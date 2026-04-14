@@ -294,22 +294,23 @@ img {
 
 .donation-menu.is-stacked {
   position: relative;
-  width: var(--dialog-action-width);
-  display: grid;
-  gap: 0.7rem;
+  width: auto;
+  display: inline-flex;
 }
 
 .donation-menu.is-stacked .donation-menu-trigger {
-  width: 100%;
+  width: auto;
 }
 
 .donation-menu-panel.is-stacked-list {
   position: absolute;
-  top: calc(100% - 0.65rem);
-  right: 0;
-  left: auto;
+  top: 0;
+  left: calc(100% + 0.25rem);
+  right: auto;
   z-index: 12;
-  width: calc(var(--dialog-action-width) + 1rem);
+  min-width: 12.5rem;
+  width: max-content;
+  max-width: 14.5rem;
   display: grid;
   gap: 0;
   padding: 0.35rem;
@@ -1204,14 +1205,56 @@ img {
 
 .donation-detail-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-  gap: 1rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+}
+
+.donation-contact-grid {
+  align-items: stretch;
+  max-width: none;
+}
+
+.donation-contact-tile {
+  display: grid;
+  align-content: start;
+  gap: 0.35rem;
+  min-height: auto;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: rgba(255, 252, 247, 0.86);
+  box-shadow: 0 10px 22px rgba(19, 36, 79, 0.06);
+}
+
+.donation-contact-tile span {
+  color: var(--muted);
+  font-size: 0.64rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.donation-contact-tile a {
+  color: var(--navy-deep);
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.25;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.donation-contact-tile a:hover {
+  color: var(--navy);
+  text-decoration: underline;
+  text-underline-offset: 0.18rem;
+}
+
+.give-contact-section {
   margin-top: 1rem;
 }
 
-.donation-side-stack {
-  display: grid;
-  gap: 1rem;
+.give-contact-section .give-section-head h3 {
+  font-size: 1.02rem;
 }
 
 .cause-meta {
@@ -1236,21 +1279,18 @@ img {
   color: var(--muted);
 }
 
-.detail-list,
-.process-list {
+.detail-list {
   margin: 1rem 0 0;
   padding-left: 1.15rem;
 }
 
-.detail-list li,
-.process-list li {
+.detail-list li {
   color: var(--muted);
   font-size: 0.93rem;
   line-height: 1.58;
 }
 
-.detail-list li + li,
-.process-list li + li {
+.detail-list li + li {
   margin-top: 0.55rem;
 }
 
@@ -1258,51 +1298,6 @@ img {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
-}
-
-.process-card {
-  background:
-    linear-gradient(180deg, rgba(19, 53, 127, 0.06), rgba(255, 251, 245, 0.92));
-}
-
-.payment-method-list {
-  display: grid;
-  gap: 0.9rem;
-  margin: 1rem 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.payment-method-list li {
-  padding-bottom: 0.9rem;
-  border-bottom: 1px solid rgba(19, 53, 127, 0.1);
-}
-
-.payment-method-list li:last-child {
-  padding-bottom: 0;
-  border-bottom: 0;
-}
-
-.payment-method-list strong {
-  display: block;
-  color: var(--navy-deep);
-  font-size: 0.98rem;
-}
-
-.payment-method-list span {
-  display: block;
-  margin-top: 0.35rem;
-  color: var(--muted);
-  font-size: 0.92rem;
-  line-height: 1.55;
-}
-
-.payment-method-list a {
-  display: inline-block;
-  margin-top: 0.45rem;
-  color: var(--navy);
-  text-decoration: underline;
-  text-underline-offset: 0.18rem;
 }
 
 .process-actions {
@@ -1617,11 +1612,10 @@ img {
 }
 
 .cause-dialog-actions {
-  --dialog-action-width: 15rem;
   display: flex;
   justify-content: center;
   align-items: start;
-  gap: 1rem;
+  gap: 0.85rem;
   margin-top: 1rem;
 }
 
@@ -1631,7 +1625,9 @@ img {
 
 .cause-dialog-actions .primary-button,
 .cause-dialog-actions .secondary-button {
-  width: var(--dialog-action-width);
+  width: auto;
+  min-width: 0;
+  padding-inline: 1.75rem;
 }
 
 .cause-secondary-action {
@@ -1986,9 +1982,6 @@ textarea:focus,
     grid-template-columns: 1fr;
   }
 
-  .donation-detail-grid {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (max-width: 980px) {
@@ -2063,6 +2056,18 @@ textarea:focus,
   .gallery-card:nth-child(4) {
     grid-column: auto;
     grid-row: auto;
+  }
+}
+
+@media (max-width: 1100px) {
+  .donation-detail-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .donation-detail-grid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -2149,6 +2154,10 @@ textarea:focus,
   .cause-dialog-actions .secondary-button,
   .donation-menu.is-stacked,
   .donation-menu-panel.is-stacked-list {
+    width: 100%;
+  }
+
+  .donation-menu.is-stacked .donation-menu-trigger {
     width: 100%;
   }
 

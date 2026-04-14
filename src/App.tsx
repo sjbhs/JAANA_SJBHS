@@ -107,8 +107,7 @@ const tabs: TabConfig[] = [
     label: "Give",
     kicker: "Giving",
     title: "Give to the SJBHS OBA from the United States.",
-    copy:
-      "Review the causes, select the giving route that fits your gift, and use the payment method that works best for you."
+    copy: ""
   },
   {
     id: "connect",
@@ -327,13 +326,6 @@ const donationTracks: DonationTrack[] = [
       "Keeps the donation path open for alumni who want to contribute now, even outside the grant threshold."
     ]
   }
-];
-
-const donationSteps = [
-  "Choose the route and cause you want to support.",
-  "Request ACH, wire, or stock transfer instructions from JAANA Finance, or use the card payment link.",
-  "Complete the OBA Donation Agreement when the gift needs a defined end use.",
-  "Share the transaction details with JAANA and the OBA so the donation can be routed and acknowledged correctly."
 ];
 
 const donationContacts: ContactChannel[] = [
@@ -568,6 +560,7 @@ function DonationMenu({
 }: DonationMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const stackedListRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!isOpen) {
@@ -595,6 +588,23 @@ function DonationMenu({
     };
   }, [isOpen]);
 
+  useEffect(() => {
+    if (!isOpen || variant !== "stacked") {
+      return;
+    }
+
+    const frame = requestAnimationFrame(() => {
+      const lastOption = stackedListRef.current?.lastElementChild as HTMLElement | null;
+      lastOption?.scrollIntoView({
+        block: "nearest",
+        inline: "nearest",
+        behavior: "smooth"
+      });
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [isOpen, variant]);
+
   if (variant === "stacked") {
     return (
       <div className="donation-menu is-stacked" ref={menuRef}>
@@ -612,7 +622,7 @@ function DonationMenu({
         </button>
 
         {isOpen ? (
-          <div className="donation-menu-panel is-stacked-list" role="menu">
+          <div className="donation-menu-panel is-stacked-list" role="menu" ref={stackedListRef}>
             {options.map((option) => (
               <a
                 key={option.title}
@@ -972,7 +982,7 @@ function App() {
             <div className="donation-page-header">
               <div className="donation-page-copy">
                 <h2>{activeTabDetails.title}</h2>
-                <p>{activeTabDetails.copy}</p>
+                {activeTabDetails.copy ? <p>{activeTabDetails.copy}</p> : null}
               </div>
 
               <div className="donation-header-actions">
@@ -991,18 +1001,21 @@ function App() {
               </article>
               <article className="donation-summary-item">
                 <span>Grant</span>
-                <strong>$1,000 | approx. INR 83,000</strong>
+                <strong>
+                  $1,000 | approx.
+                  <br />
+                  INR 83,000
+                </strong>
               </article>
               <article className="donation-summary-item">
-                <span>Payment methods</span>
-                <strong>ACH, card, and stock transfer</strong>
+                <span>USA route</span>
+                <strong>FCRA-compliant and U.S. tax-deductible</strong>
               </article>
             </div>
 
             <section className="give-section">
               <div className="give-section-head">
                 <h3>Choose a cause</h3>
-                <p>Select a cause to review the brief, giving threshold, and recommended donation routes.</p>
               </div>
 
               <div className="cause-list" aria-label="Cause list">
@@ -1025,7 +1038,6 @@ function App() {
             <section className="give-section">
               <div className="give-section-head">
                 <h3>Choose a giving route</h3>
-                <p>Use the structure that best fits the size and intent of the gift.</p>
               </div>
 
               <div className="support-grid donate-grid donation-route-grid">
@@ -1044,55 +1056,26 @@ function App() {
               </div>
             </section>
 
-            <div className="donation-detail-grid">
-              <article className="process-card">
-                <h3>How it works</h3>
-                <ol className="process-list">
-                  {donationSteps.map((step) => (
-                    <li key={step}>{step}</li>
-                  ))}
-                </ol>
-              </article>
-
-              <div className="donation-side-stack">
-                <article className="contact-card">
-                  <h3>Payment methods</h3>
-                  <ul className="payment-method-list">
-                    {paymentOptions.map((option) => (
-                      <li key={option.title}>
-                        <strong>{option.title}</strong>
-                        <span>{option.detail}</span>
-                        <a
-                          href={option.href}
-                          target={option.href.startsWith("http") ? "_blank" : undefined}
-                          rel="noreferrer"
-                        >
-                          {option.action}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </article>
-
-                <article className="contact-card">
-                  <h3>Contacts</h3>
-                  <ul className="contact-list compact-contact-list">
-                    {donationContacts.map((channel) => (
-                      <li key={channel.label}>
-                        <span>{channel.label}</span>
-                        <a
-                          href={channel.href}
-                          target={channel.href.startsWith("http") ? "_blank" : undefined}
-                          rel="noreferrer"
-                        >
-                          {channel.value}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </article>
+            <section className="give-section give-contact-section">
+              <div className="give-section-head">
+                <h3>Contacts</h3>
               </div>
-            </div>
+
+              <div className="donation-detail-grid donation-contact-grid">
+                {donationContacts.map((channel) => (
+                  <article className="donation-contact-tile" key={channel.label}>
+                    <span>{channel.label}</span>
+                    <a
+                      href={channel.href}
+                      target={channel.href.startsWith("http") ? "_blank" : undefined}
+                      rel="noreferrer"
+                    >
+                      {channel.value}
+                    </a>
+                  </article>
+                ))}
+              </div>
+            </section>
           </section>
         ) : null}
 
