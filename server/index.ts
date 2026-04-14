@@ -4,14 +4,7 @@ import express from "express";
 import fs from "node:fs";
 import path from "node:path";
 import { createInquiry, getInquiryStats } from "./lib/inquiryStore";
-
-type InquiryPayload = {
-  name?: string;
-  email?: string;
-  organization?: string;
-  interest?: string;
-  notes?: string;
-};
+import { InquiryPayload, validateInquiryPayload } from "./lib/inquiryValidation";
 
 const app = express();
 const host = process.env.HOST ?? "127.0.0.1";
@@ -40,34 +33,15 @@ app.get("/api/inquiries/stats", async (_request, response, next) => {
 
 app.post("/api/inquiries", async (request, response, next) => {
   try {
-    const payload = request.body as InquiryPayload;
-    const name = payload.name?.trim();
-    const email = payload.email?.trim().toLowerCase();
-    const organization = payload.organization?.trim();
-    const interest = payload.interest?.trim();
-    const notes = payload.notes?.trim() ?? "";
+    const validation = validateInquiryPayload(request.body as InquiryPayload);
 
-    if (!name || !email || !organization || !interest) {
+    if (!validation.ok) {
       return response.status(400).json({
-        error: "Name, email, organization, and interest are required."
+        error: validation.error
       });
     }
 
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!emailPattern.test(email)) {
-      return response.status(400).json({
-        error: "Enter a valid email address."
-      });
-    }
-
-    const result = await createInquiry({
-      name,
-      email,
-      organization,
-      interest,
-      notes
-    });
+    const result = await createInquiry(validation.data);
 
     response.status(201).json({
       message: "Thanks. Your inquiry has been sent to JAANA.",

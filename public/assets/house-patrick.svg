@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120" fill="none">
+  <defs>
+    <clipPath id="shield-patrick">
+      <path d="M50 4C66 8 78 14 83 24V56C83 78 71 96 50 114C29 96 17 78 17 56V24C22 14 34 8 50 4Z" />
+    </clipPath>
+  </defs>
+  <g clip-path="url(#shield-patrick)">
+    <rect width="100" height="120" fill="#fff" />
+    <rect width="100" height="50" fill="#279A16" />
+  </g>
+  <path d="M50 4C66 8 78 14 83 24V56C83 78 71 96 50 114C29 96 17 78 17 56V24C22 14 34 8 50 4Z" stroke="#B29741" stroke-width="4" stroke-linejoin="round" />
+</svg>

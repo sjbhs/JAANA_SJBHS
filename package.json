@@ -9,6 +9,8 @@
     "build": "npm run build:client && npm run build:server",
     "build:client": "tsc --noEmit && vite build --outDir dist/client",
     "build:server": "tsc --project tsconfig.server.json",
+    "check:vercel": "tsc --project tsconfig.vercel.json",
+    "build:vercel": "npm run check:vercel && npm run build:client",
     "preview": "vite preview",
     "start": "node dist/server/index.js"
   },

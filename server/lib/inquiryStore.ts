@@ -14,12 +14,17 @@ export type InquiryEntry = {
 type NewInquiryEntry = Omit<InquiryEntry, "id" | "createdAt">;
 
 const defaultStoragePath = path.resolve(process.cwd(), "server/data/inquiries.json");
+const temporaryStoragePath = path.join(process.env.TMPDIR ?? "/tmp", "jaana-sjbhs-inquiries.json");
 
 function getStoragePath() {
   const configuredPath =
     process.env.INQUIRY_STORAGE_PATH?.trim() ?? process.env.WAITLIST_STORAGE_PATH?.trim();
 
-  return configuredPath ? path.resolve(process.cwd(), configuredPath) : defaultStoragePath;
+  if (configuredPath) {
+    return path.resolve(process.cwd(), configuredPath);
+  }
+
+  return process.env.VERCEL ? temporaryStoragePath : defaultStoragePath;
 }
 
 async function ensureStorage() {

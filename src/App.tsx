@@ -1,4 +1,6 @@
-import { FormEvent, startTransition, useEffect, useState } from "react";
+import { FormEvent, startTransition, useEffect, useRef, useState } from "react";
+
+type TabId = "overview" | "give" | "connect" | "contact";
 
 type InquiryForm = {
   name: string;
@@ -8,160 +10,545 @@ type InquiryForm = {
   notes: string;
 };
 
-type ReunionEvent = {
-  city: string;
-  date: string;
-  time: string;
-  location: string;
-  livestream?: string;
-  rsvp: string;
+type TabConfig = {
+  id: TabId;
+  label: string;
+  kicker: string;
+  title: string;
+  copy: string;
 };
 
-type TierRow = {
-  benefit: string;
-  bronze: string;
-  silver: string;
-  gold: string;
+type PriorityCard = {
+  title: string;
+  body: string;
+  points: string[];
+  cta: string;
+  tab: TabId;
 };
 
-const reunionEvents: ReunionEvent[] = [
+type CauseCard = {
+  title: string;
+  summary: string;
+  minimum: string;
+  purpose: string;
+  goal: string;
+  impact: string;
+  support: string[];
+  donationWays: string[];
+};
+
+type DonationTrack = {
+  title: string;
+  minimum: string;
+  summary: string;
+  details: string[];
+};
+
+type PaymentOption = {
+  title: string;
+  shortTitle?: string;
+  detail: string;
+  href: string;
+  action: string;
+};
+
+type ContactChannel = {
+  label: string;
+  value: string;
+  href: string;
+};
+
+type SponsorTier = {
+  title: string;
+  amount: string;
+  benefits: string[];
+};
+
+type EventHighlight = {
+  title: string;
+  body: string;
+};
+
+type SecondaryPage = {
+  title: string;
+  body: string;
+};
+
+type GalleryImage = {
+  src: string;
+  alt: string;
+  caption: string;
+};
+
+type HouseShield = {
+  src: string;
+  alt: string;
+};
+
+type DonationMenuProps = {
+  buttonClassName: string;
+  label?: string;
+  options: PaymentOption[];
+  align?: "left" | "right";
+  variant?: "floating" | "stacked";
+};
+
+const tabs: TabConfig[] = [
   {
-    city: "Washington, D.C.",
-    date: "May 7th, 2024",
-    time: "18:00",
-    location: "Alpha Omega Integration, Floor 2, 8150 Leesburg Pike #1010, Vienna, VA 22182",
-    livestream: "https://bit.ly/JAANA-DC-reunion-livestream",
-    rsvp: "https://bit.ly/RSVP-JAANA-reunion-WashingtonDC"
+    id: "overview",
+    label: "Overview",
+    kicker: "Priority Build",
+    title: "The first release should concentrate on Give, Contact, and North America Connect 2026.",
+    copy:
+      "The giving flow is now consolidated into one cleaner destination, while the event and contact pages remain the other primary paths."
   },
   {
-    city: "Bay Area",
-    date: "May 11th, 2024",
-    time: "12:00",
-    location: "Sukoon Restaurant, 3701 E El Camino Real, Santa Clara, CA 95051",
-    rsvp: "https://bit.ly/RSVP-JAANA-reunion-BayArea"
+    id: "give",
+    label: "Give",
+    kicker: "Giving",
+    title: "Give to the SJBHS OBA from the United States.",
+    copy:
+      "Review the causes, select the giving route that fits your gift, and use the payment method that works best for you."
   },
   {
-    city: "New York",
-    date: "May 17th, 2024",
-    time: "18:00",
-    location: "Carla, 331 W 51st St, Ground Fl, New York 10019",
-    rsvp: "https://bit.ly/RSVP-JAANA-reunion-NewYork"
+    id: "connect",
+    label: "Connect 2026",
+    kicker: "North America Connect 2026",
+    title: "Promote the September 19 and 20, 2026 gathering in the Washington, D.C. metro area.",
+    copy:
+      "This page foregrounds the save-the-date message, sponsorship opportunity, and placeholders for tickets, venue details, and additional event information."
+  },
+  {
+    id: "contact",
+    label: "Contact",
+    kicker: "Stay Involved",
+    title: "Reach the OBA or JAANA for donations, sponsorship, or general alumni coordination.",
+    copy:
+      "Contact remains available, but the strongest conversion paths now point toward Causes, Donate, and North America Connect 2026."
   }
 ];
 
-const partnershipBenefits = [
-  "Direct access to 100+ in-person Josephite alumni and 300+ online members across the U.S. social network.",
-  "Multi-day visibility across the Saturday dinner and Sunday picnic lunch.",
-  "Extended brand life through post-event digital photo albums and social media recaps.",
-  "Charitable impact through support of the SJBHS OBA Teachers Insurance Fund covering 540 lives.",
-  "Potential tax deduction pathways through LearnForLife Foundation in the U.S. and SJBHS-OBA-BJES in India.",
-  "Opportunities for sustained exposure through long-term listings, advertising, and partnership placements."
+const impactStats = [
+  { value: "6", label: "priority causes available on the Give page" },
+  { value: "$12K", label: "minimum USA endowment commitment, payable over 3 years" },
+  { value: "Sept 19-20, 2026", label: "North America Connect weekend in the Washington, D.C. metro area" }
 ];
 
-const tierRows: TierRow[] = [
+const priorityCards: PriorityCard[] = [
   {
-    benefit: "Brochure Listing",
-    bronze: "Text only",
-    silver: "1/2 page ad",
-    gold: "Full page ad with QR code option"
+    title: "Give",
+    body:
+      "The giving page now combines causes and donation routes into one cleaner flow, so donors can choose what to support and act from the same place.",
+    points: [
+      "Student Scholarships",
+      "Teachers Insurance Program",
+      "Mid-Day Meal Program",
+      "Student Awards Program",
+      "School Infrastructure Development",
+      "Other Jesuit causes"
+    ],
+    cta: "Open Give page",
+    tab: "give"
   },
   {
-    benefit: "Digital Brochure",
-    bronze: "Text only",
-    silver: "1/2 page ad",
-    gold: "Full page ad with hyperlinks to business"
+    title: "Donation process",
+    body:
+      "The United States donation process stays explicit, with endowment, grant, and overflow donation routes, plus ACH, card, and stock transfer options.",
+    points: [
+      "Endowment Account",
+      "One-time Grant",
+      "One-time Donation",
+      "ACH, card, and stock transfer instructions",
+      "Direct donation method links"
+    ],
+    cta: "Open Donate",
+    tab: "give"
   },
   {
-    benefit: "Social Media / Whatsapp / LinkedIn",
-    bronze: "Group post",
-    silver: "Individual post",
-    gold: "Feature story or video"
-  },
-  {
-    benefit: "Venue Signage",
-    bronze: "Listed in rolling presentation",
-    silver: "Logo in rolling presentation + banner",
-    gold: "Silver + individual table or sponsor zone"
-  },
-  {
-    benefit: "Event Shoutout",
-    bronze: "-",
-    silver: "-",
-    gold: "Podium recognition + 2 minute elevator pitch"
-  },
-  {
-    benefit: "Post Event",
-    bronze: "Tagged in thank you / recap / album",
-    silver: "Tagged in thank you / recap / album",
-    gold: "Tagged in thank you / recap / album"
-  },
-  {
-    benefit: "Tickets Included",
-    bronze: "-",
-    silver: "1 ticket",
-    gold: "2 tickets"
+    title: "North America Connect 2026",
+    body:
+      "Use the event page as the forward-looking campaign page, with the save-the-date treatment, sponsor packet, and placeholders for tickets and logistics.",
+    points: [
+      "Washington, D.C. metro area",
+      "Saturday Dinner and Sunday Picnic Lunch",
+      "100+ in-person attendees and 300+ online reach",
+      "Call for sponsors materials and contacts"
+    ],
+    cta: "Open Connect 2026",
+    tab: "connect"
   }
 ];
 
-const addOnOptions = [
-  "Non-compete option for industry exclusivity.",
-  "Photobooth sponsor with logo on physical and digital photos.",
-  "Music or DJ sponsor with branding near the station and DJ/MC mentions.",
-  "Swag bag sponsor with logo placement on participant bags.",
-  "Cocktail bar sponsor with logo on napkins or a signature named cocktail.",
-  "Dinner sponsor with logo placement and dinner callout.",
-  "Games and picnic sponsor for prizes and activity branding."
-];
-
-const sponsorSignals = [
-  "Bronze, Silver, and Gold sponsorship tiers",
-  "Visibility across dinner, picnic, and digital recaps",
-  "Meaningful reach into the Josephite alumni network"
-];
-
-const contacts = [
-  { name: "Nikhil", email: "nikhil.mascarenhas@gmail.com" },
-  { name: "Anagha", email: "anagha.todalbagi@gmail.com" },
-  { name: "Vishal", email: "vcurrie@gmail.com" }
-];
-
-const heritageHighlights = [
+const causeCards: CauseCard[] = [
   {
-    title: "Brotherhood across generations",
-    description:
-      "JAANA exists to keep Josephites connected across cities, industries, and age groups while preserving the character of the school community."
+    title: "Student Scholarships",
+    summary: "Help students stay in school and pursue their education without interruption.",
+    minimum: "From INR 500 | approx. USD 6",
+    purpose: "Enable students requiring financial aid to pursue their education goals without interruption.",
+    goal: "Goal: INR 1,00,00,000 annually | USD 120,000 annually",
+    impact: "Impact: 114 students supported in Academic Year 2024-25.",
+    support: [
+      "Loyola Scholarship Scheme: annual commitment of INR 75,000 (approx. USD 900) per scholar for 10 years.",
+      "General grants from INR 500 (approx. USD 6) and multiples thereof.",
+      "Endowment fund minimum of INR 5,00,000 (approx. USD 6,000) for recurring annual support."
+    ],
+    donationWays: [
+      "One-time grant for immediate scholarship support.",
+      "Endowment support for recurring annual scholarships.",
+      "Smaller contributions can still be directed into the scholarship effort through the standard donation route."
+    ]
   },
   {
-    title: "A gathering with purpose",
-    description:
-      "North America Connect is not only a reunion. It is a school-centered gathering that supports teachers, staff, families, and long-term alumni engagement."
+    title: "Teachers Insurance Program",
+    summary: "Protect teaching staff, support staff, retired staff, and eligible families with insurance cover.",
+    minimum: "From INR 500 | approx. USD 6",
+    purpose:
+      "Provide teaching staff, support staff, retired staff, and their families with health and personal accident insurance cover.",
+    goal: "Goal: INR 30,00,000 annually | USD 35,000 annually",
+    impact:
+      "Impact: health insurance coverage of INR 3,00,000 for 540 lives, plus personal accident coverage for 180 teaching staff.",
+    support: [
+      "General grants from INR 500 (approx. USD 6) and multiples thereof.",
+      "Endowment fund minimum of INR 5,00,000 (approx. USD 6,000) for recurring annual support."
+    ],
+    donationWays: [
+      "One-time grant to support the current insurance cycle.",
+      "Endowment support for a recurring annual contribution to the insurance pool.",
+      "Smaller donor gifts can still be routed toward teacher welfare through the standard donation process."
+    ]
   },
   {
-    title: "A more dignified presentation",
-    description:
-      "This version keeps the official JAANA materials visible, but frames them with clearer hierarchy, calmer spacing, and a more classic alumni aesthetic."
+    title: "Mid-Day Meal Program",
+    summary: "Fund daily nourishment for children through the school’s mid-day meal support.",
+    minimum: "From INR 500 | approx. USD 6",
+    purpose: "Provide children with a nourishing meal every school day.",
+    goal: "Goal: INR 21,00,000 annually | USD 25,000 annually",
+    impact: "Impact: 3,000 meals supported in Academic Year 2024-25.",
+    support: [
+      "General grants from INR 500 (approx. USD 6) and multiples thereof.",
+      "Endowment fund minimum of INR 5,00,000 (approx. USD 6,000) for recurring annual support."
+    ],
+    donationWays: [
+      "One-time grant for immediate meal programme funding.",
+      "Endowment support to create a more durable annual meal subsidy.",
+      "Smaller gifts can still be applied to the programme through the standard donation route."
+    ]
+  },
+  {
+    title: "Student Awards Program",
+    summary: "Back prizes and recognition that reinforce excellence in academics, sport, and the arts.",
+    minimum: "INR 1,00,000 endowment | approx. USD 1,200",
+    purpose: "Promote excellence in academics, sports, and the arts at the right stages of school life.",
+    goal: "Goal: build an awards system that strengthens recognition, morale, and aspiration.",
+    impact:
+      "Impact: awards timed to key classes and levels to reinforce confidence, achievement, and continuity across the student journey.",
+    support: [
+      "Endowment fund minimum of INR 1,00,000 (approx. USD 1,200), with proceeds awarded annually.",
+      "Useful for donors who want named recognition attached to a recurring annual prize."
+    ],
+    donationWays: [
+      "Endowment support is the primary route for recurring annual awards.",
+      "Named donor-backed prizes work especially well here.",
+      "This cause suits donors who want visible, long-term recognition tied to student excellence."
+    ]
+  },
+  {
+    title: "School Infrastructure Development",
+    summary: "Support classrooms, laboratories, sports facilities, and named campus development projects.",
+    minimum: "From INR 500 | approx. USD 6",
+    purpose: "Support classrooms, sports facilities, laboratories, and other campus development needs.",
+    goal: "Goal: INR 25,00,00,000 | USD 2,750,000",
+    impact:
+      "Impact: legacy-led contributions can fund named learning spaces and long-term improvements across the school campus.",
+    support: [
+      "Name a classroom: INR 25,00,000 (approx. USD 30,000).",
+      "Name on a pillar or pavilion plaque: INR 5,00,000 (approx. USD 6,000).",
+      "General grants from INR 500 (approx. USD 6) and multiples thereof."
+    ],
+    donationWays: [
+      "One-time grant for immediate capital support.",
+      "Named giving opportunities for classrooms, pillars, and pavilions.",
+      "General contributions can still be directed toward broader infrastructure needs."
+    ]
+  },
+  {
+    title: "Other Jesuit causes",
+    summary: "Direct support to allied BJES and Josephite causes beyond the core OBA buckets.",
+    minimum: "From INR 500 | approx. USD 6",
+    purpose:
+      "Support allied BJES and Josephite causes when donors want to direct funds beyond the core OBA school-support buckets.",
+    goal: "Goal: donor-directed support routed through the same compliant USA donation process.",
+    impact:
+      "Impact: allied causes can be acknowledged in OBA communications and the annual report with credit to donors.",
+    support: [
+      "Use the donation agreement to specify the intended end use clearly.",
+      "Suitable for individual, family, or batch-led contributions supporting allied Jesuit work.",
+      "The same endowment, grant, and donation routes apply."
+    ],
+    donationWays: [
+      "Use the donation agreement to state the exact Jesuit or BJES cause you want supported.",
+      "One-time grants work well for directed needs requiring current deployment.",
+      "Endowment and general donation routes can still be used when a recurring or pooled structure is more appropriate."
+    ]
   }
 ];
 
-const connectMoments = [
+const donationTracks: DonationTrack[] = [
   {
-    label: "Saturday evening",
-    title: "Dinner and fellowship",
-    description:
-      "A setting for alumni, sponsors, and families to reconnect in person with room for conversation, recognition, and community visibility."
+    title: "Endowment Account",
+    minimum: "Minimum $12,000 | approx. INR 10,00,000 payable over 3 years",
+    summary:
+      "A long-term giving route where the corpus is invested and annual gains are distributed to the designated cause.",
+    details: [
+      "Built for recurring long-term support rather than a single campaign cycle.",
+      "Annual distributions are donor-directed, subject to a minimum 5% payout of the corpus.",
+      "Donors may opt in for visibility into the Fidelity account and invest in consultation with an advisor."
+    ]
   },
   {
-    label: "Sunday gathering",
-    title: "Picnic and families",
-    description:
-      "A more relaxed intergenerational format that brings families into the celebration and widens the circle beyond a formal event night."
+    title: "One-time Grant",
+    minimum: "Minimum $1,000 | approx. INR 83,000",
+    summary:
+      "The full gift is sent through to the OBA for the specific cause or use named in the donation agreement.",
+    details: [
+      "Best for immediate cause support where the donor wants funds deployed now.",
+      "Works well for scholarships, teacher welfare, meals, infrastructure, or named donor campaigns.",
+      "Deployment instructions are shared with the OBA alongside the grant."
+    ]
   },
   {
-    label: "School impact",
-    title: "Support beyond the weekend",
-    description:
-      "Proceeds support the SJBHS OBA Teachers Insurance Fund and reinforce a culture of giving back through alumni action."
+    title: "One-time Donation",
+    minimum: "For amounts below $1,000 | approx. INR 83,000, or amounts above what can be deployed annually",
+    summary:
+      "Smaller gifts and excess amounts are held in the overflow Fidelity account until deployment is possible.",
+    details: [
+      "Provides a path for smaller gifts while preserving compliance and tracking.",
+      "Also catches excess amounts that cannot be deployed in a single annual cycle.",
+      "Keeps the donation path open for alumni who want to contribute now, even outside the grant threshold."
+    ]
   }
+];
+
+const donationSteps = [
+  "Choose the route and cause you want to support.",
+  "Request ACH, wire, or stock transfer instructions from JAANA Finance, or use the card payment link.",
+  "Complete the OBA Donation Agreement when the gift needs a defined end use.",
+  "Share the transaction details with JAANA and the OBA so the donation can be routed and acknowledged correctly."
+];
+
+const donationContacts: ContactChannel[] = [
+  {
+    label: "JAANA Finance",
+    value: "jaanafinance@gmail.com",
+    href: "mailto:jaanafinance@gmail.com?subject=JAANA%20General%20Endowment"
+  },
+  {
+    label: "Donations desk",
+    value: "donations@sjbhsoba.net",
+    href: "mailto:donations@sjbhsoba.net"
+  },
+  {
+    label: "OBA President",
+    value: "president@sjbhsoba.net",
+    href: "mailto:president@sjbhsoba.net"
+  },
+  {
+    label: "Joint Treasurer",
+    value: "jt.treasurer@sjbhsoba.net",
+    href: "mailto:jt.treasurer@sjbhsoba.net"
+  }
+];
+
+const paymentOptions: PaymentOption[] = [
+  {
+    title: "ACH or wire transfer",
+    shortTitle: "ACH / Wire",
+    detail: "Request current banking instructions directly from JAANA Finance.",
+    href: "mailto:jaanafinance@gmail.com?subject=JAANA%20General%20Endowment",
+    action: "Request instructions"
+  },
+  {
+    title: "Credit or debit card",
+    shortTitle: "Card payment",
+    detail: "Use the JAANA payment page for card donations. Processing fees apply.",
+    href: "https://jaana.co/ways-to-give/",
+    action: "Open payment page"
+  },
+  {
+    title: "Stock transfer",
+    shortTitle: "Stock transfer",
+    detail: "Request the stock transfer instructions from JAANA Finance before initiating the transfer.",
+    href: "mailto:jaanafinance@gmail.com?subject=JAANA%20Stock%20Transfer%20Info",
+    action: "Request stock transfer info"
+  }
+];
+
+const sponsorHighlights: EventHighlight[] = [
+  {
+    title: "Save the date",
+    body:
+      "North America Connect is planned for September 19 and 20, 2026 in the Washington, D.C. metro area, with a Saturday Dinner and Sunday Picnic Lunch."
+  },
+  {
+    title: "Audience and reach",
+    body:
+      "The sponsor packet projects 100+ in-person attendees across alumni and families, plus 300+ additional members reached through JAANA social channels."
+  },
+  {
+    title: "Charitable impact",
+    body:
+      "Event proceeds are intended to support the SJBHS OBA Teachers Insurance fund covering teaching staff, support staff, retired staff, and eligible families."
+  },
+  {
+    title: "Why sponsors fit here",
+    body:
+      "The pitch is aimed at a high-trust alumni audience seeking services across real estate, finance, tax, wealth planning, senior care, insurance, banking, and legal work."
+  }
+];
+
+const sponsorTiers: SponsorTier[] = [
+  {
+    title: "Bronze",
+    amount: "$500-$999",
+    benefits: [
+      "Text listing in the brochure and digital brochure.",
+      "Rolling presentation listing at the venue.",
+      "Tagged in thank-you and recap communications."
+    ]
+  },
+  {
+    title: "Silver",
+    amount: "$1,000-$1,499",
+    benefits: [
+      "Half-page ad in the brochure and digital brochure.",
+      "Logo in the rolling presentation plus banner placement.",
+      "Individual social post and 1 included ticket."
+    ]
+  },
+  {
+    title: "Gold",
+    amount: "$1,500+",
+    benefits: [
+      "Full-page brochure ad, QR option, and hyperlinks in the digital brochure.",
+      "Feature-story or video treatment on social media.",
+      "Individual table or sponsor-zone visibility, podium recognition, and 2 included tickets."
+    ]
+  }
+];
+
+const connectMoments: GalleryImage[] = [
+  {
+    src: "/assets/connect-group-night.jpg",
+    alt: "A large OBA community group gathered outdoors at night under string lights.",
+    caption: "The site can still carry the warmth and scale of recent Connect gatherings."
+  },
+  {
+    src: "/assets/connect-group-steps.jpg",
+    alt: "A multi-generational alumni group standing on steps outside a heritage building.",
+    caption: "Past Connect imagery helps establish the tone while North America Connect 2026 is still taking shape."
+  },
+  {
+    src: "/assets/connect-carols.jpg",
+    alt: "A group singing together at a festive OBA Christmas gathering.",
+    caption: "Family participation and school-centered fellowship remain part of the event story."
+  }
+];
+
+const sponsorMaterials: GalleryImage[] = [
+  {
+    src: "/assets/call-for-sponsors-1.png",
+    alt: "First page of the North America Connect 2026 call for sponsors packet.",
+    caption: "Call for Sponsors: overview page"
+  },
+  {
+    src: "/assets/call-for-sponsors-2.png",
+    alt: "Second page of the North America Connect 2026 call for sponsors packet detailing sponsor tiers.",
+    caption: "Call for Sponsors: sponsorship tiers"
+  }
+];
+
+const connectPlaceholders: SecondaryPage[] = [
+  {
+    title: "Buy tickets",
+    body: "Hold this space for ticketing once pricing, registration flow, and batch allocations are finalized."
+  },
+  {
+    title: "Venue and lodging",
+    body: "Keep a placeholder for venue confirmation, hotel block details, and local travel notes for out-of-town attendees."
+  },
+  {
+    title: "Weekend schedule",
+    body: "Reserve room for the detailed Saturday and Sunday programme once programming is approved."
+  }
+];
+
+const secondaryPages: SecondaryPage[] = [
+  {
+    title: "About Us",
+    body: "Keep this page lightweight for now with placeholder copy that can be expanded later."
+  },
+  {
+    title: "Gallery and previous reunions",
+    body: "Past event folders can remain secondary while the 2026 event page is front and center."
+  },
+  {
+    title: "Mentor, Volunteer, Statements, and External Sites",
+    body: "These pages can stay in backlog mode until the core give flow and Connect 2026 content are locked."
+  }
+];
+
+const houseShields: HouseShield[] = [
+  {
+    src: "/assets/house-andrew.svg",
+    alt: "St. Andrew house shield"
+  },
+  {
+    src: "/assets/house-george.svg",
+    alt: "St. George house shield"
+  },
+  {
+    src: "/assets/house-david.svg",
+    alt: "St. David house shield"
+  },
+  {
+    src: "/assets/house-patrick.svg",
+    alt: "St. Patrick house shield"
+  }
+];
+
+const contactChannels: ContactChannel[] = [
+  {
+    label: "Donations",
+    value: "donations@sjbhsoba.net",
+    href: "mailto:donations@sjbhsoba.net"
+  },
+  {
+    label: "JAANA Finance",
+    value: "jaanafinance@gmail.com",
+    href: "mailto:jaanafinance@gmail.com?subject=JAANA%20General%20Endowment"
+  },
+  {
+    label: "Sponsors",
+    value: "Nikhil, Anagha, Vishal",
+    href: "mailto:nikhil.mascarenhas@gmail.com?cc=anagha.todalbagi@gmail.com,vcurrie@gmail.com&subject=North%20America%20Connect%202026%20Sponsorship"
+  },
+  {
+    label: "President",
+    value: "president@sjbhsoba.net",
+    href: "mailto:president@sjbhsoba.net"
+  },
+  {
+    label: "Website",
+    value: "www.sjbhsoba.net",
+    href: "https://www.sjbhsoba.net"
+  }
+];
+
+const inquiryTopics = [
+  "Support a cause",
+  "Donate from the USA",
+  "Sponsor North America Connect 2026",
+  "General alumni question"
 ];
 
 const initialForm: InquiryForm = {
@@ -172,45 +559,216 @@ const initialForm: InquiryForm = {
   notes: ""
 };
 
+function DonationMenu({
+  buttonClassName,
+  label = "Donate now",
+  options,
+  align = "left",
+  variant = "floating"
+}: DonationMenuProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!menuRef.current?.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [isOpen]);
+
+  if (variant === "stacked") {
+    return (
+      <div className="donation-menu is-stacked" ref={menuRef}>
+        <button
+          className={`${buttonClassName} donation-menu-trigger${isOpen ? " is-open" : ""}`}
+          type="button"
+          aria-haspopup="menu"
+          aria-expanded={isOpen}
+          onClick={() => setIsOpen((current) => !current)}
+        >
+          {label}
+          <span className="donation-menu-caret" aria-hidden="true">
+            ▾
+          </span>
+        </button>
+
+        {isOpen ? (
+          <div className="donation-menu-panel is-stacked-list" role="menu">
+            {options.map((option) => (
+              <a
+                key={option.title}
+                className="donation-menu-item is-link-only"
+                href={option.href}
+                role="menuitem"
+                target={option.href.startsWith("http") ? "_blank" : undefined}
+                rel="noreferrer"
+                onClick={() => setIsOpen(false)}
+              >
+                <strong>{option.shortTitle ?? option.title}</strong>
+              </a>
+            ))}
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
+  return (
+    <div className="donation-menu" ref={menuRef}>
+      <button
+        className={`${buttonClassName} donation-menu-trigger${isOpen ? " is-open" : ""}`}
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen((current) => !current)}
+      >
+        {label}
+        <span className="donation-menu-caret" aria-hidden="true">
+          ▾
+        </span>
+      </button>
+
+      {isOpen ? (
+        <div className={`donation-menu-panel${align === "right" ? " is-right" : ""}`} role="menu">
+          {options.map((option) => (
+            <a
+              key={option.title}
+              className="donation-menu-item"
+              href={option.href}
+              role="menuitem"
+              target={option.href.startsWith("http") ? "_blank" : undefined}
+              rel="noreferrer"
+              onClick={() => setIsOpen(false)}
+            >
+              <strong>{option.title}</strong>
+              <span>{option.detail}</span>
+            </a>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function App() {
+  const [activeTab, setActiveTab] = useState<TabId>("overview");
   const [backendOnline, setBackendOnline] = useState(false);
-  const [inquiryCount, setInquiryCount] = useState<number | null>(null);
+  const [selectedCause, setSelectedCause] = useState<CauseCard | null>(null);
+  const [lightboxImage, setLightboxImage] = useState<GalleryImage | null>(null);
   const [form, setForm] = useState<InquiryForm>(initialForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [statusTone, setStatusTone] = useState<"idle" | "success" | "error">("idle");
 
   useEffect(() => {
-    const loadSiteData = async () => {
-      try {
-        const [healthResponse, statsResponse] = await Promise.all([
-          fetch("/api/health"),
-          fetch("/api/inquiries/stats")
-        ]);
+    const syncTabWithHash = () => {
+      const nextTab = window.location.hash.replace("#", "");
 
-        if (!healthResponse.ok || !statsResponse.ok) {
-          throw new Error("Unable to load site data.");
-        }
-
-        const [{ status }, { total }] = await Promise.all([
-          healthResponse.json() as Promise<{ status: string }>,
-          statsResponse.json() as Promise<{ total: number }>
-        ]);
-
+      if (nextTab === "causes") {
         startTransition(() => {
-          setBackendOnline(status === "ok");
-          setInquiryCount(total);
+          setActiveTab("give");
         });
-      } catch {
+        window.history.replaceState(null, "", "#give");
+        return;
+      }
+
+      if (tabs.some((tab) => tab.id === nextTab)) {
         startTransition(() => {
-          setBackendOnline(false);
-          setInquiryCount(null);
+          setActiveTab(nextTab as TabId);
         });
       }
     };
 
-    void loadSiteData();
+    syncTabWithHash();
+    window.addEventListener("hashchange", syncTabWithHash);
+
+    return () => window.removeEventListener("hashchange", syncTabWithHash);
   }, []);
+
+  useEffect(() => {
+    if (!lightboxImage && !selectedCause) {
+      return;
+    }
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setLightboxImage(null);
+        setSelectedCause(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleEscape);
+
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [lightboxImage, selectedCause]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadHealth = async () => {
+      try {
+        const response = await fetch("/api/health");
+
+        if (!response.ok) {
+          throw new Error("Unable to reach the inquiry service.");
+        }
+
+        const payload = (await response.json()) as { status: string };
+
+        if (!cancelled) {
+          startTransition(() => {
+            setBackendOnline(payload.status === "ok");
+          });
+        }
+      } catch {
+        if (!cancelled) {
+          startTransition(() => {
+            setBackendOnline(false);
+          });
+        }
+      }
+    };
+
+    void loadHealth();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const activateTab = (tabId: TabId) => {
+    setSelectedCause(null);
+    setLightboxImage(null);
+
+    startTransition(() => {
+      setActiveTab(tabId);
+    });
+
+    window.history.replaceState(null, "", `#${tabId}`);
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -227,7 +785,7 @@ function App() {
         body: JSON.stringify(form)
       });
 
-      const payload = (await response.json()) as { message?: string; total?: number; error?: string };
+      const payload = (await response.json()) as { message?: string; error?: string };
 
       if (!response.ok) {
         throw new Error(payload.error ?? "Something went wrong.");
@@ -236,7 +794,6 @@ function App() {
       setForm(initialForm);
       setStatusTone("success");
       setStatusMessage(payload.message ?? "Thanks for reaching out.");
-      setInquiryCount(payload.total ?? inquiryCount);
     } catch (error) {
       setStatusTone("error");
       setStatusMessage(error instanceof Error ? error.message : "Something went wrong.");
@@ -245,433 +802,622 @@ function App() {
     }
   };
 
+  const activeTabDetails = tabs.find((tab) => tab.id === activeTab) ?? tabs[0];
+  const isOverviewTab = activeTab === "overview";
+
   return (
     <div className="site-shell">
       <header className="site-header">
         <div className="site-header-inner">
-          <a className="site-brand" href="#top" aria-label="JAANA Home">
-            <img className="brand-logo" src="/assets/jaana-logo-blue.png" alt="JAANA logo" />
-          </a>
+          <button
+            className="brand-lockup"
+            onClick={() => activateTab("overview")}
+            type="button"
+            aria-label="Go to overview"
+          >
+            <img src="/assets/oba-connect-mark.png" alt="SJBHS OBA Connect" />
+            <div>
+              <span>SJBHS OBA</span>
+              <strong>Connect</strong>
+            </div>
+          </button>
 
-          <nav className="site-nav" aria-label="Primary">
-            <a href="#connect">Connect 2026</a>
-            <a href="#reunions">Reunions 2024</a>
-            <a href="#school">School</a>
-            <a href="#sponsors">Sponsors</a>
-            <a href="#contact">Contact</a>
-          </nav>
+          <div className="house-shields header-shields" aria-label="SJBHS house shields">
+            {houseShields.map((shield) => (
+              <div className="house-shield" key={shield.src}>
+                <img src={shield.src} alt={shield.alt} />
+              </div>
+            ))}
+          </div>
+
+          <div className="header-actions">
+            <nav className="site-nav" aria-label="Homepage sections" role="tablist">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeTab === tab.id}
+                  aria-controls={`${tab.id}-panel`}
+                  className={activeTab === tab.id ? "site-tab is-active" : "site-tab"}
+                  onClick={() => activateTab(tab.id)}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </nav>
+
+            <DonationMenu buttonClassName="header-cta" options={paymentOptions} align="right" />
+          </div>
         </div>
       </header>
 
-      <main id="top">
-        <section id="connect" className="hero-section">
-          <div className="hero-copy">
-            <div className="eyebrow-row">
-              <span className="eyebrow">Save the Date</span>
-              <span className={`status-pill ${backendOnline ? "online" : "offline"}`}>
-                {backendOnline ? "Server live" : "Server offline"}
-              </span>
-            </div>
-
-            <p className="hero-overline">Josephite Alumni Association of North America</p>
-            <h1>North America Connect</h1>
-            <p className="hero-date">September 19-20, 2026</p>
-            <p className="hero-location">Washington DC | Northern Virginia</p>
-
-            <p className="hero-lead">
-              The Josephite Alumni Association of North America invites sponsors and alumni families to a two-day
-              gathering in the Washington D.C. metro area. The event is designed for in-person connection, school
-              support, and long-term community building across North America.
-            </p>
-
-            <div className="hero-actions">
-              <a className="primary-button" href="/docs/call-for-sponsors.pdf" target="_blank" rel="noreferrer">
-                Open sponsor deck
-              </a>
-              <a className="secondary-button" href="#contact">
-                Sponsor inquiry
-              </a>
-            </div>
-
-            <div className="stat-grid">
-              <article>
-                <strong>100+</strong>
-                <span>Expected in-person alumni and families</span>
-              </article>
-              <article>
-                <strong>300+</strong>
-                <span>Additional online reach across U.S. channels</span>
-              </article>
-              <article>
-                <strong>540</strong>
-                <span>Lives supported through the Teachers Insurance Fund</span>
-              </article>
-            </div>
-
-            <div className="heritage-note">
-              <img src="/assets/jaana-crest.png" alt="JAANA crest" />
-              <div>
-                <span>Josephite Alumni Association of North America</span>
-                <strong>A school alumni body rooted in fraternity, service, and memory.</strong>
-              </div>
-            </div>
-          </div>
-
-          <div className="hero-media">
-            <div className="poster-spotlight-card">
-              <div className="card-label">
-                <img src="/assets/jaana-crest.png" alt="" />
-                <span>Official reunion poster</span>
-              </div>
-              <img src="/assets/reunion-2024-poster.jpeg" alt="North American Reunions 2024 poster" />
-            </div>
-
-            <div className="hero-side-panel">
-              <div className="sponsor-summary-card">
-                <span className="mini-eyebrow">Sponsor partnership</span>
-                <h3>Support the weekend without crowding the message.</h3>
-                <p>
-                  The sponsor story belongs here, but it should read as measured and credible. The full deck stays
-                  accessible while the first screen stays calm and readable.
+      <main className={isOverviewTab ? "main-overview" : "main-subpage"}>
+        {isOverviewTab ? (
+          <>
+            <section className="hero-section">
+              <div className="hero-copy">
+                <div className="hero-brand" aria-label="JAANA identity">
+                  <img src="/assets/jaana-wordmark.png" alt="JAANA wordmark" />
+                  <h1 className="hero-motto">Fide et Labore.</h1>
+                </div>
+                <p className="hero-lead">
+                  This version of the site now concentrates the giving experience into one cleaner page, alongside
+                  North America Connect 2026 and direct contact.
                 </p>
 
-                <ul className="signal-list">
-                  {sponsorSignals.map((signal) => (
-                    <li key={signal}>{signal}</li>
-                  ))}
-                </ul>
+                <div className="hero-actions">
+                  <button className="primary-button" type="button" onClick={() => activateTab("give")}>
+                    Give now
+                  </button>
+                  <button className="secondary-button" type="button" onClick={() => activateTab("connect")}>
+                    See Connect 2026
+                  </button>
+                </div>
 
-                <a className="inline-link" href="/docs/call-for-sponsors.pdf" target="_blank" rel="noreferrer">
-                  View the complete sponsor deck
-                </a>
+                <div className="impact-strip" aria-label="Priority highlights">
+                  {impactStats.map((stat) => (
+                    <article key={stat.label}>
+                      <strong>{stat.value}</strong>
+                      <span>{stat.label}</span>
+                    </article>
+                  ))}
+                </div>
               </div>
 
-              <div className="crest-story-card">
-                <img src="/assets/jaana-crest.png" alt="" />
+              <div className="hero-media">
+                <button
+                  className="photo-button media-tile media-tile-main"
+                  type="button"
+                  onClick={() => setLightboxImage(connectMoments[0])}
+                >
+                  <img src={connectMoments[0].src} alt="" />
+                </button>
+                <div className="media-stack">
+                  <button
+                    className="photo-button media-tile media-tile-small"
+                    type="button"
+                    onClick={() => setLightboxImage(connectMoments[1])}
+                  >
+                    <img src={connectMoments[1].src} alt="" />
+                  </button>
+                  <button
+                    className="photo-button media-tile media-tile-small"
+                    type="button"
+                    onClick={() => setLightboxImage(connectMoments[2])}
+                  >
+                    <img src={connectMoments[2].src} alt="" />
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            <section id="overview-panel" className="overview-shell" role="tabpanel" aria-label="Overview">
+              <div className="featured-heading priority-heading">
                 <div>
-                  <span className="mini-eyebrow">School identity</span>
-                  <h3>Simple, formal, and rooted in alumni tradition.</h3>
+                  <h3>The primary workstreams are now visible as the first thing users see.</h3>
+                </div>
+              </div>
+
+              <div className="priority-grid">
+                {priorityCards.map((card) => (
+                  <article className="priority-card" key={card.title}>
+                    <h3>{card.title}</h3>
+                    <p>{card.body}</p>
+                    <ul className="detail-list">
+                      {card.points.map((point) => (
+                        <li key={point}>{point}</li>
+                      ))}
+                    </ul>
+                    <button className="inline-button priority-link" type="button" onClick={() => activateTab(card.tab)}>
+                      {card.cta}
+                    </button>
+                  </article>
+                ))}
+              </div>
+
+              <div className="secondary-pages-card">
+                <div className="featured-heading">
+                  <div>
+                    <h3>Other pages remain available as secondary follow-on work.</h3>
+                  </div>
+                </div>
+
+                <div className="secondary-page-grid">
+                  {secondaryPages.map((page) => (
+                    <article className="secondary-page-card" key={page.title}>
+                      <h3>{page.title}</h3>
+                      <p>{page.body}</p>
+                    </article>
+                  ))}
+                </div>
+              </div>
+
+              <div className="school-banner-card">
+                <img src="/assets/sjbhs-main-banner.jpg" alt="St. Joseph's Boys' High School campus banner" />
+                <div className="school-banner-copy">
+                  <h3>The priority pages still point back to the school and its community.</h3>
                   <p>
-                    The page now gives the crest, poster, and school references space to stand on their own instead of
-                    compressing everything into one crowded hero.
+                    Causes define what gets funded, donate shows how US support is routed, and North America Connect
+                    2026 acts as the forward-looking event page that grows community and sponsorship.
                   </p>
                 </div>
               </div>
+            </section>
+          </>
+        ) : null}
+
+        {activeTab === "give" ? (
+          <section id="give-panel" className="subpage-shell donate-shell" role="tabpanel" aria-label="Give">
+            <div className="donation-page-header">
+              <div className="donation-page-copy">
+                <h2>{activeTabDetails.title}</h2>
+                <p>{activeTabDetails.copy}</p>
+              </div>
+
+              <div className="donation-header-actions">
+                <DonationMenu buttonClassName="primary-button" options={paymentOptions} />
+              </div>
             </div>
-          </div>
-        </section>
 
-        <section className="content-section heritage-section">
-          <div className="section-heading narrow">
-            <span className="section-kicker">An alumni institution</span>
-            <h2>Classier, but still recognizably a school community website.</h2>
-            <p>
-              The tone here is intentionally more polished without losing the warmth of a school reunion page. The
-              focus stays on community, school ties, and the dignity of official alumni communication.
-            </p>
-          </div>
-
-          <div className="heritage-grid">
-            {heritageHighlights.map((item) => (
-              <article className="heritage-card" key={item.title}>
-                <img src="/assets/jaana-crest.png" alt="" />
-                <h3>{item.title}</h3>
-                <p>{item.description}</p>
+            <div className="donation-summary-bar">
+              <article className="donation-summary-item">
+                <span>Causes</span>
+                <strong>6 priority funds</strong>
               </article>
-            ))}
-          </div>
-        </section>
-
-        <section id="reunions" className="content-section light-section">
-          <div className="section-heading">
-            <span className="section-kicker">Official reunion graphic</span>
-            <h2>North American Reunions 2024</h2>
-            <p>
-              The archived JAANA site centered this poster and the related reunion schedule. The updated build keeps
-              the official visual intact and re-presents the information with cleaner spacing and better readability.
-            </p>
-          </div>
-
-          <div className="poster-layout">
-            <div className="poster-frame">
-              <img src="/assets/reunion-2024-poster.jpeg" alt="North American Reunions 2024 official poster" />
+              <article className="donation-summary-item">
+                <span>Endowment</span>
+                <strong>$12,000 | approx. INR 10,00,000</strong>
+              </article>
+              <article className="donation-summary-item">
+                <span>Grant</span>
+                <strong>$1,000 | approx. INR 83,000</strong>
+              </article>
+              <article className="donation-summary-item">
+                <span>Payment methods</span>
+                <strong>ACH, card, and stock transfer</strong>
+              </article>
             </div>
 
-            <div className="poster-copy">
-              <div className="copy-card">
-                <h3>Invitation</h3>
-                <p>
-                  St. Joseph&apos;s OBA and JAANA invited Josephites across North America to join one or more of the
-                  2024 reunions hosting Fr Sunil Fernandes, Fr Manoj D&apos;Souza, and Fr Brian Pereira.
-                </p>
-                <p>Looking forward to celebrating the Jesuits and our school.</p>
+            <section className="give-section">
+              <div className="give-section-head">
+                <h3>Choose a cause</h3>
+                <p>Select a cause to review the brief, giving threshold, and recommended donation routes.</p>
               </div>
 
-              <div className="copy-card">
-                <h3>Why these reunions mattered</h3>
-                <p>
-                  The reunion schedule was built around hospitality, school identity, and the joy of seeing Josephites
-                  gather in person. The page now presents that spirit with better pacing and a stronger sense of
-                  institutional character.
-                </p>
+              <div className="cause-list" aria-label="Cause list">
+                {causeCards.map((cause) => (
+                  <button className="cause-list-item" key={cause.title} type="button" onClick={() => setSelectedCause(cause)}>
+                    <div className="cause-list-copy">
+                      <h3>{cause.title}</h3>
+                      <p>{cause.summary}</p>
+                    </div>
+
+                    <div className="cause-list-meta">
+                      <span>Minimum amount</span>
+                      <strong>{cause.minimum}</strong>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            <section className="give-section">
+              <div className="give-section-head">
+                <h3>Choose a giving route</h3>
+                <p>Use the structure that best fits the size and intent of the gift.</p>
+              </div>
+
+              <div className="support-grid donate-grid donation-route-grid">
+                {donationTracks.map((track) => (
+                  <article className="support-card donation-route-card" key={track.title}>
+                    <p className="support-note">{track.minimum}</p>
+                    <h3>{track.title}</h3>
+                    <p>{track.summary}</p>
+                    <ul className="detail-list">
+                      {track.details.map((detail) => (
+                        <li key={detail}>{detail}</li>
+                      ))}
+                    </ul>
+                  </article>
+                ))}
+              </div>
+            </section>
+
+            <div className="donation-detail-grid">
+              <article className="process-card">
+                <h3>How it works</h3>
+                <ol className="process-list">
+                  {donationSteps.map((step) => (
+                    <li key={step}>{step}</li>
+                  ))}
+                </ol>
+              </article>
+
+              <div className="donation-side-stack">
+                <article className="contact-card">
+                  <h3>Payment methods</h3>
+                  <ul className="payment-method-list">
+                    {paymentOptions.map((option) => (
+                      <li key={option.title}>
+                        <strong>{option.title}</strong>
+                        <span>{option.detail}</span>
+                        <a
+                          href={option.href}
+                          target={option.href.startsWith("http") ? "_blank" : undefined}
+                          rel="noreferrer"
+                        >
+                          {option.action}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+
+                <article className="contact-card">
+                  <h3>Contacts</h3>
+                  <ul className="contact-list compact-contact-list">
+                    {donationContacts.map((channel) => (
+                      <li key={channel.label}>
+                        <span>{channel.label}</span>
+                        <a
+                          href={channel.href}
+                          target={channel.href.startsWith("http") ? "_blank" : undefined}
+                          rel="noreferrer"
+                        >
+                          {channel.value}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
               </div>
             </div>
-          </div>
+          </section>
+        ) : null}
 
-          <div className="event-grid">
-            {reunionEvents.map((event) => (
-              <article className="event-card" key={event.city}>
-                <p className="event-city">{event.city}</p>
-                <h3>
-                  {event.date} at {event.time}
-                </h3>
-                <p>{event.location}</p>
+        {activeTab === "connect" ? (
+          <section id="connect-panel" className="subpage-shell" role="tabpanel" aria-label="North America Connect 2026">
+            <div className="subpage-hero">
+              <div className="subpage-copy">
+                <span className="section-kicker">{activeTabDetails.kicker}</span>
+                <h2>{activeTabDetails.title}</h2>
+                <p>{activeTabDetails.copy}</p>
+              </div>
 
-                <div className="event-links">
-                  {event.livestream ? (
-                    <a href={event.livestream} target="_blank" rel="noreferrer">
-                      Livestream
-                    </a>
-                  ) : null}
-                  <a href={event.rsvp} target="_blank" rel="noreferrer">
-                    RSVP
+              <aside className="event-poster">
+                <strong>North America Connect 2026</strong>
+                <p>Washington, D.C. metro area</p>
+                <div className="event-poster-meta">
+                  <span>Saturday Dinner</span>
+                  <span>Sunday Picnic Lunch</span>
+                  <span>September 19-20, 2026</span>
+                </div>
+                <div className="process-actions">
+                  <a className="inline-link event-link" href="/docs/north-america-connect-2026-call-for-sponsors.pdf" target="_blank" rel="noreferrer">
+                    Download sponsor packet
+                  </a>
+                  <a
+                    className="inline-link event-link"
+                    href="mailto:nikhil.mascarenhas@gmail.com?cc=anagha.todalbagi@gmail.com,vcurrie@gmail.com&subject=North%20America%20Connect%202026%20Sponsorship"
+                  >
+                    Contact sponsors team
                   </a>
                 </div>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="content-section connect-section">
-          <div className="connect-shell">
-            <div className="connect-copy">
-              <span className="section-kicker">What the weekend represents</span>
-              <h2>North America Connect is part reunion, part fundraiser, part alumni homecoming.</h2>
-              <p>
-                A stronger alumni website should feel anchored in school memory while still serving real event needs.
-                These moments reflect the shape of the weekend and the reason sponsors matter.
-              </p>
+              </aside>
             </div>
 
-            <div className="connect-grid">
-              {connectMoments.map((moment) => (
-                <article className="connect-card" key={moment.title}>
-                  <span>{moment.label}</span>
-                  <h3>{moment.title}</h3>
-                  <p>{moment.description}</p>
+            <div className="event-highlight-grid">
+              {sponsorHighlights.map((item) => (
+                <article className="story-card event-card" key={item.title}>
+                  <span>{item.title}</span>
+                  <h3>{item.title}</h3>
+                  <p>{item.body}</p>
                 </article>
               ))}
             </div>
-          </div>
-        </section>
 
-        <section id="school" className="school-section">
-          <div className="school-image-frame">
-            <img src="/assets/sjbhs-main-banner.jpg" alt="St. Joseph's Boys High School banner" />
-          </div>
+            <div className="section-block">
+              <div className="featured-heading">
+                <div>
+                  <h3>Bronze, Silver, and Gold are already defined in the packet.</h3>
+                </div>
+              </div>
 
-          <div className="school-quote">
-            <p>Go forth and set the world on fire.</p>
-            <p>He who goes about to reform the world must begin with himself,</p>
-            <p>
-              or he loses his labor. <strong>- St. Ignatius of Loyola</strong>
-            </p>
-          </div>
-        </section>
-
-        <section id="sponsors" className="content-section sponsor-section">
-          <div className="section-heading narrow">
-            <span className="section-kicker">Sponsorship opportunity</span>
-            <h2>Call For Sponsors - North America Connect</h2>
-            <p>
-              Sponsorship offers direct access to a high-trust alumni audience in North America and India, spanning
-              business leaders, families, and professionals who actively support SJBHS and associated charitable
-              efforts.
-            </p>
-          </div>
-
-          <div className="benefit-panel">
-            <div className="benefit-copy">
-              <h3>Key benefits of partnership</h3>
-              <ul className="benefit-list">
-                {partnershipBenefits.map((benefit) => (
-                  <li key={benefit}>{benefit}</li>
+              <div className="support-grid donate-grid">
+                {sponsorTiers.map((tier) => (
+                  <article className="support-card sponsor-tier-card" key={tier.title}>
+                    <p className="support-note">{tier.amount}</p>
+                    <h3>{tier.title}</h3>
+                    <ul className="detail-list">
+                      {tier.benefits.map((benefit) => (
+                        <li key={benefit}>{benefit}</li>
+                      ))}
+                    </ul>
+                  </article>
                 ))}
-              </ul>
+              </div>
             </div>
 
-            <div className="deck-preview-grid">
-              <img src="/assets/call-for-sponsors-1.png" alt="Call for Sponsors overview page" />
-              <img src="/assets/call-for-sponsors-2.png" alt="Detailed sponsorship tier benefits" />
-            </div>
-          </div>
+            <div className="section-block">
+              <div className="featured-heading">
+                <div>
+                  <h3>Sponsor collateral is embedded directly on the page.</h3>
+                </div>
+              </div>
 
-          <div className="tier-banner">
-            <article>
-              <span>Bronze</span>
-              <strong>Starting at $500</strong>
-            </article>
-            <article>
-              <span>Silver</span>
-              <strong>Starting at $1,000</strong>
-            </article>
-            <article>
-              <span>Gold</span>
-              <strong>Starting at $1,500</strong>
-            </article>
-          </div>
-
-          <div className="table-card">
-            <table className="benefit-table">
-              <thead>
-                <tr>
-                  <th>Benefit</th>
-                  <th>Bronze</th>
-                  <th>Silver</th>
-                  <th>Gold</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tierRows.map((row) => (
-                  <tr key={row.benefit}>
-                    <td>{row.benefit}</td>
-                    <td>{row.bronze}</td>
-                    <td>{row.silver}</td>
-                    <td>{row.gold}</td>
-                  </tr>
+              <div className="featured-photo-strip sponsor-material-grid">
+                {sponsorMaterials.map((material) => (
+                  <button
+                    className="featured-photo sponsor-material"
+                    key={material.src}
+                    type="button"
+                    onClick={() => setLightboxImage(material)}
+                  >
+                    <img src={material.src} alt={material.alt} />
+                    <span>{material.caption}</span>
+                  </button>
                 ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="addon-panel">
-            <div>
-              <h3>Premium add-on options</h3>
-              <p>First come basis. Contact JAANA for pricing and availability.</p>
-            </div>
-
-            <ul className="addon-list">
-              {addOnOptions.map((option) => (
-                <li key={option}>{option}</li>
-              ))}
-            </ul>
-          </div>
-        </section>
-
-        <section id="contact" className="content-section contact-section">
-          <div className="contact-copy">
-            <span className="section-kicker">Contact JAANA</span>
-            <h2>Sponsor or alumni inquiry</h2>
-            <p>
-              Use the live Node form below to register sponsor interest, request more details, or ask for follow-up on
-              North America Connect. This replaces the placeholder generic form with something aligned to the actual
-              site.
-            </p>
-
-            <div className="association-card">
-              <img src="/assets/jaana-crest.png" alt="JAANA crest" />
-              <div>
-                <span>Heritage and administration</span>
-                <strong>Built for alumni, families, and supporters of St. Joseph&apos;s Boys High School.</strong>
               </div>
             </div>
 
-            <div className="contact-list">
-              {contacts.map((contact) => (
-                <a key={contact.email} href={`mailto:${contact.email}`}>
-                  {contact.name}: {contact.email}
-                </a>
-              ))}
-            </div>
+            <div className="section-block">
+              <div className="featured-heading">
+                <div>
+                  <h3>Buy tickets and detailed logistics can come online next.</h3>
+                </div>
+              </div>
 
-            <div className="contact-metrics">
-              <div>
-                <span>Association</span>
-                <strong>St. Joseph&apos;s Alumni Association of North America</strong>
-              </div>
-              <div>
-                <span>VA State ID</span>
-                <strong>11134048</strong>
-              </div>
-              <div>
-                <span>Inquiries received</span>
-                <strong>{inquiryCount ?? "Live when API is running"}</strong>
+              <div className="support-grid donate-grid">
+                {connectPlaceholders.map((item) => (
+                  <article className="support-card" key={item.title}>
+                    <h3>{item.title}</h3>
+                    <p>{item.body}</p>
+                  </article>
+                ))}
               </div>
             </div>
-          </div>
 
-          <form className="contact-form" onSubmit={handleSubmit}>
-            <label>
-              Name
-              <input
-                name="name"
-                placeholder="Your full name"
-                required
-                value={form.name}
-                onChange={(event) => setForm({ ...form, name: event.target.value })}
-              />
-            </label>
+            <div className="section-block">
+              <div className="featured-heading">
+                <div>
+                  <h3>Existing photo assets keep the 2026 page from feeling empty while details are still being finalized.</h3>
+                </div>
+              </div>
 
-            <label>
-              Email
-              <input
-                name="email"
-                type="email"
-                placeholder="you@example.com"
-                required
-                value={form.email}
-                onChange={(event) => setForm({ ...form, email: event.target.value })}
-              />
-            </label>
+              <div className="featured-photo-strip">
+                {connectMoments.map((photo) => (
+                  <button className="featured-photo" key={photo.src} type="button" onClick={() => setLightboxImage(photo)}>
+                    <img src={photo.src} alt={photo.alt} />
+                    <span>{photo.caption}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </section>
+        ) : null}
 
-            <label>
-              Organization
-              <input
-                name="organization"
-                placeholder="Business, alumni group, or family name"
-                required
-                value={form.organization}
-                onChange={(event) => setForm({ ...form, organization: event.target.value })}
-              />
-            </label>
+        {activeTab === "contact" ? (
+          <section id="contact-panel" className="subpage-shell" role="tabpanel" aria-label="Contact">
+            <div className="subpage-hero">
+              <div className="subpage-copy">
+                <span className="section-kicker">{activeTabDetails.kicker}</span>
+                <h2>{activeTabDetails.title}</h2>
+                <p>{activeTabDetails.copy}</p>
+              </div>
 
-            <label>
-              Interest
-              <input
-                name="interest"
-                placeholder="Gold sponsor, brochure ad, general event question"
-                required
-                value={form.interest}
-                onChange={(event) => setForm({ ...form, interest: event.target.value })}
-              />
-            </label>
+              <aside className="subpage-aside">
+                <strong>{backendOnline ? "Form connected" : "Form offline"}</strong>
+                <p>
+                  {backendOnline
+                    ? "The inquiry service is ready to collect outreach about causes, donations, sponsorships, and alumni coordination."
+                    : "The form is visible for review, but the connected service is not currently responding."}
+                </p>
+              </aside>
+            </div>
 
-            <label className="field-span-2">
-              Notes
-              <textarea
-                name="notes"
-                rows={4}
-                placeholder="Tell JAANA what you are interested in."
-                value={form.notes}
-                onChange={(event) => setForm({ ...form, notes: event.target.value })}
-              />
-            </label>
+            <div className="contact-panel">
+              <div className="contact-sidebar">
+                <article className="contact-card">
+                  <h3>Donation, sponsorship, and alumni outreach</h3>
+                  <ul className="contact-list">
+                    {contactChannels.map((channel) => (
+                      <li key={channel.label}>
+                        <span>{channel.label}</span>
+                        <a
+                          href={channel.href}
+                          target={channel.href.startsWith("http") ? "_blank" : undefined}
+                          rel="noreferrer"
+                        >
+                          {channel.value}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              </div>
 
-            <button className="primary-button submit-button" type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Submitting..." : "Send inquiry"}
-            </button>
+              <form className="inquiry-card" onSubmit={handleSubmit}>
+                <div className="form-heading">
+                  <h3>Tell the OBA how you want to stay involved.</h3>
+                  <p>
+                    Use this for cause support, USA donations, sponsorship enquiries, chapter coordination, or general
+                    alumni questions.
+                  </p>
+                </div>
 
-            {statusMessage ? (
-              <p className={`form-status ${statusTone === "success" ? "success" : "error"}`}>{statusMessage}</p>
-            ) : null}
-          </form>
-        </section>
+                <div className="form-grid">
+                  <label>
+                    <span>Name</span>
+                    <input
+                      required
+                      type="text"
+                      value={form.name}
+                      onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
+                    />
+                  </label>
+
+                  <label>
+                    <span>Email</span>
+                    <input
+                      required
+                      type="email"
+                      value={form.email}
+                      onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
+                    />
+                  </label>
+
+                  <label>
+                    <span>Batch / City / Organization</span>
+                    <input
+                      type="text"
+                      value={form.organization}
+                      onChange={(event) => setForm((current) => ({ ...current, organization: event.target.value }))}
+                    />
+                  </label>
+
+                  <label>
+                    <span>What is this about?</span>
+                    <select
+                      required
+                      value={form.interest}
+                      onChange={(event) => setForm((current) => ({ ...current, interest: event.target.value }))}
+                    >
+                      <option value="">Select one</option>
+                      {inquiryTopics.map((topic) => (
+                        <option key={topic} value={topic}>
+                          {topic}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="full-width">
+                    <span>Notes</span>
+                    <textarea
+                      rows={4}
+                      value={form.notes}
+                      placeholder="Share context, timing, intended cause, or sponsorship needs."
+                      onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))}
+                    />
+                  </label>
+                </div>
+
+                <div className="form-footer">
+                  <button className="primary-button" type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? "Sending..." : "Submit inquiry"}
+                  </button>
+                  {statusMessage ? <p className={`status-note ${statusTone}`}>{statusMessage}</p> : null}
+                </div>
+              </form>
+            </div>
+          </section>
+        ) : null}
       </main>
 
       <footer className="site-footer">
-        <p>St. Joseph&apos;s Alumni Association of North America (JAANA) | VA State ID: 11134048</p>
-        <p>8150 Leesburg Pike #1010, Vienna VA 22182</p>
+        <div>
+          <strong>SJBHS OBA Connect</strong>
+          <span>Reframed around one Give page, the USA donation flow, and North America Connect 2026.</span>
+        </div>
+        <a href="mailto:donations@sjbhsoba.net">donations@sjbhsoba.net</a>
       </footer>
+
+      {selectedCause ? (
+        <div
+          className="cause-dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="cause-dialog-title"
+          onClick={() => setSelectedCause(null)}
+        >
+          <div className="cause-dialog-shell" onClick={(event) => event.stopPropagation()}>
+            <button className="lightbox-close cause-dialog-close" type="button" onClick={() => setSelectedCause(null)}>
+              Close
+            </button>
+
+            <div className="cause-dialog-header">
+              <h3 id="cause-dialog-title">{selectedCause.title}</h3>
+              <p>{selectedCause.purpose}</p>
+            </div>
+
+            <div className="cause-dialog-grid">
+              <article className="cause-dialog-panel cause-dialog-summary-panel">
+                <div className="cause-dialog-summary-item">
+                  <span>Minimum amount</span>
+                  <strong>{selectedCause.minimum}</strong>
+                </div>
+
+                <div className="cause-dialog-summary-item">
+                  <span>Target</span>
+                  <p className="cause-dialog-target-text">{selectedCause.goal.replace(/^Goal:\s*/, "")}</p>
+                </div>
+              </article>
+
+              <article className="cause-dialog-panel cause-dialog-content-panel">
+                <div className="cause-dialog-section">
+                  <h4>Impact</h4>
+                  <p>{selectedCause.impact.replace(/^Impact:\s*/, "")}</p>
+                </div>
+
+                <div className="cause-dialog-section">
+                  <h4>Where support can go</h4>
+                  <ul className="detail-list">
+                    {selectedCause.support.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              </article>
+            </div>
+
+            <div className="cause-dialog-actions">
+              <a className="secondary-button cause-secondary-action" href="mailto:donations@sjbhsoba.net">
+                Email
+              </a>
+              <DonationMenu buttonClassName="primary-button" options={paymentOptions} variant="stacked" />
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {lightboxImage ? (
+        <div
+          className="lightbox"
+          role="dialog"
+          aria-modal="true"
+          aria-label={lightboxImage.caption}
+          onClick={() => setLightboxImage(null)}
+        >
+          <div className="lightbox-shell" onClick={(event) => event.stopPropagation()}>
+            <button className="lightbox-close" type="button" onClick={() => setLightboxImage(null)}>
+              Close
+            </button>
+            <img src={lightboxImage.src} alt={lightboxImage.alt} />
+            <p>{lightboxImage.caption}</p>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
