@@ -35,6 +35,9 @@ export function ConnectPage({
   const [editableContent, setEditableContent] = useState<ConnectEditableContent>(
     createDefaultEditableContent(connectPlaceholders)
   );
+  const [savedContent, setSavedContent] = useState<ConnectEditableContent>(
+    createDefaultEditableContent(connectPlaceholders)
+  );
 
   useEffect(() => {
     const fallback = createDefaultEditableContent(connectPlaceholders);
@@ -42,6 +45,7 @@ export function ConnectPage({
 
     if (!raw) {
       setEditableContent(fallback);
+      setSavedContent(fallback);
       return;
     }
 
@@ -49,7 +53,7 @@ export function ConnectPage({
       const parsed = JSON.parse(raw) as Partial<ConnectEditableContent>;
       const parsedPlaceholders = Array.isArray(parsed.placeholders) ? parsed.placeholders : fallback.placeholders;
 
-      setEditableContent({
+      const hydratedContent = {
         sponsorMessage:
           typeof parsed.sponsorMessage === "string" && parsed.sponsorMessage.trim()
             ? parsed.sponsorMessage
@@ -64,9 +68,13 @@ export function ConnectPage({
               ? item.body
               : fallback.placeholders[index]?.body ?? "Details coming soon."
         }))
-      });
+      };
+
+      setEditableContent(hydratedContent);
+      setSavedContent(hydratedContent);
     } catch {
       setEditableContent(fallback);
+      setSavedContent(fallback);
     }
   }, [connectPlaceholders]);
 
@@ -85,14 +93,16 @@ export function ConnectPage({
 
   const saveLocally = () => {
     window.localStorage.setItem(CONNECT_EDITOR_STORAGE_KEY, JSON.stringify(editableContent));
+    setSavedContent(editableContent);
     setSaveNote("Saved locally on this browser.");
   };
 
-  const resetLocalEdits = () => {
-    window.localStorage.removeItem(CONNECT_EDITOR_STORAGE_KEY);
-    setEditableContent(createDefaultEditableContent(connectPlaceholders));
-    setSaveNote("Local edits cleared. Defaults restored.");
+  const undoChanges = () => {
+    setEditableContent(savedContent);
+    setSaveNote("Reverted to your last saved version.");
   };
+
+  const hasUnsavedChanges = JSON.stringify(editableContent) !== JSON.stringify(savedContent);
 
   return (
     <section id="connect-panel" className="subpage-shell" role="tabpanel" aria-label="North America Connect 2026">
@@ -130,8 +140,8 @@ export function ConnectPage({
             <button className="primary-button" type="button" onClick={saveLocally}>
               Save locally
             </button>
-            <button className="secondary-button" type="button" onClick={resetLocalEdits}>
-              Reset local edits
+            <button className="secondary-button" type="button" onClick={undoChanges} disabled={!hasUnsavedChanges}>
+              Undo changes
             </button>
           </>
         ) : null}
