@@ -715,6 +715,10 @@ export const sponsorMaterials: GalleryImage[] = [
 
 export const connectPlaceholders: SecondaryPage[] = [
   {
+    title: "Registration",
+    body: "Details coming soon."
+  },
+  {
     title: "Buy tickets",
     body: "Ticketing details will be published here once pricing, registration flow, and batch allocations are finalized."
   },

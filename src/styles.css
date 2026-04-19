@@ -1569,6 +1569,112 @@ img {
   line-height: 1.66;
 }
 
+.connect-schedule-shell {
+  padding: 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(180deg, rgba(255, 253, 248, 0.98), rgba(250, 245, 236, 0.98));
+  box-shadow: var(--shadow-md);
+}
+
+.connect-schedule-shell .featured-heading {
+  margin-bottom: 0.85rem;
+}
+
+.connect-schedule-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.8rem;
+}
+
+.connect-schedule-tab {
+  min-height: 2.4rem;
+  padding: 0 0.9rem;
+  border: 1px solid rgba(19, 53, 127, 0.15);
+  border-radius: 8px;
+  color: var(--navy-deep);
+  background: rgba(255, 255, 255, 0.76);
+  font-weight: 600;
+  transition:
+    background 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease;
+}
+
+.connect-schedule-tab.is-active {
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--navy) 0%, #244ea8 100%);
+  border-color: transparent;
+}
+
+.connect-schedule-panel {
+  margin-top: 0.9rem;
+  padding: 1rem;
+  border: 1px solid rgba(19, 53, 127, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.84);
+}
+
+.connect-schedule-panel h4 {
+  margin: 0;
+  color: var(--navy-deep);
+  font-size: 1.25rem;
+  line-height: 1.12;
+  font-family: Georgia, "Baskerville", "Times New Roman", serif;
+}
+
+.connect-schedule-panel p {
+  margin: 0.6rem 0 0;
+  color: var(--muted);
+  font-size: 0.98rem;
+  line-height: 1.62;
+}
+
+.connect-editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+
+.connect-editor-toolbar .primary-button,
+.connect-editor-toolbar .secondary-button {
+  min-height: 2.7rem;
+  padding: 0 1rem;
+}
+
+.connect-editor-note {
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.connect-edit-input,
+.connect-edit-textarea {
+  width: 100%;
+  padding: 0.66rem 0.72rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ink);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.connect-edit-input {
+  margin: 0;
+  font-weight: 600;
+}
+
+.connect-edit-textarea {
+  margin-top: 0.6rem;
+  min-height: 7.2rem;
+  resize: vertical;
+}
+
 .support-note {
   margin: 0;
   color: var(--muted);
