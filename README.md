@@ -1,13 +1,13 @@
-# JAANA SJBHS OBA Connect
+# JAANA
 
 Single-page React + TypeScript site for the SJBHS OBA / JAANA giving and alumni outreach flow, backed by a small Express API for inquiry submission.
 
 This repo is no longer a generic starter. It now contains a working branded site with the current priority pages already implemented:
 
-- `Overview`
-- `Give`
-- `Connect 2026`
-- `Contact`
+- `Home`
+- `Causes`
+- `Donate`
+- `North America Connect 2026`
 
 ## What this project includes
 
@@ -15,16 +15,14 @@ This repo is no longer a generic starter. It now contains a working branded site
 
 - A polished single-page React app built with Vite
 - Hash-based tab navigation instead of a full router
-- A consolidated `Give` flow that combines:
-  - cause selection
-  - donation routes
-  - payment method actions
+- A `Causes` page focused on priority support areas
+- A `Donate` page focused on upcoming online giving and contact flow
 - Cause detail modals with:
   - funding summary
   - impact/support content
   - direct donation actions
 - A `North America Connect 2026` page with sponsor-oriented content and supporting assets
-- A `Contact` page with a live inquiry form
+- A live inquiry form embedded in the `Donate` page
 
 ### Back end
 
@@ -40,7 +38,7 @@ The current implementation is focused on the donor and alumni experience rather 
 Implemented work:
 
 - Reworked the site around the current priority areas instead of building every page equally
-- Consolidated `Causes` and `Donate` into one cleaner `Give` experience
+- Split the giving experience into separate `Causes` and `Donate` pages
 - Added structured cause data and interactive cause detail modals
 - Added a donation action menu with direct redirect links for payment methods
 - Added `North America Connect 2026` event and sponsor content
@@ -344,7 +342,7 @@ Deploy flow:
 
 - The site is intentionally a single-page app with section/tab switching, not a multi-route site.
 - Most of the content structure currently lives directly in `src/App.tsx`.
-- The visual behavior for the Give flow and cause modals is also driven from `src/App.tsx` plus `src/styles.css`.
+- The visual behavior for the Causes and Donate flows, along with the cause modals, is driven from `src/App.tsx` plus `src/styles.css`.
 - If you need to change cause content, donation links, sponsor content, or contact details, start in `src/App.tsx`.
 - If you need to change layout, sizing, modal appearance, or button behavior, start in `src/styles.css`.
 
