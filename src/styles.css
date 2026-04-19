@@ -1499,6 +1499,14 @@ img {
   box-shadow: var(--shadow-lg);
 }
 
+.event-poster img {
+  width: 5rem;
+  height: 5rem;
+  border-radius: 18px;
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.92);
+}
+
 .event-poster strong {
   display: block;
   color: #f8f4ea;
@@ -1533,6 +1541,32 @@ img {
 
 .event-link {
   color: #f8f4ea;
+}
+
+.connect-sponsor-callout {
+  display: block;
+  padding: 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(180deg, rgba(255, 253, 248, 0.98), rgba(250, 245, 236, 0.98));
+  box-shadow: var(--shadow-md);
+}
+
+.connect-sponsor-callout h3 {
+  margin: 0.35rem 0 0;
+  color: var(--navy-deep);
+  font-size: 1.4rem;
+  line-height: 1.12;
+  font-family: Georgia, "Baskerville", "Times New Roman", serif;
+}
+
+.connect-sponsor-callout p {
+  margin: 0.65rem 0 0;
+  max-width: 58rem;
+  color: var(--muted);
+  font-size: 0.96rem;
+  line-height: 1.66;
 }
 
 .support-note {

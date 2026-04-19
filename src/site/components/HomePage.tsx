@@ -35,7 +35,7 @@ export function HomePage({
               Browse causes
             </button>
             <button className="secondary-button" type="button" onClick={() => onActivateTab("connect")}>
-              See Connect 2026
+              See North America Connect 2026
             </button>
           </div>
 

@@ -54,7 +54,7 @@ export const tabs: TabConfig[] = [
     kicker: "North America Connect 2026",
     title: "North America Connect 2026 is the next major alumni gathering across North America.",
     copy:
-      "Browse upcoming event information, regional reunions, and group-event albums from across the OBA community."
+      "Save the date for the September 2026 reunion weekend, review sponsor information, and browse event albums from across the OBA community."
   }
 ];
 
@@ -101,9 +101,9 @@ export const priorityCards: PriorityCard[] = [
       "Washington, D.C. metro area",
       "Saturday Dinner and Sunday Picnic Lunch",
       "100+ in-person attendees and 300+ online reach",
-      "Call for sponsors materials and contacts"
+      "Call to Sponsors document and contacts"
     ],
-    cta: "Open Connect 2026",
+    cta: "Open North America Connect 2026",
     tab: "connect"
   }
 ];
@@ -739,7 +739,7 @@ export const secondaryPages: SecondaryPage[] = [
   },
   {
     title: "Mentor, Volunteer, Statements, and External Sites",
-    body: "These areas can be developed next as the giving experience and Connect 2026 campaign continue to mature."
+    body: "These areas can be developed next as the giving experience and North America Connect 2026 campaign continue to mature."
   }
 ];
 

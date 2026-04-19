@@ -11,9 +11,6 @@ import {
   inquiryTopics,
   priorityCards,
   secondaryPages,
-  sponsorHighlights,
-  sponsorMaterials,
-  sponsorTiers,
   tabs
 } from "./site/content";
 import { AlbumDialog } from "./site/components/AlbumDialog";
@@ -620,12 +617,8 @@ function App() {
         {activeTab === "connect" ? (
           <ConnectPage
             details={activeTabDetails}
-            sponsorHighlights={sponsorHighlights}
-            sponsorTiers={sponsorTiers}
-            sponsorMaterials={sponsorMaterials}
             connectPlaceholders={connectPlaceholders}
             groupedEventAlbums={groupedEventAlbums}
-            onOpenLightboxImage={openLightboxImage}
             onOpenAlbumFolder={(folder) => {
               setSelectedAlbum(null);
               setSelectedAlbumFolder(folder);

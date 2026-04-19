@@ -1,24 +1,16 @@
-import { AlbumFolder, EventHighlight, GalleryImage, SecondaryPage, SponsorTier, TabConfig } from "../types";
+import { AlbumFolder, SecondaryPage, TabConfig } from "../types";
 
 type ConnectPageProps = {
   details: TabConfig;
-  sponsorHighlights: EventHighlight[];
-  sponsorTiers: SponsorTier[];
-  sponsorMaterials: GalleryImage[];
   connectPlaceholders: SecondaryPage[];
   groupedEventAlbums: AlbumFolder[];
-  onOpenLightboxImage: (image: GalleryImage) => void;
   onOpenAlbumFolder: (folder: AlbumFolder) => void;
 };
 
 export function ConnectPage({
   details,
-  sponsorHighlights,
-  sponsorTiers,
-  sponsorMaterials,
   connectPlaceholders,
   groupedEventAlbums,
-  onOpenLightboxImage,
   onOpenAlbumFolder
 }: ConnectPageProps) {
   return (
@@ -31,78 +23,63 @@ export function ConnectPage({
         </div>
 
         <aside className="event-poster">
-          <strong>North America Connect 2026</strong>
-          <p>Washington, D.C. metro area</p>
+          <img src="/assets/oba-connect-mark.png" alt="SJBHS OBA Connect mark" />
+          <strong>Save the Date</strong>
+          <p>North America Connect 2026</p>
           <div className="event-poster-meta">
+            <span>Washington, D.C. metro area</span>
             <span>Saturday Dinner</span>
             <span>Sunday Picnic Lunch</span>
             <span>September 19-20, 2026</span>
           </div>
-          <div className="process-actions">
-            <a className="inline-link event-link" href="/docs/north-america-connect-2026-call-for-sponsors.pdf" target="_blank" rel="noreferrer">
-              Download sponsor packet
-            </a>
-            <a
-              className="inline-link event-link"
-              href="mailto:jaanafinance@gmail.com?subject=North%20America%20Connect%202026%20Sponsorship"
-            >
-              Contact sponsors team
-            </a>
-          </div>
         </aside>
       </div>
 
-      <div className="event-highlight-grid">
-        {sponsorHighlights.map((item) => (
-          <article className="story-card event-card" key={item.title}>
-            <span>{item.title}</span>
-            <h3>{item.title}</h3>
-            <p>{item.body}</p>
+      <div className="section-block">
+        <div className="connect-sponsor-callout">
+          <div>
+            <span className="section-kicker">Call to Sponsors</span>
+            <h3>Support North America Connect 2026.</h3>
+            <p>
+              We are seeking sponsors for our North America Connect reunion, your brand/business will have the
+              opportunity to reach hundreds of successful Josephites and their families. Proceeds from the event will
+              fund the OBA Teachers Insurance program. Individual and batch benefactors are also warmly welcome. More
+              info in the document{" "}
+              <a
+                className="inline-link"
+                href="/docs/north-america-connect-2026-call-for-sponsors.pdf"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Download Call to Sponsors PDF
+              </a>
+              .
+            </p>
+          </div>
+
+        </div>
+      </div>
+
+      <div className="section-block">
+        <div className="featured-heading">
+          <div>
+            <h3>Save the date for the North America Connect 2026 weekend.</h3>
+            <p>Saturday Dinner and Sunday Picnic Lunch will take place September 19-20, 2026.</p>
+          </div>
+        </div>
+
+        <div className="event-highlight-grid">
+          <article className="story-card event-card">
+            <span>September 19, 2026</span>
+            <h3>Saturday Dinner</h3>
+            <p>Alumni and families will gather in the Washington, D.C. metro area.</p>
           </article>
-        ))}
-      </div>
 
-      <div className="section-block">
-        <div className="featured-heading">
-          <div>
-            <h3>Sponsorship options are already defined and ready to discuss.</h3>
-          </div>
-        </div>
-
-        <div className="support-grid donate-grid">
-          {sponsorTiers.map((tier) => (
-            <article className="support-card sponsor-tier-card" key={tier.title}>
-              <p className="support-note">{tier.amount}</p>
-              <h3>{tier.title}</h3>
-              <ul className="detail-list">
-                {tier.benefits.map((benefit) => (
-                  <li key={benefit}>{benefit}</li>
-                ))}
-              </ul>
-            </article>
-          ))}
-        </div>
-      </div>
-
-      <div className="section-block">
-        <div className="featured-heading">
-          <div>
-            <h3>The sponsor packet is available here for quick review and sharing.</h3>
-          </div>
-        </div>
-
-        <div className="featured-photo-strip sponsor-material-grid">
-          {sponsorMaterials.map((material) => (
-            <button
-              className="featured-photo sponsor-material"
-              key={material.src}
-              type="button"
-              onClick={() => onOpenLightboxImage(material)}
-            >
-              <img src={material.src} alt={material.alt} />
-              <span>{material.caption}</span>
-            </button>
-          ))}
+          <article className="story-card event-card">
+            <span>September 20, 2026</span>
+            <h3>Sunday Picnic Lunch</h3>
+            <p>The reunion weekend continues with a family-friendly picnic lunch.</p>
+          </article>
         </div>
       </div>
 
