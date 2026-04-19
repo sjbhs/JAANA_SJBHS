@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { CauseCard } from "../types";
 import { PlaceholderDonateButton } from "./PlaceholderDonateButton";
 
@@ -7,41 +8,59 @@ type CauseDialogProps = {
 };
 
 export function CauseDialog({ cause, onClose }: CauseDialogProps) {
+  const goal = cause.goal.replace(/^Goal:\s*/, "");
+  const impact = cause.impact.replace(/^Impact:\s*/, "");
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   return (
-    <div className="cause-dialog" role="dialog" aria-modal="true" aria-labelledby="cause-dialog-title" onClick={onClose}>
+    <div
+      className="cause-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="cause-dialog-title"
+      aria-describedby="cause-dialog-description"
+      onClick={onClose}
+    >
       <div className="cause-dialog-shell" onClick={(event) => event.stopPropagation()}>
         <button className="cause-dialog-close" type="button" onClick={onClose} aria-label="Close dialog">
           ×
         </button>
 
-        <div className="cause-dialog-header">
+        <header className="cause-dialog-header">
           <h3 id="cause-dialog-title">{cause.title}</h3>
-          <p>{cause.purpose}</p>
-        </div>
+          <p id="cause-dialog-description">{cause.purpose}</p>
+        </header>
 
         <div className="cause-dialog-grid">
-          <article className="cause-dialog-panel cause-dialog-summary-panel">
-            <div className="cause-dialog-summary-header">
-              <h4>Funding details</h4>
-            </div>
-
-            <div className="cause-dialog-summary-metrics">
-              <div className="cause-dialog-summary-item">
-                <span>Minimum amount</span>
-                <strong>{cause.minimum}</strong>
+          <aside className="cause-dialog-panel cause-dialog-summary-panel" aria-label="Funding details">
+            <dl className="cause-dialog-summary-metrics">
+              <div>
+                <dt>Minimum amount</dt>
+                <dd className="cause-dialog-minimum">{cause.minimum}</dd>
               </div>
 
-              <div className="cause-dialog-summary-item">
-                <span>Target</span>
-                <p className="cause-dialog-target-text">{cause.goal.replace(/^Goal:\s*/, "")}</p>
+              <div>
+                <dt>Target</dt>
+                <dd>{goal}</dd>
               </div>
-            </div>
-          </article>
+            </dl>
+          </aside>
 
           <article className="cause-dialog-panel cause-dialog-content-panel">
             <div className="cause-dialog-section">
               <h4>Impact</h4>
-              <p>{cause.impact.replace(/^Impact:\s*/, "")}</p>
+              <p>{impact}</p>
             </div>
 
             <div className="cause-dialog-section">
@@ -55,9 +74,9 @@ export function CauseDialog({ cause, onClose }: CauseDialogProps) {
           </article>
         </div>
 
-        <div className="cause-dialog-actions">
+        <footer className="cause-dialog-actions">
           <PlaceholderDonateButton buttonClassName="primary-button" />
-        </div>
+        </footer>
       </div>
     </div>
   );

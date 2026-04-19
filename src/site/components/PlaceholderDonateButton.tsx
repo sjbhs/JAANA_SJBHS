@@ -12,8 +12,8 @@ export function PlaceholderDonateButton({
       className={buttonClassName}
       type="button"
       disabled
-      aria-label={`${label} available soon`}
-      title="Online giving available soon"
+      aria-label={`${label}. Online giving will be available soon.`}
+      title="Online giving will be available soon."
     >
       {label}
     </button>
