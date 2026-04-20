@@ -6,11 +6,8 @@ import {
   contactChannels,
   groupedEventAlbums,
   houseShields,
-  impactStats,
   initialForm,
   inquiryTopics,
-  priorityCards,
-  secondaryPages,
   tabs
 } from "./site/content";
 import { AlbumDialog } from "./site/components/AlbumDialog";
@@ -20,6 +17,7 @@ import { ConnectPage } from "./site/components/ConnectPage";
 import { DonatePage } from "./site/components/DonatePage";
 import { HomePage } from "./site/components/HomePage";
 import { LightboxDialog } from "./site/components/LightboxDialog";
+import { PastEventsDialog } from "./site/components/PastEventsDialog";
 import { AlbumFolder, CauseCard, EventAlbum, GalleryImage, InquiryForm, TabId } from "./site/types";
 
 function App() {
@@ -28,6 +26,7 @@ function App() {
   const [selectedCause, setSelectedCause] = useState<CauseCard | null>(null);
   const [selectedAlbumFolder, setSelectedAlbumFolder] = useState<AlbumFolder | null>(null);
   const [selectedAlbum, setSelectedAlbum] = useState<EventAlbum | null>(null);
+  const [pastEventsDialogOpen, setPastEventsDialogOpen] = useState(false);
   const [lightboxImage, setLightboxImage] = useState<GalleryImage | null>(null);
   const [lightboxZoomed, setLightboxZoomed] = useState(false);
   const [lightboxScale, setLightboxScale] = useState(1);
@@ -100,7 +99,7 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (!lightboxImage && !selectedCause && !selectedAlbumFolder) {
+    if (!lightboxImage && !selectedCause && !selectedAlbumFolder && !pastEventsDialogOpen) {
       return;
     }
 
@@ -115,13 +114,14 @@ function App() {
         setSelectedCause(null);
         setSelectedAlbumFolder(null);
         setSelectedAlbum(null);
+        setPastEventsDialogOpen(false);
       }
     };
 
     window.addEventListener("keydown", handleEscape);
 
     return () => window.removeEventListener("keydown", handleEscape);
-  }, [lightboxImage, selectedCause, selectedAlbumFolder, selectedAlbum]);
+  }, [lightboxImage, selectedCause, selectedAlbumFolder, selectedAlbum, pastEventsDialogOpen]);
 
   useEffect(() => {
     return () => {
@@ -586,11 +586,9 @@ function App() {
       <main className={isOverviewTab ? "main-overview" : "main-subpage"}>
         {isOverviewTab ? (
           <HomePage
-            impactStats={impactStats}
-            priorityCards={priorityCards}
-            secondaryPages={secondaryPages}
             connectMoments={connectMoments}
             onActivateTab={activateTab}
+            onOpenPastEventsDialog={() => setPastEventsDialogOpen(true)}
             onOpenLightboxImage={openLightboxImage}
           />
         ) : null}
@@ -615,15 +613,7 @@ function App() {
         ) : null}
 
         {activeTab === "connect" ? (
-          <ConnectPage
-            details={activeTabDetails}
-            connectPlaceholders={connectPlaceholders}
-            groupedEventAlbums={groupedEventAlbums}
-            onOpenAlbumFolder={(folder) => {
-              setSelectedAlbum(null);
-              setSelectedAlbumFolder(folder);
-            }}
-          />
+          <ConnectPage details={activeTabDetails} connectPlaceholders={connectPlaceholders} />
         ) : null}
       </main>
 
@@ -654,6 +644,14 @@ function App() {
           }}
           onBack={() => setSelectedAlbum(null)}
           onSelectAlbum={setSelectedAlbum}
+          onOpenLightboxImage={openLightboxImage}
+        />
+      ) : null}
+
+      {pastEventsDialogOpen ? (
+        <PastEventsDialog
+          folders={groupedEventAlbums}
+          onClose={() => setPastEventsDialogOpen(false)}
           onOpenLightboxImage={openLightboxImage}
         />
       ) : null}

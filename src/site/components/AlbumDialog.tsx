@@ -17,10 +17,24 @@ export function AlbumDialog({
   onSelectAlbum,
   onOpenLightboxImage
 }: AlbumDialogProps) {
+  const handleCloseButton = () => {
+    if (selectedAlbum) {
+      onBack();
+      return;
+    }
+
+    onClose();
+  };
+
   return (
     <div className="album-dialog" role="dialog" aria-modal="true" aria-labelledby="album-dialog-title" onClick={onClose}>
       <div className="album-dialog-shell" onClick={(event) => event.stopPropagation()}>
-        <button className="lightbox-close album-dialog-close" type="button" onClick={onClose} aria-label="Close dialog">
+        <button
+          className="lightbox-close album-dialog-close"
+          type="button"
+          onClick={handleCloseButton}
+          aria-label="Close dialog"
+        >
           ×
         </button>
 
@@ -46,13 +60,28 @@ export function AlbumDialog({
         </div>
 
         {selectedAlbum ? (
-          <div className="folder-photo-grid album-photo-grid">
-            {selectedAlbum.photos.map((photo) => (
-              <button className="folder-photo" key={photo.src} type="button" onClick={() => onOpenLightboxImage(photo)}>
-                <img src={photo.src} alt={photo.alt} />
-                <span>{photo.caption}</span>
+          <div className="album-photo-grid">
+            {selectedAlbum.photos[0] ? (
+              <button
+                className="folder-photo album-photo-featured"
+                type="button"
+                onClick={() => onOpenLightboxImage(selectedAlbum.photos[0])}
+              >
+                <img src={selectedAlbum.photos[0].src} alt={selectedAlbum.photos[0].alt} />
+                <span>{selectedAlbum.photos[0].caption}</span>
               </button>
-            ))}
+            ) : null}
+
+            {selectedAlbum.photos.length > 1 ? (
+              <div className="album-photo-stack" aria-label="Additional album photos">
+                {selectedAlbum.photos.slice(1).map((photo) => (
+                  <button className="folder-photo" key={photo.src} type="button" onClick={() => onOpenLightboxImage(photo)}>
+                    <img src={photo.src} alt={photo.alt} />
+                    <span>{photo.caption}</span>
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </div>
         ) : (
           <div className="folder-grid album-subfolder-grid" aria-label={`${folder.title} subfolders`}>

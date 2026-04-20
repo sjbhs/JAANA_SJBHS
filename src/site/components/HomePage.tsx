@@ -1,20 +1,16 @@
-import { GalleryImage, PriorityCard, SecondaryPage, TabId } from "../types";
+import { GalleryImage, TabId } from "../types";
 
 type HomePageProps = {
-  impactStats: { value: string; label: string }[];
-  priorityCards: PriorityCard[];
-  secondaryPages: SecondaryPage[];
   connectMoments: GalleryImage[];
   onActivateTab: (tabId: TabId) => void;
+  onOpenPastEventsDialog: () => void;
   onOpenLightboxImage: (image: GalleryImage) => void;
 };
 
 export function HomePage({
-  impactStats,
-  priorityCards,
-  secondaryPages,
   connectMoments,
   onActivateTab,
+  onOpenPastEventsDialog,
   onOpenLightboxImage
 }: HomePageProps) {
   return (
@@ -26,8 +22,8 @@ export function HomePage({
             <h1 className="hero-motto">Fide et Labore.</h1>
           </div>
           <p className="hero-lead">
-            Support students, teachers, and the wider SJBHS community through JAANA, and stay connected through the
-            next major North America alumni gathering.
+            JAANA supports St. Joseph&apos;s Boys&apos; High School through alumni-led service, giving, and community
+            events across North America.
           </p>
 
           <div className="hero-actions">
@@ -35,17 +31,8 @@ export function HomePage({
               Browse causes
             </button>
             <button className="secondary-button" type="button" onClick={() => onActivateTab("connect")}>
-              See North America Connect 2026
+              Open Connect 2026
             </button>
-          </div>
-
-          <div className="impact-strip" aria-label="Priority highlights">
-            {impactStats.map((stat) => (
-              <article key={stat.label}>
-                <strong>{stat.value}</strong>
-                <span>{stat.label}</span>
-              </article>
-            ))}
           </div>
         </div>
 
@@ -55,7 +42,7 @@ export function HomePage({
             type="button"
             onClick={() => onOpenLightboxImage(connectMoments[0])}
           >
-            <img src={connectMoments[0].src} alt="" />
+            <img src={connectMoments[0].src} alt={connectMoments[0].alt} />
           </button>
           <div className="media-stack">
             <button
@@ -63,68 +50,87 @@ export function HomePage({
               type="button"
               onClick={() => onOpenLightboxImage(connectMoments[1])}
             >
-              <img src={connectMoments[1].src} alt="" />
+              <img src={connectMoments[1].src} alt={connectMoments[1].alt} />
             </button>
             <button
               className="photo-button media-tile media-tile-small"
               type="button"
               onClick={() => onOpenLightboxImage(connectMoments[2])}
             >
-              <img src={connectMoments[2].src} alt="" />
+              <img src={connectMoments[2].src} alt={connectMoments[2].alt} />
             </button>
           </div>
         </div>
       </section>
 
       <section id="home-panel" className="overview-shell" role="tabpanel" aria-label="Home">
-        <div className="featured-heading priority-heading">
-          <div>
-            <h3>Three clear paths make it easy to act.</h3>
-          </div>
-        </div>
-
-        <div className="priority-grid">
-          {priorityCards.map((card) => (
-            <article className="priority-card" key={card.title}>
-              <h3>{card.title}</h3>
-              <p>{card.body}</p>
-              <ul className="detail-list">
-                {card.points.map((point) => (
-                  <li key={point}>{point}</li>
-                ))}
-              </ul>
-              <button className="inline-button priority-link" type="button" onClick={() => onActivateTab(card.tab)}>
-                {card.cta}
-              </button>
-            </article>
-          ))}
-        </div>
-
-        <div className="secondary-pages-card">
+        <div className="section-block">
           <div className="featured-heading">
             <div>
-              <h3>Additional pages can keep supporting the story as the core experience grows.</h3>
+              <h3>About JAANA</h3>
             </div>
           </div>
+          <article className="info-card">
+            <p>
+              The Josephite Alumni Association of North America brings together SJBHS alumni and families to support
+              scholarships, teacher welfare, student programmes, and school development through trusted giving and
+              active fellowship.
+            </p>
+          </article>
+        </div>
 
-          <div className="secondary-page-grid">
-            {secondaryPages.map((page) => (
-              <article className="secondary-page-card" key={page.title}>
-                <h3>{page.title}</h3>
-                <p>{page.body}</p>
-              </article>
-            ))}
+        <div className="section-block">
+          <div className="featured-heading">
+            <div>
+              <h3>Quick links</h3>
+            </div>
+          </div>
+          <div className="priority-grid">
+            <article className="priority-card">
+              <h3>Causes</h3>
+              <p>Review the active school causes and decide where you want your support to go.</p>
+              <button className="inline-button priority-link" type="button" onClick={() => onActivateTab("causes")}>
+                Open Causes page
+              </button>
+            </article>
+            <article className="priority-card">
+              <h3>Donate</h3>
+              <p>Find current donation guidance and contact points while online giving links are being finalized.</p>
+              <button className="inline-button priority-link" type="button" onClick={() => onActivateTab("donate")}>
+                Open Donate page
+              </button>
+            </article>
+            <article className="priority-card">
+              <h3>North America Connect 2026</h3>
+              <p>Check sponsor details and reunion updates for the September 2026 weekend.</p>
+              <button className="inline-button priority-link" type="button" onClick={() => onActivateTab("connect")}>
+                Open Connect page
+              </button>
+            </article>
           </div>
         </div>
 
-        <div className="school-banner-card">
-          <img src="/assets/sjbhs-main-banner.jpg" alt="St. Joseph's Boys' High School campus banner" />
-          <div className="school-banner-copy">
-            <h3>Every path on the site leads back to the school and its people.</h3>
-            <p>
-              The Causes page shows where support can go, the Donate page will soon include online giving links, and
-              North America Connect 2026 brings alumni and families together around a shared purpose.
-            </p>
+        <div className="section-block">
+          <div className="featured-heading">
+            <div>
+              <h3>Upcoming JAANA events | Past JAANA events</h3>
+            </div>
+          </div>
+          <div className="home-events-grid">
+            <article className="event-card">
+              <h3>Upcoming JAANA events</h3>
+              <p>North America Connect 2026 | September 19-20, 2026 | Washington DC &amp; Northern Virginia.</p>
+              <button className="inline-button priority-link" type="button" onClick={() => onActivateTab("connect")}>
+                Open upcoming events
+              </button>
+            </article>
+            <article className="event-card">
+              <h3>Past JAANA events</h3>
+              <p>Browse past OBA and Connect event albums in a dialog view.</p>
+              <button className="inline-button priority-link" type="button" onClick={onOpenPastEventsDialog}>
+                Open past events
+              </button>
+            </article>
           </div>
         </div>
       </section>

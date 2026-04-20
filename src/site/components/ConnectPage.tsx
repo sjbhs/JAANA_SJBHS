@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AlbumFolder, SecondaryPage, TabConfig } from "../types";
+import { SecondaryPage, TabConfig } from "../types";
 
 const CONNECT_EDITOR_STORAGE_KEY = "jaana-connect-page-local-v1";
 
@@ -9,8 +9,6 @@ const defaultSponsorMessage =
 type ConnectPageProps = {
   details: TabConfig;
   connectPlaceholders: SecondaryPage[];
-  groupedEventAlbums: AlbumFolder[];
-  onOpenAlbumFolder: (folder: AlbumFolder) => void;
 };
 
 type ConnectEditableContent = {
@@ -25,9 +23,7 @@ const createDefaultEditableContent = (connectPlaceholders: SecondaryPage[]): Con
 
 export function ConnectPage({
   details,
-  connectPlaceholders,
-  groupedEventAlbums,
-  onOpenAlbumFolder
+  connectPlaceholders
 }: ConnectPageProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [activeScheduleTab, setActiveScheduleTab] = useState(0);
@@ -232,29 +228,6 @@ export function ConnectPage({
         </div>
       </div>
 
-      <div className="section-block">
-        <div className="featured-heading">
-          <div>
-            <h3>OBA past event</h3>
-          </div>
-        </div>
-
-        <div className="folder-grid album-folder-grid" aria-label="Album folders">
-          {groupedEventAlbums.map((folder) => (
-            <button className="folder-card" key={folder.id} type="button" onClick={() => onOpenAlbumFolder(folder)}>
-              <div className="folder-card-thumb">
-                <img src={folder.albums[0]?.cover.src} alt={folder.albums[0]?.cover.alt ?? folder.title} />
-              </div>
-
-              <div className="folder-card-copy">
-                <span>{folder.title}</span>
-                <h3>{folder.title}</h3>
-                <p>{folder.albums.length} event sets</p>
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
     </section>
   );
 }
