@@ -34,6 +34,11 @@ html {
   scroll-behavior: smooth;
 }
 
+html,
+body {
+  overflow-x: clip;
+}
+
 body {
   margin: 0;
   min-width: 320px;
@@ -230,7 +235,7 @@ img {
   top: calc(100% + 0.7rem);
   left: 0;
   z-index: 70;
-  width: min(18.5rem, calc(100vw - 1rem));
+  width: min(18.5rem, calc(100vw - 2rem));
   padding: 0.55rem;
   border-radius: 24px;
   border: 1px solid rgba(19, 53, 127, 0.12);
@@ -2656,6 +2661,42 @@ textarea:focus,
 }
 
 @media (max-width: 1180px) {
+  .site-header {
+    padding-top: 0.8rem;
+  }
+
+  .site-header-inner {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
+    min-height: 4.8rem;
+    padding: 0.8rem 0.9rem;
+  }
+
+  .mobile-nav-shell {
+    display: inline-flex;
+  }
+
+  .brand-lockup {
+    justify-content: center;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .brand-lockup img {
+    max-width: min(11.5rem, 28vw);
+    height: 2.85rem;
+  }
+
+  .header-shields {
+    display: none;
+  }
+
+  .header-actions {
+    display: none;
+  }
+
   .hero-section {
     grid-template-columns: 1fr;
   }
@@ -2706,44 +2747,6 @@ textarea:focus,
 
   .secondary-support-grid {
     grid-template-columns: 1fr;
-  }
-
-}
-
-@media (max-width: 980px) {
-  .site-header {
-    padding-top: 0.75rem;
-  }
-
-  .site-header-inner,
-  .header-actions {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .site-header-inner {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.6rem;
-  }
-
-  .mobile-nav-shell {
-    display: inline-flex;
-  }
-
-  .brand-lockup {
-    justify-content: center;
-    flex: 1 1 auto;
-    min-width: 0;
-  }
-
-  .header-shields {
-    display: none;
-  }
-
-  .header-actions {
-    display: none;
   }
 
   .header-cta {
@@ -2831,16 +2834,26 @@ textarea:focus,
     border-radius: 24px;
   }
 
-  .site-header-inner {
-    gap: 0.55rem;
-  }
-
   .brand-lockup img {
-    max-width: min(11.25rem, 54vw);
+    max-width: min(10.5rem, 58vw);
+    height: 2.55rem;
   }
 
   .site-nav {
     justify-content: flex-start;
+  }
+
+  .mobile-nav-toggle {
+    min-height: 2.75rem;
+    padding-inline: 0.85rem;
+  }
+
+  .mobile-nav-label {
+    font-size: 0.95rem;
+  }
+
+  .mobile-site-nav {
+    width: min(18rem, calc(100vw - 1rem));
   }
 
   .hero-section {
@@ -3005,5 +3018,255 @@ textarea:focus,
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1.2rem 1.6rem;
     width: 100%;
+  }
+}
+
+@media (max-width: 980px) {
+  .site-footer {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    align-items: stretch;
+  }
+
+  .footer-brand {
+    min-width: auto;
+  }
+
+  .footer-contacts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem 1.2rem;
+    width: 100%;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hero-actions .primary-button,
+  .hero-actions .secondary-button {
+    width: 100%;
+  }
+
+  .impact-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .cause-list-item {
+    grid-template-columns: 1fr;
+  }
+
+  .cause-list-meta {
+    min-width: 0;
+    text-align: left;
+  }
+
+  .donation-summary-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .connect-editor-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .connect-editor-toolbar .primary-button,
+  .connect-editor-toolbar .secondary-button {
+    width: 100%;
+  }
+
+  .connect-schedule-tabs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  }
+
+  .connect-schedule-tab {
+    width: 100%;
+  }
+
+  .album-photo-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .folder-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .folder-photo-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .site-header,
+  .hero-section,
+  .overview-shell,
+  .subpage-shell,
+  .site-footer {
+    width: calc(100vw - 0.75rem);
+  }
+
+  .site-header {
+    padding-top: 0.6rem;
+  }
+
+  .site-header-inner {
+    padding: 0.72rem;
+    min-height: 4.55rem;
+    border-radius: 22px;
+  }
+
+  .brand-lockup img {
+    max-width: min(9.5rem, 56vw);
+    height: 2.25rem;
+  }
+
+  .mobile-nav-toggle {
+    min-height: 2.55rem;
+    padding: 0 0.8rem 0 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .mobile-nav-label {
+    font-size: 0.9rem;
+  }
+
+  .mobile-site-nav {
+    width: min(17.5rem, calc(100vw - 0.75rem));
+  }
+
+  .hero-section {
+    padding-top: 2.4rem;
+  }
+
+  .hero-actions {
+    gap: 0.7rem;
+  }
+
+  .hero-actions .primary-button,
+  .hero-actions .secondary-button {
+    min-height: 2.9rem;
+    padding: 0 1rem;
+  }
+
+  .impact-strip,
+  .overview-notes,
+  .support-grid,
+  .volunteer-grid,
+  .contact-panel,
+  .causes-grid,
+  .story-grid,
+  .priority-grid,
+  .home-events-grid,
+  .form-grid,
+  .gallery-grid,
+  .featured-photo-strip,
+  .secondary-page-grid,
+  .event-highlight-grid,
+  .sponsor-material-grid,
+  .folder-grid,
+  .folder-photo-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cause-directory-toolbar,
+  .donation-page-header,
+  .give-section-head,
+  .featured-heading,
+  .folder-view-header {
+    gap: 0.75rem;
+  }
+
+  .cause-list-item,
+  .cause-dialog-grid {
+    gap: 1rem;
+  }
+
+  .cause-list-item {
+    padding: 0.95rem 1rem;
+  }
+
+  .cause-list-copy p,
+  .donation-page-copy p,
+  .give-section-head p,
+  .folder-view-header p,
+  .connect-sponsor-callout p,
+  .connect-schedule-panel p {
+    font-size: 0.92rem;
+    line-height: 1.58;
+  }
+
+  .donation-summary-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .footer-contacts {
+    grid-template-columns: 1fr;
+  }
+
+  .connect-schedule-tabs {
+    grid-template-columns: 1fr;
+  }
+
+  .connect-schedule-tab {
+    min-height: 2.8rem;
+    padding: 0 0.85rem;
+    border-radius: 12px;
+  }
+
+  .connect-schedule-panel {
+    padding: 0.9rem;
+  }
+
+  .form-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .form-footer .primary-button,
+  .form-footer .secondary-button {
+    width: 100%;
+  }
+
+  .lightbox-shell {
+    padding: 0.75rem 0.75rem 0.9rem;
+  }
+
+  .lightbox-topbar {
+    min-height: auto;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  .lightbox-zoom,
+  .lightbox-close {
+    min-height: 2.7rem;
+    padding: 0 0.95rem;
+  }
+
+  .lightbox-stage {
+    max-height: calc(100vh - 8rem);
+  }
+
+  .cause-dialog-shell,
+  .album-dialog-shell {
+    border-radius: 18px;
+  }
+
+  .album-dialog-shell {
+    width: calc(100vw - 0.75rem);
+    padding: 3.4rem 0.9rem 1rem;
+  }
+
+  .album-dialog .album-dialog-close {
+    top: 0.85rem;
+    right: 0.85rem;
+    width: 2.8rem;
+    height: 2.8rem;
+    font-size: 1.9rem;
   }
 }
