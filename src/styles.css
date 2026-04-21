@@ -256,6 +256,13 @@ img {
   overflow: visible;
 }
 
+.mobile-site-nav .site-nav.mobile-site-nav-list {
+  display: grid;
+  flex-direction: initial;
+  align-items: stretch;
+  overflow: visible;
+}
+
 .mobile-site-nav-list .site-tab {
   width: 100%;
   justify-content: flex-start;
