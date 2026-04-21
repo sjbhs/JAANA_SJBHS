@@ -1,0 +1,10 @@
+import { getAdminSessionFromCookie } from "../../server/lib/adminAuth";
+
+export async function GET(request: Request) {
+  const session = getAdminSessionFromCookie(request.headers.get("cookie"));
+
+  return Response.json({
+    authenticated: Boolean(session),
+    email: session?.email ?? null
+  });
+}

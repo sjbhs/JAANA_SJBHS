@@ -57,6 +57,11 @@ export type SecondaryPage = {
   body: string;
 };
 
+export type ConnectPageContent = {
+  sponsorMessage: string;
+  placeholders: SecondaryPage[];
+};
+
 export type GalleryImage = {
   src: string;
   alt: string;

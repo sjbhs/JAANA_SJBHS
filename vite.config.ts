@@ -8,7 +8,9 @@ export default defineConfig(({ mode }) => {
   const port = Number(env.VITE_PORT ?? 5173);
 
   return {
-    plugins: [react()],
+    plugins: [
+      react()
+    ],
     server: {
       host,
       port,

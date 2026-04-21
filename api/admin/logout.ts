@@ -1,0 +1,14 @@
+import { clearAdminSessionCookie } from "../../server/lib/adminAuth";
+
+export async function POST() {
+  return Response.json(
+    {
+      authenticated: false
+    },
+    {
+      headers: {
+        "Set-Cookie": clearAdminSessionCookie()
+      }
+    }
+  );
+}

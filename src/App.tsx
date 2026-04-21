@@ -2,7 +2,7 @@ import { FormEvent, startTransition, useEffect, useRef, useState } from "react";
 import {
   causeCards,
   connectMoments,
-  connectPlaceholders,
+  defaultConnectPageContent,
   contactChannels,
   groupedEventAlbums,
   houseShields,
@@ -11,6 +11,7 @@ import {
   tabs
 } from "./site/content";
 import { AlbumDialog } from "./site/components/AlbumDialog";
+import { AdminConnectPage } from "./site/components/AdminConnectPage";
 import { CausesPage } from "./site/components/CausesPage";
 import { CauseDialog } from "./site/components/CauseDialog";
 import { ConnectPage } from "./site/components/ConnectPage";
@@ -18,7 +19,15 @@ import { DonatePage } from "./site/components/DonatePage";
 import { HomePage } from "./site/components/HomePage";
 import { LightboxDialog } from "./site/components/LightboxDialog";
 import { PastEventsDialog } from "./site/components/PastEventsDialog";
-import { AlbumFolder, CauseCard, EventAlbum, GalleryImage, InquiryForm, TabId } from "./site/types";
+import {
+  AlbumFolder,
+  CauseCard,
+  ConnectPageContent,
+  EventAlbum,
+  GalleryImage,
+  InquiryForm,
+  TabId
+} from "./site/types";
 
 function App() {
   const [activeTab, setActiveTab] = useState<TabId>("home");
@@ -40,6 +49,8 @@ function App() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [statusTone, setStatusTone] = useState<"idle" | "success" | "error">("idle");
+  const [connectContent, setConnectContent] = useState<ConnectPageContent>(defaultConnectPageContent);
+  const [, forceLocationRender] = useState(0);
   const pinchDistanceRef = useRef<number | null>(null);
   const pinchScaleRef = useRef(1);
   const pinchMovedRef = useRef(false);
@@ -74,6 +85,10 @@ function App() {
 
   useEffect(() => {
     const syncTabWithHash = () => {
+      if (window.location.pathname.startsWith("/admin")) {
+        return;
+      }
+
       const hashTab = window.location.hash.replace("#", "");
       const nextTab =
         hashTab === "overview"
@@ -97,6 +112,16 @@ function App() {
     window.addEventListener("hashchange", syncTabWithHash);
 
     return () => window.removeEventListener("hashchange", syncTabWithHash);
+  }, []);
+
+  useEffect(() => {
+    const syncLocation = () => {
+      forceLocationRender((current) => current + 1);
+    };
+
+    window.addEventListener("popstate", syncLocation);
+
+    return () => window.removeEventListener("popstate", syncLocation);
   }, []);
 
   useEffect(() => {
@@ -143,6 +168,54 @@ function App() {
 
     return () => window.removeEventListener("keydown", handleEscape);
   }, [mobileNavOpen]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadConnectContent = async () => {
+      try {
+        const response = await fetch("/api/connect-content");
+
+        if (!response.ok) {
+          throw new Error("Unable to load the Connect content.");
+        }
+
+        const payload = (await response.json()) as Partial<ConnectPageContent>;
+
+        if (!cancelled && payload && typeof payload === "object") {
+          setConnectContent({
+            sponsorMessage:
+              typeof payload.sponsorMessage === "string" && payload.sponsorMessage.trim()
+                ? payload.sponsorMessage
+                : defaultConnectPageContent.sponsorMessage,
+            placeholders: Array.isArray(payload.placeholders)
+              ? payload.placeholders
+                  .map((item, index) => ({
+                    title:
+                      typeof item?.title === "string" && item.title.trim()
+                        ? item.title
+                        : defaultConnectPageContent.placeholders[index]?.title ?? "Details",
+                    body:
+                      typeof item?.body === "string" && item.body.trim()
+                        ? item.body
+                        : defaultConnectPageContent.placeholders[index]?.body ?? "Details coming soon."
+                  }))
+              : defaultConnectPageContent.placeholders
+          });
+        }
+      } catch {
+        if (!cancelled) {
+          setConnectContent(defaultConnectPageContent);
+        }
+      }
+    };
+
+    void loadConnectContent();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -570,8 +643,45 @@ function App() {
     setMobileNavOpen(false);
   };
 
+  const isAdminRoute = window.location.pathname.startsWith("/admin");
+  const connectTabDetails = tabs.find((tab) => tab.id === "connect") ?? tabs[0];
   const activeTabDetails = tabs.find((tab) => tab.id === activeTab) ?? tabs[0];
   const isOverviewTab = activeTab === "home";
+
+  if (isAdminRoute) {
+    return (
+      <div className="site-shell">
+        <header className="site-header">
+          <div className="site-header-inner admin-header-inner">
+            <button
+              className="brand-lockup"
+              onClick={() => {
+                window.location.href = "/";
+              }}
+              type="button"
+              aria-label="Go to home"
+            >
+              <img src="/assets/jaana-logo-blue.png" alt="JAANA logo" />
+            </button>
+
+            <div className="house-shields header-shields" aria-label="SJBHS house shields">
+              {houseShields.map((shield) => (
+                <div className="house-shield" key={shield.src}>
+                  <img src={shield.src} alt={shield.alt} />
+                </div>
+              ))}
+            </div>
+
+            <span className="section-kicker admin-route-badge">Admin</span>
+          </div>
+        </header>
+
+        <main className="main-subpage">
+          <AdminConnectPage details={connectTabDetails} />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="site-shell">
@@ -675,7 +785,7 @@ function App() {
         ) : null}
 
         {activeTab === "connect" ? (
-          <ConnectPage details={activeTabDetails} connectPlaceholders={connectPlaceholders} />
+          <ConnectPage details={activeTabDetails} connectContent={connectContent} />
         ) : null}
       </main>
 

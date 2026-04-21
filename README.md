@@ -23,12 +23,14 @@ This repo is no longer a generic starter. It now contains a working branded site
   - direct donation actions
 - A `North America Connect 2026` page with sponsor-oriented content and supporting assets
 - A live inquiry form embedded in the `Donate` page
+- A hidden `/admin` editor for Connect page content with a normal login form and password reminder email
 
 ### Back end
 
 - Express API used during local development and production server runs
 - Vercel serverless functions in `api/` for deployment
 - Local JSON persistence for inquiry submissions
+- Local JSON persistence for Connect page content
 - Validation for inquiry form payloads
 
 ## What was done in this repo
@@ -47,7 +49,9 @@ Implemented work:
   - health checks
   - inquiry submission
   - inquiry stats
+- Added Connect content read/write routes for the public page and hidden admin editor
 - Added local JSON storage for inquiries
+- Added local JSON storage for the Connect page editor
 - Added Vercel-compatible API functions and build config
 
 ## Tech stack
@@ -78,12 +82,22 @@ Implemented work:
   Reads and writes inquiry submissions to JSON storage.
 - `server/lib/inquiryValidation.ts`
   Validates the inquiry payload before writing it.
+- `server/lib/connectContentStore.ts`
+  Reads and writes the Connect page content used by the public page and admin editor.
+- `server/lib/adminAuth.ts`
+  Session-cookie helpers, admin login checks, and password reminder email support.
 
 ### Deployment API files
 
 - `api/health.ts`
+- `api/connect-content.ts`
 - `api/inquiries/index.ts`
 - `api/inquiries/stats.ts`
+- `api/admin/session.ts`
+- `api/admin/login.ts`
+- `api/admin/logout.ts`
+- `api/admin/password-reset.ts`
+- `api/admin/connect-content.ts`
 
 These mirror the main API behavior for Vercel deployment.
 
@@ -106,10 +120,20 @@ These mirror the main API behavior for Vercel deployment.
 ├── server/
 │   ├── index.ts
 │   └── lib/
+│       ├── adminAuth.ts
+│       ├── connectContentStore.ts
 │       ├── inquiryStore.ts
 │       └── inquiryValidation.ts
 ├── api/
 │   ├── health.ts
+│   ├── connect-content.ts
+│   ├── admin/
+│   │   ├── _shared.ts
+│   │   ├── connect-content.ts
+│   │   ├── login.ts
+│   │   ├── logout.ts
+│   │   ├── password-reset.ts
+│   │   └── session.ts
 │   └── inquiries/
 │       ├── index.ts
 │       └── stats.ts
@@ -141,6 +165,12 @@ HOST=127.0.0.1
 PORT=3001
 CORS_ORIGIN=http://127.0.0.1:5173
 INQUIRY_STORAGE_PATH=./server/data/inquiries.json
+CONNECT_CONTENT_STORAGE_PATH=./server/data/connect-page.json
+ADMIN_EMAIL=jaanamedia@gmail.com
+ADMIN_PASSWORD=CommonPassJAANA1858$
+ADMIN_SESSION_SECRET=change-this-to-a-long-random-string
+ADMIN_EMAIL_FROM=JAANA Admin <no-reply@jaana.app>
+RESEND_API_KEY=
 VITE_API_PROXY_TARGET=http://127.0.0.1:3001
 VITE_HOST=127.0.0.1
 VITE_PORT=5173
@@ -156,6 +186,18 @@ What they control:
   Allowed browser origin for API requests.
 - `INQUIRY_STORAGE_PATH`
   JSON file path used to store inquiry submissions locally.
+- `CONNECT_CONTENT_STORAGE_PATH`
+  JSON file path used to store Connect page content locally.
+- `ADMIN_EMAIL`
+  Locked admin email used to sign in to the hidden editor.
+- `ADMIN_PASSWORD`
+  Locked admin password used to sign in to the hidden editor.
+- `ADMIN_SESSION_SECRET`
+  Secret used to sign the admin session cookie.
+- `ADMIN_EMAIL_FROM`
+  Verified sender address or identity used by the password reminder email.
+- `RESEND_API_KEY`
+  API key used to send the password reminder email through Resend.
 - `VITE_API_PROXY_TARGET`
   Backend target for Vite's `/api` proxy.
 - `VITE_HOST`
@@ -194,6 +236,11 @@ Vite proxies `/api` requests to the Express server during development.
 
 - Front end: `http://127.0.0.1:5173`
 - API health check: `http://127.0.0.1:3001/api/health`
+- Hidden Connect editor: `http://127.0.0.1:5173/admin`
+
+The public Connect page is read-only. Editing happens only through the hidden `/admin` route.
+The admin page uses a signed session cookie, a fixed admin email, and a password reminder email flow. Configure `RESEND_API_KEY` and `ADMIN_EMAIL_FROM` before using the reminder button in production.
+The Connect editor storage is still file-backed, so on Vercel you should connect it to persistent storage if you want edits to survive deploys and serverless restarts.
 
 ## Available scripts
 

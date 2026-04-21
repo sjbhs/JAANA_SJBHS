@@ -2,6 +2,7 @@ import {
   AlbumFolder,
   CauseCard,
   ContactChannel,
+  ConnectPageContent,
   EventAlbum,
   EventHighlight,
   GalleryImage,
@@ -14,6 +15,8 @@ import {
 } from "./types";
 
 const albumAssetVersion = "2026-04-15-1";
+const defaultConnectSponsorMessage =
+  "We are seeking sponsors for our North America Connect reunion, your brand/business will have the opportunity to reach hundreds of successful Josephites and their families. Proceeds from the event will fund the OBA Teachers Insurance program. Individual and batch benefactors are also warmly welcome.";
 
 const withAlbumAssetVersion = (image: GalleryImage): GalleryImage =>
   image.src.startsWith("/assets/albums/")
@@ -731,6 +734,11 @@ export const connectPlaceholders: SecondaryPage[] = [
     body: "The detailed Saturday and Sunday programme will be shared here as the event schedule is finalized."
   }
 ];
+
+export const defaultConnectPageContent: ConnectPageContent = {
+  sponsorMessage: defaultConnectSponsorMessage,
+  placeholders: connectPlaceholders
+};
 
 export const secondaryPages: SecondaryPage[] = [
   {

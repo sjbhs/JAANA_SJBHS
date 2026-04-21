@@ -1,104 +1,17 @@
 import { useEffect, useState } from "react";
-import { SecondaryPage, TabConfig } from "../types";
-
-const CONNECT_EDITOR_STORAGE_KEY = "jaana-connect-page-local-v1";
-
-const defaultSponsorMessage =
-  "We are seeking sponsors for our North America Connect reunion, your brand/business will have the opportunity to reach hundreds of successful Josephites and their families. Proceeds from the event will fund the OBA Teachers Insurance program. Individual and batch benefactors are also warmly welcome.";
+import { ConnectPageContent, TabConfig } from "../types";
 
 type ConnectPageProps = {
   details: TabConfig;
-  connectPlaceholders: SecondaryPage[];
+  connectContent: ConnectPageContent;
 };
 
-type ConnectEditableContent = {
-  sponsorMessage: string;
-  placeholders: SecondaryPage[];
-};
-
-const createDefaultEditableContent = (connectPlaceholders: SecondaryPage[]): ConnectEditableContent => ({
-  sponsorMessage: defaultSponsorMessage,
-  placeholders: connectPlaceholders
-});
-
-export function ConnectPage({
-  details,
-  connectPlaceholders
-}: ConnectPageProps) {
-  const [isEditing, setIsEditing] = useState(false);
+export function ConnectPage({ details, connectContent }: ConnectPageProps) {
   const [activeScheduleTab, setActiveScheduleTab] = useState(0);
-  const [saveNote, setSaveNote] = useState("Local edits affect only this browser.");
-  const [editableContent, setEditableContent] = useState<ConnectEditableContent>(
-    createDefaultEditableContent(connectPlaceholders)
-  );
-  const [savedContent, setSavedContent] = useState<ConnectEditableContent>(
-    createDefaultEditableContent(connectPlaceholders)
-  );
 
   useEffect(() => {
-    const fallback = createDefaultEditableContent(connectPlaceholders);
-    const raw = window.localStorage.getItem(CONNECT_EDITOR_STORAGE_KEY);
-
-    if (!raw) {
-      setEditableContent(fallback);
-      setSavedContent(fallback);
-      return;
-    }
-
-    try {
-      const parsed = JSON.parse(raw) as Partial<ConnectEditableContent>;
-      const parsedPlaceholders = Array.isArray(parsed.placeholders) ? parsed.placeholders : fallback.placeholders;
-
-      const hydratedContent = {
-        sponsorMessage:
-          typeof parsed.sponsorMessage === "string" && parsed.sponsorMessage.trim()
-            ? parsed.sponsorMessage
-            : fallback.sponsorMessage,
-        placeholders: parsedPlaceholders.map((item, index) => ({
-          title:
-            typeof item?.title === "string" && item.title.trim()
-              ? item.title
-              : fallback.placeholders[index]?.title ?? "Details",
-          body:
-            typeof item?.body === "string" && item.body.trim()
-              ? item.body
-              : fallback.placeholders[index]?.body ?? "Details coming soon."
-        }))
-      };
-
-      setEditableContent(hydratedContent);
-      setSavedContent(hydratedContent);
-    } catch {
-      setEditableContent(fallback);
-      setSavedContent(fallback);
-    }
-  }, [connectPlaceholders]);
-
-  useEffect(() => {
-    setActiveScheduleTab((current) => Math.min(current, Math.max(editableContent.placeholders.length - 1, 0)));
-  }, [editableContent.placeholders.length]);
-
-  const updatePlaceholder = (index: number, field: keyof SecondaryPage, value: string) => {
-    setEditableContent((current) => ({
-      ...current,
-      placeholders: current.placeholders.map((item, itemIndex) =>
-        itemIndex === index ? { ...item, [field]: value } : item
-      )
-    }));
-  };
-
-  const saveLocally = () => {
-    window.localStorage.setItem(CONNECT_EDITOR_STORAGE_KEY, JSON.stringify(editableContent));
-    setSavedContent(editableContent);
-    setSaveNote("Saved locally on this browser.");
-  };
-
-  const undoChanges = () => {
-    setEditableContent(savedContent);
-    setSaveNote("Reverted to your last saved version.");
-  };
-
-  const hasUnsavedChanges = JSON.stringify(editableContent) !== JSON.stringify(savedContent);
+    setActiveScheduleTab((current) => Math.min(current, Math.max(connectContent.placeholders.length - 1, 0)));
+  }, [connectContent.placeholders.length]);
 
   return (
     <section id="connect-panel" className="subpage-shell" role="tabpanel" aria-label="North America Connect 2026">
@@ -122,61 +35,24 @@ export function ConnectPage({
         </aside>
       </div>
 
-      <div className="connect-editor-toolbar">
-        <button
-          className={isEditing ? "secondary-button" : "primary-button"}
-          type="button"
-          onClick={() => setIsEditing((value) => !value)}
-        >
-          {isEditing ? "Done editing" : "Edit this page"}
-        </button>
-
-        {isEditing ? (
-          <>
-            <button className="primary-button" type="button" onClick={saveLocally}>
-              Save locally
-            </button>
-            <button className="secondary-button" type="button" onClick={undoChanges} disabled={!hasUnsavedChanges}>
-              Undo changes
-            </button>
-          </>
-        ) : null}
-
-        <span className="connect-editor-note">{saveNote}</span>
-      </div>
-
       <div className="section-block">
         <div className="connect-sponsor-callout">
           <div>
             <span className="section-kicker">Call to Sponsors</span>
             <h3>Support North America Connect 2026.</h3>
-            {isEditing ? (
-              <textarea
-                className="connect-edit-textarea"
-                value={editableContent.sponsorMessage}
-                onChange={(event) =>
-                  setEditableContent((current) => ({
-                    ...current,
-                    sponsorMessage: event.target.value
-                  }))
-                }
-              />
-            ) : (
-              <p>
-                {editableContent.sponsorMessage} More info in the document{" "}
-                <a
-                  className="inline-link"
-                  href="/docs/north-america-connect-2026-call-for-sponsors.pdf"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Download Call to Sponsors PDF
-                </a>
-                .
-              </p>
-            )}
+            <p>
+              {connectContent.sponsorMessage} More info in the document{" "}
+              <a
+                className="inline-link"
+                href="/docs/north-america-connect-2026-call-for-sponsors.pdf"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Download Call to Sponsors PDF
+              </a>
+              .
+            </p>
           </div>
-
         </div>
       </div>
 
@@ -190,7 +66,7 @@ export function ConnectPage({
           </div>
 
           <div className="connect-schedule-tabs" role="tablist" aria-label="Connect details tabs">
-            {editableContent.placeholders.map((item, index) => (
+            {connectContent.placeholders.map((item, index) => (
               <button
                 key={item.title}
                 type="button"
@@ -205,29 +81,11 @@ export function ConnectPage({
           </div>
 
           <div className="connect-schedule-panel" role="tabpanel">
-            {isEditing ? (
-              <>
-                <input
-                  className="connect-edit-input"
-                  value={editableContent.placeholders[activeScheduleTab]?.title ?? ""}
-                  onChange={(event) => updatePlaceholder(activeScheduleTab, "title", event.target.value)}
-                />
-                <textarea
-                  className="connect-edit-textarea"
-                  value={editableContent.placeholders[activeScheduleTab]?.body ?? ""}
-                  onChange={(event) => updatePlaceholder(activeScheduleTab, "body", event.target.value)}
-                />
-              </>
-            ) : (
-              <>
-                <h4>{editableContent.placeholders[activeScheduleTab]?.title}</h4>
-                <p>{editableContent.placeholders[activeScheduleTab]?.body}</p>
-              </>
-            )}
+            <h4>{connectContent.placeholders[activeScheduleTab]?.title}</h4>
+            <p>{connectContent.placeholders[activeScheduleTab]?.body}</p>
           </div>
         </div>
       </div>
-
     </section>
   );
 }

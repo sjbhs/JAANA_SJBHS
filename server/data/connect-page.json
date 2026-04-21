@@ -1,0 +1,21 @@
+{
+  "sponsorMessage": "We are seeking sponsors for our North America Connect reunion, your brand/business will have the opportunity to reach hundreds of successful Josephites and their families. Proceeds from the event will fund the OBA Teachers Insurance program. Individual and batch benefactors are also warmly welcome.",
+  "placeholders": [
+    {
+      "title": "Registration",
+      "body": "Details coming soon."
+    },
+    {
+      "title": "Buy tickets",
+      "body": "Ticketing details will be published here once pricing, registration flow, and batch allocations are finalized."
+    },
+    {
+      "title": "Venue and lodging",
+      "body": "Venue confirmation, hotel block details, and local travel guidance for out-of-town attendees will be added here."
+    },
+    {
+      "title": "Weekend schedule",
+      "body": "The detailed Saturday and Sunday programme will be shared here as the event schedule is finalized."
+    }
+  ]
+}
