@@ -619,7 +619,7 @@ function App() {
 
       <footer className="site-footer">
         <div className="footer-brand">
-          <strong>JAANA</strong>
+          <strong>SJBHS</strong>
           <span>The Josephite Alumni Association of North America.</span>
         </div>
         <div className="footer-contacts">
