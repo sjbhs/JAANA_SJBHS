@@ -22,6 +22,7 @@ import { AlbumFolder, CauseCard, EventAlbum, GalleryImage, InquiryForm, TabId } 
 
 function App() {
   const [activeTab, setActiveTab] = useState<TabId>("home");
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [backendOnline, setBackendOnline] = useState(false);
   const [selectedCause, setSelectedCause] = useState<CauseCard | null>(null);
   const [selectedAlbumFolder, setSelectedAlbumFolder] = useState<AlbumFolder | null>(null);
@@ -99,6 +100,10 @@ function App() {
   }, []);
 
   useEffect(() => {
+    setMobileNavOpen(false);
+  }, [activeTab]);
+
+  useEffect(() => {
     if (!lightboxImage && !selectedCause && !selectedAlbumFolder && !pastEventsDialogOpen) {
       return;
     }
@@ -122,6 +127,22 @@ function App() {
 
     return () => window.removeEventListener("keydown", handleEscape);
   }, [lightboxImage, selectedCause, selectedAlbumFolder, selectedAlbum, pastEventsDialogOpen]);
+
+  useEffect(() => {
+    if (!mobileNavOpen) {
+      return;
+    }
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMobileNavOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleEscape);
+
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [mobileNavOpen]);
 
   useEffect(() => {
     return () => {
@@ -544,6 +565,11 @@ function App() {
     setForm((current) => ({ ...current, [field]: value }));
   };
 
+  const handleActivateTab = (tabId: TabId) => {
+    activateTab(tabId);
+    setMobileNavOpen(false);
+  };
+
   const activeTabDetails = tabs.find((tab) => tab.id === activeTab) ?? tabs[0];
   const isOverviewTab = activeTab === "home";
 
@@ -551,7 +577,43 @@ function App() {
     <div className="site-shell">
       <header className="site-header">
         <div className="site-header-inner">
-          <button className="brand-lockup" onClick={() => activateTab("home")} type="button" aria-label="Go to home">
+          <div className="mobile-nav-shell">
+            <button
+              className={mobileNavOpen ? "mobile-nav-toggle is-open" : "mobile-nav-toggle"}
+              type="button"
+              aria-label={mobileNavOpen ? "Close site navigation" : "Open site navigation"}
+              aria-expanded={mobileNavOpen}
+              aria-controls="mobile-site-nav"
+              onClick={() => setMobileNavOpen((current) => !current)}
+            >
+              <span className="mobile-nav-icon" aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </span>
+              <span className="mobile-nav-label">Menu</span>
+            </button>
+
+            <div id="mobile-site-nav" className={mobileNavOpen ? "mobile-site-nav is-open" : "mobile-site-nav"}>
+              <nav className="site-nav mobile-site-nav-list" aria-label="Site pages" role="tablist">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={activeTab === tab.id}
+                    aria-controls={`${tab.id}-panel`}
+                    className={activeTab === tab.id ? "site-tab is-active" : "site-tab"}
+                    onClick={() => handleActivateTab(tab.id)}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </nav>
+            </div>
+          </div>
+
+          <button className="brand-lockup" onClick={() => handleActivateTab("home")} type="button" aria-label="Go to home">
             <img src="/assets/jaana-logo-blue.png" alt="JAANA logo" />
           </button>
 
