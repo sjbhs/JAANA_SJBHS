@@ -17,6 +17,11 @@ import {
   validateConnectContent,
   writeConnectContent
 } from "./lib/connectContentStore";
+import {
+  readSiteContent,
+  validateSiteContent,
+  writeSiteContent
+} from "./lib/siteContentStore";
 import { createInquiry, getInquiryStats } from "./lib/inquiryStore";
 import { InquiryPayload, validateInquiryPayload } from "./lib/inquiryValidation";
 
@@ -49,6 +54,15 @@ app.get("/api/health", (_request, response) => {
 app.get("/api/connect-content", async (_request, response, next) => {
   try {
     const content = await readConnectContent();
+    response.json(content);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/site-content", async (_request, response, next) => {
+  try {
+    const content = await readSiteContent();
     response.json(content);
   } catch (error) {
     next(error);
@@ -139,6 +153,35 @@ app.put("/api/admin/connect-content", requireAdminSession, async (request, respo
     }
 
     const content = await writeConnectContent(validation.data);
+
+    response.json({
+      content
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/admin/site-content", requireAdminSession, async (_request, response, next) => {
+  try {
+    const content = await readSiteContent();
+    response.json(content);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.put("/api/admin/site-content", requireAdminSession, async (request, response, next) => {
+  try {
+    const validation = validateSiteContent(request.body as Parameters<typeof validateSiteContent>[0]);
+
+    if (!validation.ok) {
+      return response.status(400).json({
+        error: "Unable to validate the site content."
+      });
+    }
+
+    const content = await writeSiteContent(validation.data);
 
     response.json({
       content

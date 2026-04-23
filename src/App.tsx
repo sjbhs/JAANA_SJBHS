@@ -1,17 +1,7 @@
 import { FormEvent, startTransition, useEffect, useRef, useState } from "react";
-import {
-  causeCards,
-  connectMoments,
-  defaultConnectPageContent,
-  contactChannels,
-  groupedEventAlbums,
-  houseShields,
-  initialForm,
-  inquiryTopics,
-  tabs
-} from "./site/content";
+import { initialForm } from "./site/content";
 import { AlbumDialog } from "./site/components/AlbumDialog";
-import { AdminConnectPage } from "./site/components/AdminConnectPage";
+import { AdminSiteContentPage } from "./site/components/AdminSiteContentPage";
 import { CausesPage } from "./site/components/CausesPage";
 import { CauseDialog } from "./site/components/CauseDialog";
 import { ConnectPage } from "./site/components/ConnectPage";
@@ -22,12 +12,13 @@ import { PastEventsDialog } from "./site/components/PastEventsDialog";
 import {
   AlbumFolder,
   CauseCard,
-  ConnectPageContent,
   EventAlbum,
   GalleryImage,
   InquiryForm,
+  SiteContent,
   TabId
 } from "./site/types";
+import { defaultSiteContent } from "./site/siteContent";
 
 function App() {
   const [activeTab, setActiveTab] = useState<TabId>("home");
@@ -49,7 +40,7 @@ function App() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [statusTone, setStatusTone] = useState<"idle" | "success" | "error">("idle");
-  const [connectContent, setConnectContent] = useState<ConnectPageContent>(defaultConnectPageContent);
+  const [siteContent, setSiteContent] = useState<SiteContent>(defaultSiteContent);
   const [, forceLocationRender] = useState(0);
   const pinchDistanceRef = useRef<number | null>(null);
   const pinchScaleRef = useRef(1);
@@ -172,45 +163,30 @@ function App() {
   useEffect(() => {
     let cancelled = false;
 
-    const loadConnectContent = async () => {
+    const loadSiteContent = async () => {
       try {
-        const response = await fetch("/api/connect-content");
+        const response = await fetch("/api/site-content");
 
         if (!response.ok) {
-          throw new Error("Unable to load the Connect content.");
+          throw new Error("Unable to load the site content.");
         }
 
-        const payload = (await response.json()) as Partial<ConnectPageContent>;
+        const payload = (await response.json()) as Partial<SiteContent>;
 
         if (!cancelled && payload && typeof payload === "object") {
-          setConnectContent({
-            sponsorMessage:
-              typeof payload.sponsorMessage === "string" && payload.sponsorMessage.trim()
-                ? payload.sponsorMessage
-                : defaultConnectPageContent.sponsorMessage,
-            placeholders: Array.isArray(payload.placeholders)
-              ? payload.placeholders
-                  .map((item, index) => ({
-                    title:
-                      typeof item?.title === "string" && item.title.trim()
-                        ? item.title
-                        : defaultConnectPageContent.placeholders[index]?.title ?? "Details",
-                    body:
-                      typeof item?.body === "string" && item.body.trim()
-                        ? item.body
-                        : defaultConnectPageContent.placeholders[index]?.body ?? "Details coming soon."
-                  }))
-              : defaultConnectPageContent.placeholders
-          });
+          setSiteContent((current) => ({
+            ...current,
+            ...payload
+          }));
         }
       } catch {
         if (!cancelled) {
-          setConnectContent(defaultConnectPageContent);
+          setSiteContent(defaultSiteContent);
         }
       }
     };
 
-    void loadConnectContent();
+    void loadSiteContent();
 
     return () => {
       cancelled = true;
@@ -643,6 +619,20 @@ function App() {
     setMobileNavOpen(false);
   };
 
+  const {
+    tabs,
+    contactChannels,
+    houseShields,
+    connectMoments,
+    groupedEventAlbums,
+    causeCards,
+    inquiryTopics,
+    connectPage,
+    homeCopy,
+    causesCopy,
+    donateCopy,
+    connectCopy
+  } = siteContent;
   const isAdminRoute = window.location.pathname.startsWith("/admin");
   const connectTabDetails = tabs.find((tab) => tab.id === "connect") ?? tabs[0];
   const activeTabDetails = tabs.find((tab) => tab.id === activeTab) ?? tabs[0];
@@ -650,36 +640,12 @@ function App() {
 
   if (isAdminRoute) {
     return (
-      <div className="site-shell">
-        <header className="site-header">
-          <div className="site-header-inner admin-header-inner">
-            <button
-              className="brand-lockup"
-              onClick={() => {
-                window.location.href = "/";
-              }}
-              type="button"
-              aria-label="Go to home"
-            >
-              <img src="/assets/jaana-logo-blue.png" alt="JAANA logo" />
-            </button>
-
-            <div className="house-shields header-shields" aria-label="SJBHS house shields">
-              {houseShields.map((shield) => (
-                <div className="house-shield" key={shield.src}>
-                  <img src={shield.src} alt={shield.alt} />
-                </div>
-              ))}
-            </div>
-
-            <span className="section-kicker admin-route-badge">Admin</span>
-          </div>
-        </header>
-
-        <main className="main-subpage">
-          <AdminConnectPage details={connectTabDetails} />
-        </main>
-      </div>
+      <AdminSiteContentPage
+        details={connectTabDetails}
+        onContentSaved={(content) => {
+          setSiteContent(content);
+        }}
+      />
     );
   }
 
@@ -759,6 +725,7 @@ function App() {
         {isOverviewTab ? (
           <HomePage
             connectMoments={connectMoments}
+            homeCopy={homeCopy}
             onActivateTab={activateTab}
             onOpenPastEventsDialog={() => setPastEventsDialogOpen(true)}
             onOpenLightboxImage={openLightboxImage}
@@ -766,7 +733,12 @@ function App() {
         ) : null}
 
         {activeTab === "causes" ? (
-          <CausesPage details={activeTabDetails} causeCards={causeCards} onSelectCause={setSelectedCause} />
+          <CausesPage
+            details={activeTabDetails}
+            causeCards={causeCards}
+            causesCopy={causesCopy}
+            onSelectCause={setSelectedCause}
+          />
         ) : null}
 
         {activeTab === "donate" ? (
@@ -775,6 +747,7 @@ function App() {
             backendOnline={backendOnline}
             contactChannels={contactChannels}
             inquiryTopics={inquiryTopics}
+            donateCopy={donateCopy}
             form={form}
             isSubmitting={isSubmitting}
             statusMessage={statusMessage}
@@ -785,7 +758,7 @@ function App() {
         ) : null}
 
         {activeTab === "connect" ? (
-          <ConnectPage details={activeTabDetails} connectContent={connectContent} />
+          <ConnectPage details={activeTabDetails} connectContent={connectPage} connectCopy={connectCopy} />
         ) : null}
       </main>
 

@@ -85,8 +85,8 @@ export function AlbumDialog({
           </div>
         ) : (
           <div className="folder-grid album-subfolder-grid" aria-label={`${folder.title} subfolders`}>
-            {folder.albums.map((album) => (
-              <button className="folder-card" key={album.title} type="button" onClick={() => onSelectAlbum(album)}>
+            {folder.albums.map((album, index) => (
+              <button className="folder-card" key={album.id ?? `${album.title}-${index}`} type="button" onClick={() => onSelectAlbum(album)}>
                 <div className="folder-card-thumb">
                   <img src={album.cover.src} alt={album.cover.alt} />
                 </div>

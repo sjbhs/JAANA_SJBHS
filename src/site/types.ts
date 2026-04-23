@@ -16,6 +16,48 @@ export type TabConfig = {
   copy: string;
 };
 
+export type HomePageCopy = {
+  heroMotto: string;
+  heroLead: string;
+  aboutTitle: string;
+  aboutBody: string;
+  quickLinksTitle: string;
+  causesCardTitle: string;
+  causesCardBody: string;
+  donateCardTitle: string;
+  donateCardBody: string;
+  connectCardTitle: string;
+  connectCardBody: string;
+  eventsTitle: string;
+  upcomingEventsTitle: string;
+  upcomingEventsBody: string;
+  pastEventsTitle: string;
+  pastEventsBody: string;
+};
+
+export type CausesPageCopy = {
+  sectionHeading: string;
+};
+
+export type DonatePageCopy = {
+  onlineGivingHeading: string;
+  onlineGivingBody: string;
+  contactHeading: string;
+  contactBody: string;
+  formHeading: string;
+  formBody: string;
+};
+
+export type ConnectPageCopy = {
+  posterLabel: string;
+  posterTitle: string;
+  posterBody: string;
+  sponsorHeading: string;
+  sponsorBody: string;
+  scheduleHeading: string;
+  scheduleBody: string;
+};
+
 export type PriorityCard = {
   title: string;
   body: string;
@@ -68,9 +110,10 @@ export type GalleryImage = {
   caption: string;
 };
 
-export type AlbumCategoryId = "oba" | "christmas" | "connect" | "sports" | "school";
+export type AlbumCategoryId = string;
 
 export type EventAlbum = {
+  id?: string;
   title: string;
   category: AlbumCategoryId;
   label: string;
@@ -89,4 +132,25 @@ export type AlbumFolder = {
 export type HouseShield = {
   src: string;
   alt: string;
+};
+
+export type SiteContent = {
+  tabs: TabConfig[];
+  impactStats: { value: string; label: string }[];
+  priorityCards: PriorityCard[];
+  causeCards: CauseCard[];
+  sponsorHighlights: EventHighlight[];
+  sponsorTiers: SponsorTier[];
+  connectMoments: GalleryImage[];
+  groupedEventAlbums: AlbumFolder[];
+  sponsorMaterials: GalleryImage[];
+  connectPage: ConnectPageContent;
+  secondaryPages: SecondaryPage[];
+  houseShields: HouseShield[];
+  contactChannels: ContactChannel[];
+  inquiryTopics: string[];
+  homeCopy: HomePageCopy;
+  causesCopy: CausesPageCopy;
+  donateCopy: DonatePageCopy;
+  connectCopy: ConnectPageCopy;
 };

@@ -1,18 +1,25 @@
 import { FormEvent } from "react";
-import { InquiryForm, TabConfig } from "../types";
+import { DonatePageCopy, InquiryForm, TabConfig } from "../types";
 import { PlaceholderDonateButton } from "./PlaceholderDonateButton";
+import { InlineEditableText } from "./InlineEditableText";
 
 type DonatePageProps = {
   details: TabConfig;
   backendOnline: boolean;
   contactChannels: { label: string; value: string; href: string }[];
   inquiryTopics: string[];
+  donateCopy: DonatePageCopy;
+  editable?: boolean;
   form: InquiryForm;
   isSubmitting: boolean;
   statusMessage: string;
   statusTone: "idle" | "success" | "error";
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onFieldChange: <K extends keyof InquiryForm>(field: K, value: InquiryForm[K]) => void;
+  onChangeDetails?: <K extends keyof TabConfig>(key: K, value: TabConfig[K]) => void;
+  onChangeDonateCopy?: <K extends keyof DonatePageCopy>(key: K, value: DonatePageCopy[K]) => void;
+  onChangeContactChannel?: (index: number, key: "label" | "value" | "href", value: string) => void;
+  onChangeInquiryTopics?: (topics: string[]) => void;
 };
 
 export function DonatePage({
@@ -20,26 +27,64 @@ export function DonatePage({
   backendOnline,
   contactChannels,
   inquiryTopics,
+  donateCopy,
+  editable = false,
   form,
   isSubmitting,
   statusMessage,
   statusTone,
   onSubmit,
-  onFieldChange
+  onFieldChange,
+  onChangeDetails,
+  onChangeDonateCopy,
+  onChangeContactChannel,
+  onChangeInquiryTopics
 }: DonatePageProps) {
   return (
     <section id="donate-panel" className="subpage-shell donate-shell" role="tabpanel" aria-label="Donate">
       <div className="donation-page-header">
         <div className="donation-page-copy">
-          <h2>{details.title}</h2>
-          {details.copy ? <p>{details.copy}</p> : null}
+          <h2>
+            <InlineEditableText
+              editable={editable}
+              value={details.title}
+              onChange={(value) => onChangeDetails?.("title", value)}
+              className="section-title-edit"
+            />
+          </h2>
+          {details.copy ? (
+            <div className="body-copy">
+              <InlineEditableText
+                editable={editable}
+                value={details.copy}
+                onChange={(value) => onChangeDetails?.("copy", value)}
+                multiline
+                className="body-copy-edit"
+              />
+            </div>
+          ) : null}
         </div>
       </div>
 
       <section className="give-section">
         <div className="give-section-head">
-          <h3>Online giving will be available soon</h3>
-          <p>Donation links for the supported causes will be added here as soon as the giving page is ready.</p>
+          <h3>
+            <InlineEditableText
+              editable={editable}
+              value={donateCopy.onlineGivingHeading}
+              onChange={(value) => onChangeDonateCopy?.("onlineGivingHeading", value)}
+              className="section-title-edit"
+            />
+          </h3>
+          <div className="body-copy">
+            <InlineEditableText
+              editable={editable}
+              value={donateCopy.onlineGivingBody}
+              onChange={(value) => onChangeDonateCopy?.("onlineGivingBody", value)}
+              multiline
+              className="body-copy-edit"
+            />
+          </div>
         </div>
 
         <article className="support-card donation-route-card">
@@ -55,8 +100,23 @@ export function DonatePage({
 
       <section className="give-section">
         <div className="give-section-head">
-          <h3>Reach JAANA directly</h3>
-          <p>For donation enquiries in the meantime, use the details below.</p>
+          <h3>
+            <InlineEditableText
+              editable={editable}
+              value={donateCopy.contactHeading}
+              onChange={(value) => onChangeDonateCopy?.("contactHeading", value)}
+              className="section-title-edit"
+            />
+          </h3>
+          <div className="body-copy">
+            <InlineEditableText
+              editable={editable}
+              value={donateCopy.contactBody}
+              onChange={(value) => onChangeDonateCopy?.("contactBody", value)}
+              multiline
+              className="body-copy-edit"
+            />
+          </div>
         </div>
 
         <div className="contact-panel">
@@ -64,18 +124,38 @@ export function DonatePage({
             <article className="contact-card">
               <h3>Donation, sponsorship, and alumni contacts</h3>
               <ul className="contact-list">
-                {contactChannels.map((channel) => (
-                  <li key={channel.label}>
-                    <span>{channel.label}</span>
-                    <a
-                      href={channel.href}
-                      target={channel.href.startsWith("http") ? "_blank" : undefined}
-                      rel="noreferrer"
-                    >
-                      {channel.value}
-                    </a>
-                  </li>
-                ))}
+                {contactChannels.map((channel, index) =>
+                  editable ? (
+                    <li key={channel.label}>
+                      <input
+                        className="connect-edit-input contact-label-edit"
+                        value={channel.label}
+                        onChange={(event) => onChangeContactChannel?.(index, "label", event.target.value)}
+                      />
+                      <input
+                        className="connect-edit-input contact-value-edit"
+                        value={channel.value}
+                        onChange={(event) => onChangeContactChannel?.(index, "value", event.target.value)}
+                      />
+                      <input
+                        className="connect-edit-input contact-href-edit"
+                        value={channel.href}
+                        onChange={(event) => onChangeContactChannel?.(index, "href", event.target.value)}
+                      />
+                    </li>
+                  ) : (
+                    <li key={channel.label}>
+                      <span>{channel.label}</span>
+                      <a
+                        href={channel.href}
+                        target={channel.href.startsWith("http") ? "_blank" : undefined}
+                        rel="noreferrer"
+                      >
+                        {channel.value}
+                      </a>
+                    </li>
+                  )
+                )}
               </ul>
             </article>
 
@@ -91,11 +171,23 @@ export function DonatePage({
 
           <form className="inquiry-card" onSubmit={onSubmit}>
             <div className="form-heading">
-              <h3>Tell the team how you would like to get involved.</h3>
-              <p>
-                Use this form for cause support, U.S. donations, sponsorship enquiries, chapter coordination, or
-                general alumni questions.
-              </p>
+              <h3>
+                <InlineEditableText
+                  editable={editable}
+                  value={donateCopy.formHeading}
+                  onChange={(value) => onChangeDonateCopy?.("formHeading", value)}
+                  className="section-title-edit"
+                />
+              </h3>
+              <div className="body-copy">
+                <InlineEditableText
+                  editable={editable}
+                  value={donateCopy.formBody}
+                  onChange={(value) => onChangeDonateCopy?.("formBody", value)}
+                  multiline
+                  className="body-copy-edit"
+                />
+              </div>
             </div>
 
             <div className="form-grid">
@@ -150,6 +242,27 @@ export function DonatePage({
           </form>
         </div>
       </section>
+
+      {editable && onChangeInquiryTopics ? (
+        <section className="give-section admin-inline-section">
+          <div className="give-section-head">
+            <h3>Inquiry topics</h3>
+            <p>Edit the dropdown choices one per line.</p>
+          </div>
+          <textarea
+            className="connect-edit-textarea"
+            value={inquiryTopics.join("\n")}
+            onChange={(event) =>
+              onChangeInquiryTopics(
+                event.target.value
+                  .split("\n")
+                  .map((item) => item.trim())
+                  .filter(Boolean)
+              )
+            }
+          />
+        </section>
+      ) : null}
     </section>
   );
 }

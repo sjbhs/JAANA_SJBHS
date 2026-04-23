@@ -1,7 +1,11 @@
-import { GalleryImage, TabId } from "../types";
+import { GalleryImage, TabId, HomePageCopy } from "../types";
+import { InlineEditableText } from "./InlineEditableText";
 
 type HomePageProps = {
   connectMoments: GalleryImage[];
+  homeCopy: HomePageCopy;
+  editable?: boolean;
+  onChangeHomeCopy?: <K extends keyof HomePageCopy>(key: K, value: HomePageCopy[K]) => void;
   onActivateTab: (tabId: TabId) => void;
   onOpenPastEventsDialog: () => void;
   onOpenLightboxImage: (image: GalleryImage) => void;
@@ -9,6 +13,9 @@ type HomePageProps = {
 
 export function HomePage({
   connectMoments,
+  homeCopy,
+  editable = false,
+  onChangeHomeCopy,
   onActivateTab,
   onOpenPastEventsDialog,
   onOpenLightboxImage
@@ -19,12 +26,24 @@ export function HomePage({
         <div className="hero-copy">
           <div className="hero-brand" aria-label="JAANA identity">
             <img src="/assets/jaana-wordmark.png" alt="JAANA wordmark" />
-            <h1 className="hero-motto">Fide et Labore.</h1>
+            <h1 className="hero-motto">
+              <InlineEditableText
+                editable={editable}
+                value={homeCopy.heroMotto}
+                onChange={(value) => onChangeHomeCopy?.("heroMotto", value)}
+                className="hero-motto"
+              />
+            </h1>
           </div>
-          <p className="hero-lead">
-            JAANA supports St. Joseph&apos;s Boys&apos; High School through alumni-led service, giving, and community
-            events across North America.
-          </p>
+          <div className="hero-lead">
+            <InlineEditableText
+              editable={editable}
+              value={homeCopy.heroLead}
+              onChange={(value) => onChangeHomeCopy?.("heroLead", value)}
+              multiline
+              className="hero-lead"
+            />
+          </div>
 
           <div className="hero-actions">
             <button className="primary-button" type="button" onClick={() => onActivateTab("causes")}>
@@ -67,42 +86,99 @@ export function HomePage({
         <div className="section-block">
           <div className="featured-heading">
             <div>
-              <h3>About JAANA</h3>
+              <h3>
+                <InlineEditableText
+                  editable={editable}
+                  value={homeCopy.aboutTitle}
+                  onChange={(value) => onChangeHomeCopy?.("aboutTitle", value)}
+                  className="section-title-edit"
+                />
+              </h3>
             </div>
           </div>
           <article className="info-card">
-            <p>
-              The Josephite Alumni Association of North America brings together SJBHS alumni and families to support
-              scholarships, teacher welfare, student programmes, and school development through trusted giving and
-              active fellowship.
-            </p>
+            <div className="card-copy">
+              <InlineEditableText
+                editable={editable}
+                value={homeCopy.aboutBody}
+                onChange={(value) => onChangeHomeCopy?.("aboutBody", value)}
+                multiline
+                className="body-copy-edit"
+              />
+            </div>
           </article>
         </div>
 
         <div className="section-block">
           <div className="featured-heading">
             <div>
-              <h3>Quick links</h3>
+              <h3>
+                <InlineEditableText
+                  editable={editable}
+                  value={homeCopy.quickLinksTitle}
+                  onChange={(value) => onChangeHomeCopy?.("quickLinksTitle", value)}
+                  className="section-title-edit"
+                />
+              </h3>
             </div>
           </div>
           <div className="priority-grid">
             <article className="priority-card">
-              <h3>Causes</h3>
-              <p>Review the active school causes and decide where you want your support to go.</p>
+              <h3>
+                <InlineEditableText
+                  editable={editable}
+                  value={homeCopy.causesCardTitle}
+                  onChange={(value) => onChangeHomeCopy?.("causesCardTitle", value)}
+                />
+              </h3>
+              <div className="card-copy">
+                <InlineEditableText
+                  editable={editable}
+                  value={homeCopy.causesCardBody}
+                  onChange={(value) => onChangeHomeCopy?.("causesCardBody", value)}
+                  multiline
+                />
+              </div>
               <button className="inline-button priority-link" type="button" onClick={() => onActivateTab("causes")}>
                 Open Causes page
               </button>
             </article>
             <article className="priority-card">
-              <h3>Donate</h3>
-              <p>Find current donation guidance and contact points while online giving links are being finalized.</p>
+              <h3>
+                <InlineEditableText
+                  editable={editable}
+                  value={homeCopy.donateCardTitle}
+                  onChange={(value) => onChangeHomeCopy?.("donateCardTitle", value)}
+                />
+              </h3>
+              <div className="card-copy">
+                <InlineEditableText
+                  editable={editable}
+                  value={homeCopy.donateCardBody}
+                  onChange={(value) => onChangeHomeCopy?.("donateCardBody", value)}
+                  multiline
+                />
+              </div>
               <button className="inline-button priority-link" type="button" onClick={() => onActivateTab("donate")}>
                 Open Donate page
               </button>
             </article>
             <article className="priority-card">
-              <h3>North America Connect 2026</h3>
-              <p>Check sponsor details and reunion updates for the September 2026 weekend.</p>
+              <h3>
+                <InlineEditableText
+                  editable={editable}
+                  value={homeCopy.connectCardTitle}
+                  onChange={(value) => onChangeHomeCopy?.("connectCardTitle", value)}
+                />
+              </h3>
+              <div className="card-copy">
+                <InlineEditableText
+                  editable={editable}
+                  value={homeCopy.connectCardBody}
+                  onChange={(value) => onChangeHomeCopy?.("connectCardBody", value)}
+                  multiline
+                />
+              </div>
               <button className="inline-button priority-link" type="button" onClick={() => onActivateTab("connect")}>
                 Open Connect page
               </button>
@@ -113,20 +189,53 @@ export function HomePage({
         <div className="section-block">
           <div className="featured-heading">
             <div>
-              <h3>Upcoming JAANA events | Past JAANA events</h3>
+              <h3>
+                <InlineEditableText
+                  editable={editable}
+                  value={homeCopy.eventsTitle}
+                  onChange={(value) => onChangeHomeCopy?.("eventsTitle", value)}
+                  className="section-title-edit"
+                />
+              </h3>
             </div>
           </div>
           <div className="home-events-grid">
             <article className="event-card">
-              <h3>Upcoming JAANA events</h3>
-              <p>North America Connect 2026 | September 19-20, 2026 | Washington DC &amp; Northern Virginia.</p>
+              <h3>
+                <InlineEditableText
+                  editable={editable}
+                  value={homeCopy.upcomingEventsTitle}
+                  onChange={(value) => onChangeHomeCopy?.("upcomingEventsTitle", value)}
+                />
+              </h3>
+              <div className="card-copy">
+                <InlineEditableText
+                  editable={editable}
+                  value={homeCopy.upcomingEventsBody}
+                  onChange={(value) => onChangeHomeCopy?.("upcomingEventsBody", value)}
+                  multiline
+                />
+              </div>
               <button className="inline-button priority-link" type="button" onClick={() => onActivateTab("connect")}>
                 Open upcoming events
               </button>
             </article>
             <article className="event-card">
-              <h3>Past JAANA events</h3>
-              <p>Browse past OBA and Connect event albums in a dialog view.</p>
+              <h3>
+                <InlineEditableText
+                  editable={editable}
+                  value={homeCopy.pastEventsTitle}
+                  onChange={(value) => onChangeHomeCopy?.("pastEventsTitle", value)}
+                />
+              </h3>
+              <div className="card-copy">
+                <InlineEditableText
+                  editable={editable}
+                  value={homeCopy.pastEventsBody}
+                  onChange={(value) => onChangeHomeCopy?.("pastEventsBody", value)}
+                  multiline
+                />
+              </div>
               <button className="inline-button priority-link" type="button" onClick={onOpenPastEventsDialog}>
                 Open past events
               </button>

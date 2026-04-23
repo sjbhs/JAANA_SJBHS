@@ -105,8 +105,8 @@ export function PastEventsDialog({ folders, onClose, onOpenLightboxImage }: Past
           </div>
         ) : selectedFolder ? (
           <div className="folder-grid album-subfolder-grid" aria-label={`${selectedFolder.title} albums`}>
-            {selectedFolder.albums.map((album) => (
-              <button className="folder-card" key={album.title} type="button" onClick={() => setSelectedAlbum(album)}>
+            {selectedFolder.albums.map((album, index) => (
+              <button className="folder-card" key={album.id ?? `${album.title}-${index}`} type="button" onClick={() => setSelectedAlbum(album)}>
                 <div className="folder-card-thumb">
                   <img src={album.cover.src} alt={album.cover.alt} />
                 </div>
