@@ -2758,7 +2758,7 @@ img {
   inset: 0;
   z-index: 92;
   display: grid;
-  align-items: center;
+  align-items: start;
   justify-items: center;
   overflow-y: auto;
   padding: clamp(1rem, 2.5vw, 2rem);
@@ -2772,7 +2772,10 @@ img {
   flex-direction: column;
   width: min(1080px, calc(100vw - 2rem));
   max-height: calc(100dvh - 2rem);
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   border-radius: 32px;
   border: 1px solid rgba(255, 255, 255, 0.72);
   background:
@@ -2782,9 +2785,14 @@ img {
 }
 
 .zeffy-dialog-header {
-  position: relative;
-  padding: clamp(1.35rem, 2.5vw, 2rem) clamp(1.45rem, 2.7vw, 2.15rem) 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  padding: clamp(1.35rem, 2.5vw, 2rem) clamp(4.2rem, 6vw, 5rem) 1rem clamp(1.45rem, 2.7vw, 2.15rem);
   border-bottom: 1px solid rgba(19, 53, 127, 0.1);
+  background:
+    radial-gradient(circle at top right, rgba(233, 214, 163, 0.12), transparent 24%),
+    linear-gradient(180deg, rgba(255, 253, 248, 0.99), rgba(247, 241, 230, 0.99));
 }
 
 .zeffy-dialog-header h3 {
@@ -2805,9 +2813,9 @@ img {
 }
 
 .zeffy-dialog-embed {
-  min-height: 36rem;
-  height: min(72vh, 44rem);
-  padding: 1rem clamp(1rem, 2vw, 1.5rem) clamp(1rem, 2vw, 1.5rem);
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 1rem clamp(1rem, 2vw, 1.5rem) clamp(1.25rem, 2vw, 1.75rem);
 }
 
 .zeffy-dialog-embed > div,
@@ -2841,7 +2849,7 @@ img {
     box-shadow 220ms ease,
     background 220ms ease;
   box-shadow: 0 10px 24px rgba(15, 34, 78, 0.12);
-  z-index: 101;
+  z-index: 4;
   cursor: pointer;
 }
 
@@ -3723,8 +3731,6 @@ textarea:focus,
   }
 
   .zeffy-dialog-embed {
-    min-height: 28rem;
-    height: min(76dvh, 40rem);
     padding-inline: 0.9rem;
     padding-bottom: 1rem;
   }

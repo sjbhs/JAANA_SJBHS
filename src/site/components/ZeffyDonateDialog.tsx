@@ -76,11 +76,10 @@ export function ZeffyDonateDialog({ open, onClose }: ZeffyDonateDialogProps) {
   return (
     <div className="zeffy-dialog" role="dialog" aria-modal="true" aria-labelledby="zeffy-dialog-title" onClick={onClose}>
       <div className="zeffy-dialog-shell" onClick={(event) => event.stopPropagation()}>
-        <button className="zeffy-dialog-close" type="button" onClick={onClose} aria-label="Close donation form">
-          ×
-        </button>
-
         <header className="zeffy-dialog-header">
+          <button className="zeffy-dialog-close" type="button" onClick={onClose} aria-label="Close donation form">
+            ×
+          </button>
           <p className="support-note">Secure donation form powered by Zeffy</p>
           <h3 id="zeffy-dialog-title">Donate to SJBHS through JAANA</h3>
           <p>
