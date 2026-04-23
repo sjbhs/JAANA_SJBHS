@@ -16,6 +16,7 @@ import { ConnectPage } from "./ConnectPage";
 import { DonatePage } from "./DonatePage";
 import { HomePage } from "./HomePage";
 import { initialForm } from "../content";
+import { ZeffyDonateDialog } from "./ZeffyDonateDialog";
 
 type AdminSiteContentPageProps = {
   details: TabConfig;
@@ -92,6 +93,7 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [backendOnline, setBackendOnline] = useState(false);
   const [selectedCause, setSelectedCause] = useState<CauseCard | null>(null);
+  const [donateDialogOpen, setDonateDialogOpen] = useState(false);
   const [form, setForm] = useState(initialForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
@@ -1016,6 +1018,7 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
             statusTone={statusTone}
             onSubmit={handleSubmit}
             onFieldChange={handleFormFieldChange}
+            onDonateClick={() => setDonateDialogOpen(true)}
             onChangeDetails={updateActiveTab}
             onChangeDonateCopy={(key, value) =>
               updateNestedContent("donateCopy", (donateCopy) => ({
@@ -1323,7 +1326,16 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
         </div>
       </footer>
 
-      {selectedCause ? <CauseDialog cause={selectedCause} onClose={() => setSelectedCause(null)} /> : null}
+      {selectedCause ? (
+        <CauseDialog
+          cause={selectedCause}
+          onClose={() => setSelectedCause(null)}
+          onDonateClick={() => setDonateDialogOpen(true)}
+          disableEscape={donateDialogOpen}
+        />
+      ) : null}
+
+      <ZeffyDonateDialog open={donateDialogOpen} onClose={() => setDonateDialogOpen(false)} />
     </div>
   );
 }

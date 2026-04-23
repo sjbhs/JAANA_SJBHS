@@ -5,13 +5,19 @@ import { PlaceholderDonateButton } from "./PlaceholderDonateButton";
 type CauseDialogProps = {
   cause: CauseCard;
   onClose: () => void;
+  onDonateClick: () => void;
+  disableEscape?: boolean;
 };
 
-export function CauseDialog({ cause, onClose }: CauseDialogProps) {
+export function CauseDialog({ cause, onClose, onDonateClick, disableEscape = false }: CauseDialogProps) {
   const goal = cause.goal.replace(/^Goal:\s*/, "");
   const impact = cause.impact.replace(/^Impact:\s*/, "");
 
   useEffect(() => {
+    if (disableEscape) {
+      return;
+    }
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         onClose();
@@ -21,7 +27,7 @@ export function CauseDialog({ cause, onClose }: CauseDialogProps) {
     window.addEventListener("keydown", handleKeyDown);
 
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+  }, [disableEscape, onClose]);
 
   return (
     <div
@@ -75,7 +81,7 @@ export function CauseDialog({ cause, onClose }: CauseDialogProps) {
         </div>
 
         <footer className="cause-dialog-actions">
-          <PlaceholderDonateButton buttonClassName="primary-button" />
+          <PlaceholderDonateButton buttonClassName="primary-button" onClick={onDonateClick} />
         </footer>
       </div>
     </div>

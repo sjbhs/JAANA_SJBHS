@@ -16,6 +16,7 @@ type DonatePageProps = {
   statusTone: "idle" | "success" | "error";
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onFieldChange: <K extends keyof InquiryForm>(field: K, value: InquiryForm[K]) => void;
+  onDonateClick: () => void;
   onChangeDetails?: <K extends keyof TabConfig>(key: K, value: TabConfig[K]) => void;
   onChangeDonateCopy?: <K extends keyof DonatePageCopy>(key: K, value: DonatePageCopy[K]) => void;
   onChangeContactChannel?: (index: number, key: "label" | "value" | "href", value: string) => void;
@@ -35,6 +36,7 @@ export function DonatePage({
   statusTone,
   onSubmit,
   onFieldChange,
+  onDonateClick,
   onChangeDetails,
   onChangeDonateCopy,
   onChangeContactChannel,
@@ -88,13 +90,13 @@ export function DonatePage({
         </div>
 
         <article className="support-card donation-route-card">
-          <p className="support-note">Coming soon</p>
-          <h3>Donate online through JAANA</h3>
+          <p className="support-note">Donate online through JAANA</p>
+          <h3>Open the Zeffy donation form</h3>
           <p>
-            JAANA is preparing its online giving page. When it is published, this section will include direct donation
-            links for the causes listed on the Causes page.
+            Use the embedded Zeffy campaign to donate without leaving the site. The form opens in a pop-up so donors
+            can complete the process directly from JAANA.
           </p>
-          <PlaceholderDonateButton buttonClassName="primary-button" />
+          <PlaceholderDonateButton buttonClassName="primary-button" onClick={onDonateClick} />
         </article>
       </section>
 

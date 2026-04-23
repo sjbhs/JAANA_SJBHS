@@ -48,8 +48,7 @@ export const tabs: TabConfig[] = [
     label: "Donate",
     kicker: "Donate",
     title: "Donate to St. Joseph's Boys' High School through JAANA in North America.",
-    copy:
-      "Online giving through JAANA will be available soon. Donation links for the supported causes will be published here once they are ready."
+    copy: "The Zeffy donation form is embedded here so donors can complete gifts without leaving the site."
   },
   {
     id: "connect",
@@ -63,7 +62,7 @@ export const tabs: TabConfig[] = [
 
 export const impactStats = [
   { value: "6", label: "priority causes open for support" },
-  { value: "Soon", label: "online giving links will be added here" },
+  { value: "Live", label: "Zeffy donation form opens in a pop-up" },
   { value: "Sept 19-20, 2026", label: "North America Connect weekend near Washington, D.C." }
 ];
 
@@ -85,12 +84,11 @@ export const priorityCards: PriorityCard[] = [
   },
   {
     title: "Donate",
-    body:
-      "The Donate page will soon include online giving links for the supported causes, along with current contact details for donors.",
+    body: "Open the Donate page to use the embedded Zeffy form and review current contact details for donors.",
     points: [
-      "Online giving through JAANA",
-      "Cause-based donation links",
-      "Updates coming soon",
+      "Embedded Zeffy donation form",
+      "Cause-based donation support",
+      "Donation questions handled directly",
       "JAANA finance contact remains available"
     ],
     cta: "Open Donate page",

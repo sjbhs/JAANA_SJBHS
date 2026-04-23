@@ -19,7 +19,7 @@
       "label": "Donate",
       "kicker": "Donate",
       "title": "Donate to St. Joseph's Boys' High School through JAANA in North America.",
-      "copy": "Online giving through JAANA will be available soon. Donation links for the supported causes will be published here once they are ready."
+      "copy": "The Zeffy donation form is embedded here so donors can complete gifts without leaving the site."
     },
     {
       "id": "connect",
@@ -35,8 +35,8 @@
       "label": "priority causes open for support"
     },
     {
-      "value": "Soon",
-      "label": "online giving links will be added here"
+      "value": "Live",
+      "label": "Zeffy donation form opens in a pop-up"
     },
     {
       "value": "Sept 19-20, 2026",
@@ -60,11 +60,11 @@
     },
     {
       "title": "Donate",
-      "body": "The Donate page will soon include online giving links for the supported causes, along with current contact details for donors.",
+      "body": "Open the Donate page to use the embedded Zeffy form and review current contact details for donors.",
       "points": [
-        "Online giving through JAANA",
-        "Cause-based donation links",
-        "Updates coming soon",
+        "Embedded Zeffy donation form",
+        "Cause-based donation support",
+        "Donation questions handled directly",
         "JAANA finance contact remains available"
       ],
       "cta": "Open Donate page",
@@ -758,7 +758,7 @@
     "causesCardTitle": "Causes",
     "causesCardBody": "Review the active school causes and decide where you want your support to go.",
     "donateCardTitle": "Donate",
-    "donateCardBody": "Find current donation guidance and contact points while online giving links are being finalized.",
+    "donateCardBody": "Open the Zeffy donation form or use the contact points below if you need help with a gift.",
     "connectCardTitle": "North America Connect 2026",
     "connectCardBody": "Check sponsor details and reunion updates for the September 2026 weekend.",
     "eventsTitle": "Upcoming JAANA events | Past JAANA events",
@@ -771,10 +771,10 @@
     "sectionHeading": "Choose where your support goes"
   },
   "donateCopy": {
-    "onlineGivingHeading": "Online giving will be available soon",
-    "onlineGivingBody": "Donation links for the supported causes will be added here as soon as the giving page is ready.",
+    "onlineGivingHeading": "Donate online through Zeffy",
+    "onlineGivingBody": "The donation form opens in a pop-up so you can complete your gift without leaving the site.",
     "contactHeading": "Reach JAANA directly",
-    "contactBody": "For donation enquiries in the meantime, use the details below.",
+    "contactBody": "For donation questions, sponsorship, or chapter coordination, use the details below.",
     "formHeading": "Tell the team how you would like to get involved.",
     "formBody": "Use this form for cause support, U.S. donations, sponsorship enquiries, chapter coordination, or general alumni questions."
   },
