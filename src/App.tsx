@@ -9,6 +9,7 @@ import { DonatePage } from "./site/components/DonatePage";
 import { HomePage } from "./site/components/HomePage";
 import { LightboxDialog } from "./site/components/LightboxDialog";
 import { PastEventsDialog } from "./site/components/PastEventsDialog";
+import { ZeffyDonateDialog } from "./site/components/ZeffyDonateDialog";
 import {
   AlbumFolder,
   CauseCard,
@@ -28,6 +29,7 @@ function App() {
   const [selectedAlbumFolder, setSelectedAlbumFolder] = useState<AlbumFolder | null>(null);
   const [selectedAlbum, setSelectedAlbum] = useState<EventAlbum | null>(null);
   const [pastEventsDialogOpen, setPastEventsDialogOpen] = useState(false);
+  const [donateDialogOpen, setDonateDialogOpen] = useState(false);
   const [lightboxImage, setLightboxImage] = useState<GalleryImage | null>(null);
   const [lightboxZoomed, setLightboxZoomed] = useState(false);
   const [lightboxScale, setLightboxScale] = useState(1);
@@ -120,12 +122,17 @@ function App() {
   }, [activeTab]);
 
   useEffect(() => {
-    if (!lightboxImage && !selectedCause && !selectedAlbumFolder && !pastEventsDialogOpen) {
+    if (!lightboxImage && !selectedCause && !selectedAlbumFolder && !pastEventsDialogOpen && !donateDialogOpen) {
       return;
     }
 
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
+        if (donateDialogOpen) {
+          setDonateDialogOpen(false);
+          return;
+        }
+
         setLightboxImage(null);
         setLightboxZoomed(false);
         setLightboxScale(1);
@@ -142,7 +149,7 @@ function App() {
     window.addEventListener("keydown", handleEscape);
 
     return () => window.removeEventListener("keydown", handleEscape);
-  }, [lightboxImage, selectedCause, selectedAlbumFolder, selectedAlbum, pastEventsDialogOpen]);
+  }, [lightboxImage, selectedCause, selectedAlbumFolder, selectedAlbum, pastEventsDialogOpen, donateDialogOpen]);
 
   useEffect(() => {
     if (!mobileNavOpen) {
@@ -619,6 +626,10 @@ function App() {
     setMobileNavOpen(false);
   };
 
+  const handleOpenDonateDialog = () => {
+    setDonateDialogOpen(true);
+  };
+
   const {
     tabs,
     contactChannels,
@@ -754,6 +765,7 @@ function App() {
             statusTone={statusTone}
             onSubmit={handleSubmit}
             onFieldChange={handleFormFieldChange}
+            onDonateClick={handleOpenDonateDialog}
           />
         ) : null}
 
@@ -777,7 +789,14 @@ function App() {
         </div>
       </footer>
 
-      {selectedCause ? <CauseDialog cause={selectedCause} onClose={() => setSelectedCause(null)} /> : null}
+      {selectedCause ? (
+        <CauseDialog
+          cause={selectedCause}
+          onClose={() => setSelectedCause(null)}
+          onDonateClick={handleOpenDonateDialog}
+          disableEscape={donateDialogOpen}
+        />
+      ) : null}
 
       {selectedAlbumFolder ? (
         <AlbumDialog
@@ -837,6 +856,8 @@ function App() {
           onStopDrag={stopLightboxDrag}
         />
       ) : null}
+
+      <ZeffyDonateDialog open={donateDialogOpen} onClose={() => setDonateDialogOpen(false)} />
     </div>
   );
 }

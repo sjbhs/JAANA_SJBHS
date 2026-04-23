@@ -2753,6 +2753,109 @@ img {
   min-height: 2.75rem;
 }
 
+.zeffy-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 92;
+  display: grid;
+  align-items: center;
+  justify-items: center;
+  overflow-y: auto;
+  padding: clamp(1rem, 2.5vw, 2rem);
+  background: rgba(12, 20, 37, 0.82);
+  backdrop-filter: blur(12px);
+}
+
+.zeffy-dialog-shell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(1080px, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  overflow: hidden;
+  border-radius: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  background:
+    radial-gradient(circle at top right, rgba(233, 214, 163, 0.12), transparent 24%),
+    linear-gradient(180deg, rgba(255, 253, 248, 0.99), rgba(247, 241, 230, 0.99));
+  box-shadow: 0 34px 90px rgba(7, 15, 33, 0.34);
+}
+
+.zeffy-dialog-header {
+  position: relative;
+  padding: clamp(1.35rem, 2.5vw, 2rem) clamp(1.45rem, 2.7vw, 2.15rem) 1rem;
+  border-bottom: 1px solid rgba(19, 53, 127, 0.1);
+}
+
+.zeffy-dialog-header h3 {
+  margin: 0;
+  color: var(--navy-deep);
+  font-family: Georgia, "Baskerville", "Times New Roman", serif;
+  font-size: clamp(1.65rem, 2.8vw, 2.3rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.zeffy-dialog-header p {
+  margin: 0.7rem 0 0;
+  max-width: 54rem;
+  color: rgba(19, 53, 127, 0.7);
+  font-size: 0.96rem;
+  line-height: 1.58;
+}
+
+.zeffy-dialog-embed {
+  min-height: 36rem;
+  height: min(72vh, 44rem);
+  padding: 1rem clamp(1rem, 2vw, 1.5rem) clamp(1rem, 2vw, 1.5rem);
+}
+
+.zeffy-dialog-embed > div,
+.zeffy-dialog-embed iframe {
+  width: 100%;
+}
+
+.zeffy-dialog-embed iframe {
+  display: block;
+}
+
+.zeffy-dialog-close {
+  position: absolute;
+  top: clamp(1rem, 2vw, 1.5rem);
+  right: clamp(1rem, 2vw, 1.5rem);
+  margin: 0;
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--navy-deep);
+  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid rgba(19, 53, 127, 0.12);
+  border-radius: 50%;
+  font-size: 1.8rem;
+  font-weight: 300;
+  line-height: 1;
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    background 220ms ease;
+  box-shadow: 0 10px 24px rgba(15, 34, 78, 0.12);
+  z-index: 101;
+  cursor: pointer;
+}
+
+.zeffy-dialog-close:hover {
+  background: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(15, 34, 78, 0.18);
+}
+
+.zeffy-dialog-close:active {
+  transform: translateY(0);
+  box-shadow: 0 8px 18px rgba(15, 34, 78, 0.14);
+}
+
 .album-dialog .album-dialog-close {
   position: absolute;
   top: 1.25rem;
@@ -3578,7 +3681,18 @@ textarea:focus,
     border-radius: 22px;
   }
 
+  .zeffy-dialog-shell {
+    width: calc(100vw - 1rem);
+    max-height: calc(100dvh - 1rem);
+    border-radius: 22px;
+  }
+
   .cause-dialog {
+    align-items: start;
+    padding: 0.5rem;
+  }
+
+  .zeffy-dialog {
     align-items: start;
     padding: 0.5rem;
   }
@@ -3606,6 +3720,13 @@ textarea:focus,
   .cause-dialog-grid {
     gap: 1.2rem;
     padding: 1rem;
+  }
+
+  .zeffy-dialog-embed {
+    min-height: 28rem;
+    height: min(76dvh, 40rem);
+    padding-inline: 0.9rem;
+    padding-bottom: 1rem;
   }
 
   .cause-dialog-actions {
@@ -3930,12 +4051,24 @@ textarea:focus,
     border-radius: 18px;
   }
 
+  .zeffy-dialog-shell {
+    border-radius: 18px;
+  }
+
   .album-dialog-shell {
     width: calc(100vw - 0.75rem);
     padding: 3.4rem 0.9rem 1rem;
   }
 
   .album-dialog .album-dialog-close {
+    top: 0.85rem;
+    right: 0.85rem;
+    width: 2.8rem;
+    height: 2.8rem;
+    font-size: 1.9rem;
+  }
+
+  .zeffy-dialog-close {
     top: 0.85rem;
     right: 0.85rem;
     width: 2.8rem;

@@ -45,7 +45,7 @@ export const defaultHomeCopy: HomePageCopy = {
   causesCardTitle: "Causes",
   causesCardBody: "Review the active school causes and decide where you want your support to go.",
   donateCardTitle: "Donate",
-  donateCardBody: "Find current donation guidance and contact points while online giving links are being finalized.",
+  donateCardBody: "Open the Zeffy donation form or use the contact points below if you need help with a gift.",
   connectCardTitle: "North America Connect 2026",
   connectCardBody: "Check sponsor details and reunion updates for the September 2026 weekend.",
   eventsTitle: "Upcoming JAANA events | Past JAANA events",
@@ -60,10 +60,10 @@ export const defaultCausesCopy: CausesPageCopy = {
 };
 
 export const defaultDonateCopy: DonatePageCopy = {
-  onlineGivingHeading: "Online giving will be available soon",
-  onlineGivingBody: "Donation links for the supported causes will be added here as soon as the giving page is ready.",
+  onlineGivingHeading: "Donate online through Zeffy",
+  onlineGivingBody: "The donation form opens in a pop-up so you can complete your gift without leaving the site.",
   contactHeading: "Reach JAANA directly",
-  contactBody: "For donation enquiries in the meantime, use the details below.",
+  contactBody: "For donation questions, sponsorship, or chapter coordination, use the details below.",
   formHeading: "Tell the team how you would like to get involved.",
   formBody:
     "Use this form for cause support, U.S. donations, sponsorship enquiries, chapter coordination, or general alumni questions."
