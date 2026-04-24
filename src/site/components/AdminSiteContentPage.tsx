@@ -18,6 +18,16 @@ import { HomePage } from "./HomePage";
 import { initialForm } from "../content";
 import { ZeffyDonateDialog } from "./ZeffyDonateDialog";
 
+type InquiryEntry = {
+  id: string;
+  name: string;
+  email: string;
+  organization: string;
+  interest: string;
+  notes: string;
+  createdAt: string;
+};
+
 type AdminSiteContentPageProps = {
   details: TabConfig;
   onContentSaved?: (content: SiteContent) => void;
@@ -99,6 +109,10 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
   const [statusMessage, setStatusMessage] = useState("");
   const [statusTone, setStatusTone] = useState<"idle" | "success" | "error">("idle");
   const [editorStatus, setEditorStatus] = useState("Saved content stays on the public site.");
+  const [inquiryTotal, setInquiryTotal] = useState(0);
+  const [recentInquiries, setRecentInquiries] = useState<InquiryEntry[]>([]);
+  const [inquiriesLoading, setInquiriesLoading] = useState(false);
+  const [inquiriesStatus, setInquiriesStatus] = useState("Latest inquiries appear here once loaded.");
   const [editorView, setEditorView] = useState<"content" | "media">("content");
   const [jsonDraft, setJsonDraft] = useState(JSON.stringify(defaultSiteContent, null, 2));
   const [jsonError, setJsonError] = useState("");
@@ -171,6 +185,41 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
     return true;
   };
 
+  const loadInquiryInbox = async () => {
+    setInquiriesLoading(true);
+    setInquiriesStatus("Loading inquiries...");
+
+    try {
+      const response = await fetch("/api/admin/inquiries?limit=10", {
+        credentials: "include"
+      });
+
+      if (response.status === 401) {
+        setAuthState("signedOut");
+        setLoginStatus("Sign in to edit the site content.");
+        setInquiriesStatus("Sign in to view inquiries.");
+        return false;
+      }
+
+      const payload = (await readJson(response)) as { total?: number; inquiries?: InquiryEntry[]; error?: string };
+
+      if (!response.ok) {
+        setInquiriesStatus(payload.error ?? "Unable to load inquiries.");
+        return false;
+      }
+
+      setInquiryTotal(typeof payload.total === "number" ? payload.total : 0);
+      setRecentInquiries(Array.isArray(payload.inquiries) ? payload.inquiries : []);
+      setInquiriesStatus("Loaded latest inquiries.");
+      return true;
+    } catch {
+      setInquiriesStatus("Unable to load inquiries.");
+      return false;
+    } finally {
+      setInquiriesLoading(false);
+    }
+  };
+
   useEffect(() => {
     let cancelled = false;
 
@@ -194,6 +243,7 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
 
         setAuthState("signedIn");
         await loadEditorContent();
+        await loadInquiryInbox();
       } catch {
         if (!cancelled) {
           setAuthState("signedOut");
@@ -319,6 +369,7 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
       setLoginPassword("");
       setLoginStatus("Signed in.");
       await loadEditorContent();
+      await loadInquiryInbox();
     } catch (error) {
       setLoginStatus(error instanceof Error ? error.message : "Unable to sign in.");
     } finally {
@@ -405,6 +456,9 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
       setIsEditing(false);
       setEditorView("content");
       setEditorStatus("Sign in to edit the site content.");
+      setInquiryTotal(0);
+      setRecentInquiries([]);
+      setInquiriesStatus("Sign in to view inquiries.");
     }
   };
 
@@ -965,6 +1019,66 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
               Sign out
             </button>
           </div>
+        </div>
+      </section>
+
+      <section className="section-block admin-inquiry-section" aria-label="Inquiry inbox">
+        <div className="featured-heading admin-inquiry-head">
+          <div>
+            <h3>Inquiry inbox</h3>
+            <p>Review the latest donation and sponsor requests coming in from the public site.</p>
+          </div>
+          <button className="secondary-button" type="button" onClick={() => void loadInquiryInbox()} disabled={inquiriesLoading}>
+            {inquiriesLoading ? "Refreshing..." : "Refresh inbox"}
+          </button>
+        </div>
+
+        <div className="admin-inquiry-summary">
+          <article>
+            <span>Total inquiries</span>
+            <strong>{inquiryTotal}</strong>
+          </article>
+          <article>
+            <span>Loaded now</span>
+            <strong>{recentInquiries.length}</strong>
+          </article>
+        </div>
+
+        {inquiriesStatus ? (
+          <p className="admin-auth-status" aria-live="polite">
+            {inquiriesStatus}
+          </p>
+        ) : null}
+
+        <div className="admin-inquiry-list">
+          {recentInquiries.length ? (
+            recentInquiries.map((inquiry) => (
+              <article key={inquiry.id} className="admin-inquiry-card">
+                <div className="admin-inquiry-card-head">
+                  <div>
+                    <strong>{inquiry.name}</strong>
+                    <span>{inquiry.interest}</span>
+                  </div>
+                  <time dateTime={inquiry.createdAt}>{new Date(inquiry.createdAt).toLocaleString()}</time>
+                </div>
+                <dl className="admin-inquiry-meta">
+                  <div>
+                    <dt>Email</dt>
+                    <dd>
+                      <a href={`mailto:${inquiry.email}`}>{inquiry.email}</a>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Batch / City / Organization</dt>
+                    <dd>{inquiry.organization || "Not provided"}</dd>
+                  </div>
+                </dl>
+                <p>{inquiry.notes || "No notes provided."}</p>
+              </article>
+            ))
+          ) : (
+            <p className="admin-inquiry-empty">No inquiries loaded yet.</p>
+          )}
         </div>
       </section>
 

@@ -170,6 +170,9 @@ ADMIN_EMAIL=jaanamedia@gmail.com
 ADMIN_PASSWORD=CommonPassJAANA1858$
 ADMIN_SESSION_SECRET=change-this-to-a-long-random-string
 ADMIN_EMAIL_FROM=JAANA Admin <no-reply@jaana.app>
+INQUIRY_EMAIL_FROM=JAANA Website <no-reply@jaana.app>
+INQUIRY_EMAIL_TO=jaanafinance@gmail.com
+INQUIRY_EMAIL_CC=
 RESEND_API_KEY=
 VITE_API_PROXY_TARGET=http://127.0.0.1:3001
 VITE_HOST=127.0.0.1
@@ -196,8 +199,14 @@ What they control:
   Secret used to sign the admin session cookie.
 - `ADMIN_EMAIL_FROM`
   Verified sender address or identity used by the password reminder email.
+- `INQUIRY_EMAIL_FROM`
+  Verified sender address or identity used by inquiry notification emails.
+- `INQUIRY_EMAIL_TO`
+  Comma-separated recipients for inquiry notification emails. Defaults to `jaanafinance@gmail.com`.
+- `INQUIRY_EMAIL_CC`
+  Optional comma-separated CC recipients for inquiry notification emails.
 - `RESEND_API_KEY`
-  API key used to send the password reminder email through Resend.
+  API key used to send password reminder and inquiry notification emails through Resend.
 - `VITE_API_PROXY_TARGET`
   Backend target for Vite's `/api` proxy.
 - `VITE_HOST`
@@ -239,7 +248,7 @@ Vite proxies `/api` requests to the Express server during development.
 - Hidden Connect editor: `http://127.0.0.1:5173/admin`
 
 The public Connect page is read-only. Editing happens only through the hidden `/admin` route.
-The admin page uses a signed session cookie, a fixed admin email, and a password reminder email flow. Configure `RESEND_API_KEY` and `ADMIN_EMAIL_FROM` before using the reminder button in production.
+The admin page uses a signed session cookie, a fixed admin email, a password reminder email flow, and an inquiry inbox for donations/sponsorship requests. Configure `RESEND_API_KEY` and `ADMIN_EMAIL_FROM` before using the reminder button in production.
 The Connect editor storage is still file-backed, so on Vercel you should connect it to persistent storage if you want edits to survive deploys and serverless restarts.
 
 ## Available scripts
@@ -352,6 +361,13 @@ Required fields:
 - `name`
 - `email`
 - `interest`
+
+When `RESEND_API_KEY` is configured, the API also emails inquiry details to `INQUIRY_EMAIL_TO` and optional
+`INQUIRY_EMAIL_CC` recipients. Submissions are still written to JSON storage if email is not configured.
+
+### `GET /api/admin/inquiries`
+
+Returns the latest inquiry submissions for the `/admin` inbox view.
 
 ## Inquiry storage
 
