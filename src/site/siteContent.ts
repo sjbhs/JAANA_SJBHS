@@ -60,13 +60,12 @@ export const defaultCausesCopy: CausesPageCopy = {
 };
 
 export const defaultDonateCopy: DonatePageCopy = {
-  onlineGivingHeading: "Donate online through Zeffy",
-  onlineGivingBody: "The donation form opens in a pop-up so you can complete your gift without leaving the site.",
-  contactHeading: "Reach JAANA directly",
-  contactBody: "For donation questions, sponsorship, or chapter coordination, use the details below.",
-  formHeading: "Tell the team how you would like to get involved.",
-  formBody:
-    "Use this form for cause support, U.S. donations, sponsorship enquiries, chapter coordination, or general alumni questions."
+  onlineGivingHeading: "Ways to donate",
+  onlineGivingBody: "Choose the route that fits your giving plan. Grant and small-gift donations open Zeffy.",
+  contactHeading: "Contacts",
+  contactBody: "Use the details below if you need them.",
+  formHeading: "Inquiry form",
+  formBody: "Use this form for donations, sponsorship inquiries, or alumni questions."
 };
 
 export const defaultConnectCopy: ConnectPageCopy = {

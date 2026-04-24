@@ -1269,6 +1269,13 @@ img {
   line-height: 1.66;
 }
 
+.donation-cause-link a {
+  color: var(--navy);
+  font-weight: 700;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.18rem;
+}
+
 .donation-header-actions {
   display: flex;
   flex-wrap: wrap;
@@ -1324,6 +1331,10 @@ img {
   margin-top: 1.35rem;
 }
 
+.donation-form-section {
+  margin-top: 1rem;
+}
+
 .give-section-head {
   display: flex;
   align-items: end;
@@ -1348,8 +1359,78 @@ img {
 }
 
 .donation-route-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+  overflow: hidden;
   background:
+    radial-gradient(circle at top right, rgba(233, 214, 163, 0.16), transparent 28%),
     linear-gradient(180deg, rgba(255, 253, 248, 0.98), rgba(250, 245, 236, 0.98));
+}
+
+.donation-route-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-top: 4px solid rgba(19, 53, 127, 0.72);
+}
+
+.donation-route-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.donation-route-card-head {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.9rem;
+}
+
+.donation-route-card-head h3 {
+  margin-top: 0.45rem;
+}
+
+.donation-minimum {
+  flex: 0 0 auto;
+  max-width: 11.5rem;
+  padding: 0.48rem 0.7rem;
+  border: 1px solid rgba(19, 53, 127, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--navy-deep);
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.25;
+  text-align: center;
+  box-shadow: 0 10px 22px rgba(15, 34, 78, 0.08);
+}
+
+.donation-route-actions {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: auto;
+}
+
+.donation-route-actions .primary-button,
+.donation-route-actions .secondary-button {
+  min-height: 2.75rem;
+  padding-inline: 1rem;
+  font-size: 0.88rem;
+}
+
+.donation-route-card-matching {
+  background:
+    radial-gradient(circle at top right, rgba(19, 53, 127, 0.1), transparent 30%),
+    linear-gradient(180deg, rgba(255, 253, 248, 0.98), rgba(243, 238, 228, 0.98));
 }
 
 .secondary-support-grid {
@@ -2030,6 +2111,129 @@ img {
 .admin-controls-actions .primary-button,
 .admin-controls-actions .secondary-button {
   min-height: 2.75rem;
+}
+
+.admin-inquiry-section {
+  display: grid;
+  gap: 1rem;
+  width: var(--container);
+  margin-top: 1rem;
+}
+
+.admin-inquiry-head {
+  align-items: center;
+}
+
+.admin-inquiry-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.admin-inquiry-summary article {
+  padding: 0.95rem 1rem;
+  border: 1px solid rgba(19, 53, 127, 0.1);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 14px 28px rgba(13, 31, 74, 0.06);
+}
+
+.admin-inquiry-summary span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-inquiry-summary strong {
+  display: block;
+  margin-top: 0.35rem;
+  color: var(--navy-deep);
+  font-family: Georgia, "Baskerville", "Times New Roman", serif;
+  font-size: 1.35rem;
+  line-height: 1.1;
+}
+
+.admin-inquiry-list {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.admin-inquiry-card {
+  display: grid;
+  gap: 0.8rem;
+  padding: 1rem 1.05rem;
+  border: 1px solid rgba(19, 53, 127, 0.1);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 16px 34px rgba(13, 31, 74, 0.06);
+}
+
+.admin-inquiry-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.admin-inquiry-card-head strong {
+  display: block;
+  color: var(--navy-deep);
+  font-size: 1rem;
+}
+
+.admin-inquiry-card-head span,
+.admin-inquiry-card-head time {
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.admin-inquiry-card-head time {
+  flex: 0 0 auto;
+  text-align: right;
+}
+
+.admin-inquiry-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin: 0;
+}
+
+.admin-inquiry-meta div {
+  display: grid;
+  gap: 0.18rem;
+}
+
+.admin-inquiry-meta dt {
+  color: var(--muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-inquiry-meta dd {
+  margin: 0;
+  color: var(--navy-deep);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.admin-inquiry-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.admin-inquiry-empty {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  border: 1px dashed rgba(19, 53, 127, 0.18);
+  border-radius: 18px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.72);
 }
 
 .admin-media-overlay {
@@ -2753,6 +2957,211 @@ img {
   min-height: 2.75rem;
 }
 
+.donation-info-dialog,
+.donation-request-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 91;
+  display: grid;
+  align-items: start;
+  justify-items: center;
+  overflow-y: auto;
+  padding: clamp(1rem, 2.5vw, 2rem);
+  background: rgba(12, 20, 37, 0.8);
+  backdrop-filter: blur(12px);
+}
+
+.donation-request-dialog {
+  z-index: 92;
+}
+
+.donation-info-dialog-shell,
+.donation-request-dialog-shell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(920px, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  overflow: hidden;
+  border-radius: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  background:
+    radial-gradient(circle at top right, rgba(233, 214, 163, 0.14), transparent 24%),
+    linear-gradient(180deg, rgba(255, 253, 248, 0.99), rgba(247, 241, 230, 0.99));
+  box-shadow: 0 34px 90px rgba(7, 15, 33, 0.34);
+}
+
+.donation-request-dialog-shell {
+  width: min(1080px, calc(100vw - 2rem));
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.donation-info-dialog-header,
+.donation-request-dialog-header {
+  padding: clamp(1.35rem, 2.5vw, 2rem) clamp(4.2rem, 6vw, 5rem) 1rem clamp(1.45rem, 2.7vw, 2.15rem);
+  border-bottom: 1px solid rgba(19, 53, 127, 0.1);
+}
+
+.donation-info-dialog-header h3,
+.donation-info-section h4 {
+  margin: 0;
+  color: var(--navy-deep);
+  font-family: Georgia, "Baskerville", "Times New Roman", serif;
+}
+
+.donation-info-dialog-header h3 {
+  font-size: clamp(1.65rem, 2.8vw, 2.3rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.donation-info-dialog-header p {
+  margin: 0.7rem 0 0;
+  max-width: 54rem;
+  color: rgba(19, 53, 127, 0.7);
+  font-size: 0.96rem;
+  line-height: 1.58;
+}
+
+.donation-request-dialog-header p {
+  max-width: 54rem;
+}
+
+.donation-info-dialog-body {
+  display: grid;
+  gap: 1rem;
+  overflow-y: auto;
+  padding: clamp(1rem, 2vw, 1.4rem) clamp(1.45rem, 2.7vw, 2.15rem);
+}
+
+.donation-info-section {
+  padding: 1rem;
+  border: 1px solid rgba(19, 53, 127, 0.1);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.donation-info-section h4 {
+  font-size: clamp(1.04rem, 1.8vw, 1.35rem);
+  line-height: 1.15;
+}
+
+.donation-info-section .detail-list {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0.8rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.donation-info-section .detail-list li {
+  position: relative;
+  padding-left: 1.05rem;
+  color: rgba(19, 53, 127, 0.7);
+  font-size: 0.94rem;
+  line-height: 1.55;
+}
+
+.donation-info-section .detail-list li::before {
+  content: "";
+  position: absolute;
+  top: 0.7em;
+  left: 0;
+  width: 0.36rem;
+  height: 0.36rem;
+  border-radius: 999px;
+  background: var(--gold);
+}
+
+.donation-info-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem clamp(1.45rem, 2.7vw, 2.15rem);
+  border-top: 1px solid rgba(19, 53, 127, 0.1);
+  background: rgba(255, 251, 245, 0.78);
+}
+
+.donation-info-actions .primary-button,
+.donation-info-actions .secondary-button {
+  min-height: 2.75rem;
+}
+
+.donation-request-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.donation-request-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 1rem clamp(1rem, 2vw, 1.5rem) clamp(1.25rem, 2vw, 1.75rem);
+}
+
+.donation-request-panel {
+  width: min(860px, 100%);
+  margin: 0 auto;
+  padding: clamp(1rem, 2vw, 1.35rem);
+  border: 1px solid rgba(87, 87, 190, 0.14);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at top right, rgba(210, 210, 255, 0.58), transparent 35%),
+    linear-gradient(180deg, rgba(244, 244, 255, 0.9), rgba(232, 232, 252, 0.88));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.68),
+    0 20px 42px rgba(19, 27, 76, 0.08);
+}
+
+.request-block {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.request-section-head h4 {
+  margin: 0;
+  color: var(--navy-deep);
+  font-family: Georgia, "Baskerville", "Times New Roman", serif;
+  font-size: 1.08rem;
+  line-height: 1.15;
+}
+
+.request-section-head p {
+  margin: 0.35rem 0 0;
+  color: rgba(19, 53, 127, 0.66);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.request-block + .request-block {
+  margin-top: 0.95rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(19, 53, 127, 0.1);
+}
+
+.request-block .form-grid {
+  margin-top: 0.1rem;
+}
+
+.request-block .form-grid label span {
+  color: rgba(19, 53, 127, 0.82);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.request-block input,
+.request-block select,
+.request-block textarea {
+  background: #fffefa;
+}
+
+.request-footer {
+  margin-top: 0.35rem;
+}
+
 .zeffy-dialog {
   position: fixed;
   inset: 0;
@@ -3160,8 +3569,12 @@ img {
   background: var(--surface-strong);
 }
 
+.inquiry-card--solo {
+  width: 100%;
+}
+
 .form-heading {
-  max-width: 38rem;
+  max-width: 52rem;
 }
 
 .form-heading h3 {
@@ -3573,6 +3986,15 @@ textarea:focus,
 }
 
 @media (max-width: 1100px) {
+  .admin-inquiry-summary,
+  .admin-inquiry-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .donation-route-list {
+    grid-template-columns: 1fr;
+  }
+
   .donation-detail-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -3583,8 +4005,32 @@ textarea:focus,
 }
 
 @media (max-width: 720px) {
+  .admin-inquiry-card-head {
+    flex-direction: column;
+  }
+
+  .admin-inquiry-card-head time {
+    text-align: left;
+  }
+
   .donation-detail-grid {
     grid-template-columns: 1fr;
+  }
+
+  .donation-route-card-head {
+    flex-direction: column-reverse;
+    align-items: flex-start;
+  }
+
+  .donation-minimum {
+    max-width: none;
+  }
+
+  .donation-route-actions .primary-button,
+  .donation-route-actions .secondary-button,
+  .donation-info-actions .primary-button,
+  .donation-info-actions .secondary-button {
+    width: 100%;
   }
 }
 
@@ -3856,6 +4302,10 @@ textarea:focus,
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .donation-request-dialog-header {
+    padding: 3.75rem 1rem 1rem;
+  }
+
   .form-grid {
     grid-template-columns: 1fr;
   }
@@ -4002,6 +4452,24 @@ textarea:focus,
 
   .donation-summary-bar {
     grid-template-columns: 1fr;
+  }
+
+  .donation-request-dialog-header {
+    padding: 1rem 1rem 0.95rem;
+  }
+
+  .donation-request-body {
+    padding: 0.9rem;
+  }
+
+  .donation-request-panel {
+    padding: 0.9rem;
+    border-radius: 18px;
+  }
+
+  .request-block + .request-block {
+    margin-top: 0.85rem;
+    padding-top: 0.9rem;
   }
 
   .footer-contacts {

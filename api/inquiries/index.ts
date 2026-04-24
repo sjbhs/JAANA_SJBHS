@@ -1,4 +1,5 @@
 import { createInquiry } from "../../server/lib/inquiryStore";
+import { sendInquiryNotification } from "../../server/lib/inquiryNotifications";
 import { InquiryPayload, validateInquiryPayload } from "../../server/lib/inquiryValidation";
 
 async function readPayload(request: Request) {
@@ -38,10 +39,15 @@ export async function POST(request: Request) {
 
   try {
     const result = await createInquiry(validation.data);
+    const notification = await sendInquiryNotification(validation.data);
+
+    if (!notification.ok) {
+      console.warn(notification.error);
+    }
 
     return Response.json(
       {
-        message: "Thanks. Your inquiry has been sent to JAANA.",
+        message: notification.ok ? "Thanks. Your inquiry has been sent to JAANA." : "Thanks. Your inquiry has been received by JAANA.",
         total: result.total
       },
       {

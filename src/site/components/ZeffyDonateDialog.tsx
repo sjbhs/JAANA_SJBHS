@@ -81,9 +81,16 @@ export function ZeffyDonateDialog({ open, onClose }: ZeffyDonateDialogProps) {
             ×
           </button>
           <p className="support-note">Secure donation form powered by Zeffy</p>
-          <h3 id="zeffy-dialog-title">Donate to SJBHS through JAANA</h3>
+          <h3 id="zeffy-dialog-title">Donate to JAANA causes</h3>
           <p>
-            The embedded form opens here so donors can complete the Zeffy campaign without leaving the site.
+            Donate to JAANA, SJBHS-OBA, and BJES causes such as scholarships, awards, meals, insurance, and
+            infrastructure.
+          </p>
+          <p>
+            <strong>Grant:</strong> $1,000 or more. Donors may specify the cause they want to support.
+          </p>
+          <p>
+            <strong>Small gifts:</strong> Any amount helps. JAANA and SJBHS OBA use these funds where needed most.
           </p>
         </header>
 

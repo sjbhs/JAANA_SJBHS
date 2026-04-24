@@ -83,3 +83,12 @@ export async function getInquiryStats() {
     total: entries.length
   };
 }
+
+export async function getRecentInquiries(limit = 10) {
+  const entries = await readEntries();
+
+  return {
+    total: entries.length,
+    inquiries: entries.slice(0, Math.max(0, limit))
+  };
+}

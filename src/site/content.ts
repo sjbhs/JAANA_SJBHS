@@ -47,8 +47,8 @@ export const tabs: TabConfig[] = [
     id: "donate",
     label: "Donate",
     kicker: "Donate",
-    title: "Donate to St. Joseph's Boys' High School through JAANA in North America.",
-    copy: "The Zeffy donation form is embedded here so donors can complete gifts without leaving the site."
+    title: "Donate to JAANA",
+    copy: "Support JAANA, SJBHS-OBA, and BJES through the donation routes on this page."
   },
   {
     id: "connect",
@@ -798,6 +798,8 @@ export const contactChannels: ContactChannel[] = [
 export const inquiryTopics = [
   "Support a cause",
   "Donate from the USA",
+  "Create a named endowment",
+  "Corporate matching eligibility",
   "Sponsor North America Connect 2026",
   "General alumni question"
 ];

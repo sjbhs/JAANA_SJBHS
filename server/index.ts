@@ -22,7 +22,8 @@ import {
   validateSiteContent,
   writeSiteContent
 } from "./lib/siteContentStore";
-import { createInquiry, getInquiryStats } from "./lib/inquiryStore";
+import { createInquiry, getInquiryStats, getRecentInquiries } from "./lib/inquiryStore";
+import { sendInquiryNotification } from "./lib/inquiryNotifications";
 import { InquiryPayload, validateInquiryPayload } from "./lib/inquiryValidation";
 
 const app = express();
@@ -171,6 +172,18 @@ app.get("/api/admin/site-content", requireAdminSession, async (_request, respons
   }
 });
 
+app.get("/api/admin/inquiries", requireAdminSession, async (request, response, next) => {
+  try {
+    const limitParam = Number(request.query.limit ?? 10);
+    const limit = Number.isFinite(limitParam) ? Math.max(1, Math.min(50, Math.floor(limitParam))) : 10;
+    const inquiries = await getRecentInquiries(limit);
+
+    response.json(inquiries);
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.put("/api/admin/site-content", requireAdminSession, async (request, response, next) => {
   try {
     const validation = validateSiteContent(request.body as Parameters<typeof validateSiteContent>[0]);
@@ -211,9 +224,14 @@ app.post("/api/inquiries", async (request, response, next) => {
     }
 
     const result = await createInquiry(validation.data);
+    const notification = await sendInquiryNotification(validation.data);
+
+    if (!notification.ok) {
+      console.warn(notification.error);
+    }
 
     response.status(201).json({
-      message: "Thanks. Your inquiry has been sent to JAANA.",
+      message: notification.ok ? "Thanks. Your inquiry has been sent to JAANA." : "Thanks. Your inquiry has been received by JAANA.",
       total: result.total
     });
   } catch (error) {
