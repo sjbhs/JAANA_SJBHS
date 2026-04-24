@@ -55,28 +55,24 @@ const financeEmail = "jaanafinance@gmail.com";
 const donationRoutes = [
   {
     id: "endowment" as const,
-    label: "Endowment",
     title: "Endowment",
     minimum: "Min: $12,000 over 3 years",
     body: "An invested corpus created with JAANA US. At least 5% is distributed yearly to the donor's chosen cause."
   },
   {
     id: "grant" as const,
-    label: "Grant",
     title: "Grant",
     minimum: "Min: $1,000",
     body: "A grant of $1,000 or more to a donor-selected JAANA/OBA cause."
   },
   {
     id: "smallGift" as const,
-    label: "Small gifts",
     title: "Small gifts",
     minimum: "Min: $1",
     body: "Donations of less than $1,000 are used by JAANA and the SJBHS OBA where needed most."
   },
   {
     id: "matching" as const,
-    label: "Matching",
     title: "Matching",
     minimum: "Employer matching",
     body: "Check whether your employer can match your donation."
@@ -416,7 +412,6 @@ export function DonatePage({
               <article key={route.id} className={`support-card donation-route-card donation-route-card-${route.id}`}>
                 <div className="donation-route-card-head">
                   <div>
-                    <p className="support-note">{route.label}</p>
                     <h3>{route.title}</h3>
                   </div>
                   <span className="donation-minimum">{route.minimum}</span>
