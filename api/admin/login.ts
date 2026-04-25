@@ -4,7 +4,7 @@ import {
   getAdminAuthConfigurationError,
   isAdminAuthConfigured,
   verifyAdminCredentials
-} from "../../server/lib/adminAuth.js";
+} from "./_auth.js";
 import { checkRateLimit, getClientIpFromRequestHeaders } from "../../server/lib/rateLimit.js";
 import { readJsonBody, tooManyRequestsResponse } from "./_shared.js";
 

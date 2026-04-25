@@ -1,4 +1,4 @@
-import { isAdminSessionValid } from "../../server/lib/adminAuth.js";
+import { isAdminSessionValid } from "./_auth.js";
 import { unauthorizedResponse, readJsonBody } from "./_shared.js";
 import { readConnectContent, validateConnectContent, writeConnectContent } from "../../server/lib/connectContentStore.js";
 

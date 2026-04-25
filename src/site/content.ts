@@ -3,6 +3,7 @@ import type {
   CauseCard,
   ContactChannel,
   ConnectPageContent,
+  DonationRoute,
   EventAlbum,
   EventHighlight,
   GalleryImage,
@@ -227,6 +228,37 @@ export const causeCards: CauseCard[] = [
       "One-time grants work well for directed needs requiring current deployment.",
       "Endowment and general donation routes can still be used when a recurring or pooled structure is more appropriate."
     ]
+  }
+];
+
+export const donationRoutes: DonationRoute[] = [
+  {
+    id: "endowment",
+    title: "Endowment",
+    minimum: "Min: $12,000 over 3 years",
+    body: "An invested corpus created with JAANA US. At least 5% is distributed yearly to the donor's chosen cause.",
+    action: "endowment"
+  },
+  {
+    id: "grant",
+    title: "Grant",
+    minimum: "Min: $1,000",
+    body: "A grant of $1,000 or more to a donor-selected JAANA/OBA cause.",
+    action: "grant"
+  },
+  {
+    id: "smallGift",
+    title: "Small gifts",
+    minimum: "Min: $1",
+    body: "Donations of less than $1,000 are used by JAANA and the SJBHS OBA where needed most.",
+    action: "smallGift"
+  },
+  {
+    id: "matching",
+    title: "Employer Matching",
+    minimum: "Employer matching",
+    body: "Check whether your employer can match your donation.",
+    action: "matching"
   }
 ];
 

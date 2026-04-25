@@ -49,6 +49,16 @@ export type DonatePageCopy = {
   formBody: string;
 };
 
+export type DonationRouteAction = "endowment" | "grant" | "smallGift" | "matching";
+
+export type DonationRoute = {
+  id: string;
+  title: string;
+  minimum: string;
+  body: string;
+  action: DonationRouteAction;
+};
+
 export type ConnectPageCopy = {
   posterLabel: string;
   posterTitle: string;
@@ -140,6 +150,7 @@ export type SiteContent = {
   impactStats: { value: string; label: string }[];
   priorityCards: PriorityCard[];
   causeCards: CauseCard[];
+  donationRoutes: DonationRoute[];
   sponsorHighlights: EventHighlight[];
   sponsorTiers: SponsorTier[];
   connectMoments: GalleryImage[];

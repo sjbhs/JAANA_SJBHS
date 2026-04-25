@@ -645,6 +645,7 @@ function App() {
     homeCopy,
     causesCopy,
     donateCopy,
+    donationRoutes,
     connectCopy
   } = siteContent;
   const isAdminRoute = window.location.pathname.startsWith("/admin");
@@ -756,7 +757,12 @@ function App() {
         ) : null}
 
         {activeTab === "donate" ? (
-          <DonatePage details={activeTabDetails} donateCopy={donateCopy} onDonateClick={handleOpenDonateDialog} />
+          <DonatePage
+            details={activeTabDetails}
+            donateCopy={donateCopy}
+            donationRoutes={donationRoutes}
+            onDonateClick={handleOpenDonateDialog}
+          />
         ) : null}
 
         {activeTab === "contact" ? (

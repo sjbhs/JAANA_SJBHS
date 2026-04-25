@@ -16,13 +16,14 @@ import {
   sanitizeInquiryNameInput,
   sanitizePhoneNumberInput
 } from "../inquiryConstraints";
-import { DonatePageCopy, TabConfig } from "../types";
+import { DonatePageCopy, DonationRoute, TabConfig } from "../types";
 import { PlaceholderDonateButton } from "./PlaceholderDonateButton";
 import { InlineEditableText } from "./InlineEditableText";
 
 type DonatePageProps = {
   details: TabConfig;
   donateCopy: DonatePageCopy;
+  donationRoutes: DonationRoute[];
   editable?: boolean;
   onDonateClick: () => void;
   onChangeDetails?: <K extends keyof TabConfig>(key: K, value: TabConfig[K]) => void;
@@ -56,33 +57,6 @@ type DonationInfoContent = {
 };
 
 const financeEmail = "jaanafinance@gmail.com";
-
-const donationRoutes = [
-  {
-    id: "endowment" as const,
-    title: "Endowment",
-    minimum: "Min: $12,000 over 3 years",
-    body: "An invested corpus created with JAANA US. At least 5% is distributed yearly to the donor's chosen cause."
-  },
-  {
-    id: "grant" as const,
-    title: "Grant",
-    minimum: "Min: $1,000",
-    body: "A grant of $1,000 or more to a donor-selected JAANA/OBA cause."
-  },
-  {
-    id: "smallGift" as const,
-    title: "Small gifts",
-    minimum: "Min: $1",
-    body: "Donations of less than $1,000 are used by JAANA and the SJBHS OBA where needed most."
-  },
-  {
-    id: "matching" as const,
-    title: "Employer Matching",
-    minimum: "Employer matching",
-    body: "Check whether your employer can match your donation."
-  }
-];
 
 const sharedGrantReasons = [
   "Tax deductions: To obtain a US tax deduction, donors need to donate to a 501(c)(3) non-profit. JAANA has established a partnership with Learn For Life Foundation - LFL, a US registered 501(c)(3) public charity established by Thomas Thekkethala, SJBHS '77.",
@@ -223,6 +197,7 @@ function formatRequestNotes(kind: DonationRequestKind, form: DonationRequestForm
 export function DonatePage({
   details,
   donateCopy,
+  donationRoutes,
   editable = false,
   onDonateClick,
   onChangeDetails,
@@ -398,7 +373,7 @@ export function DonatePage({
 
           <div className="donation-route-list">
             {donationRoutes.map((route) => (
-              <article key={route.id} className={`support-card donation-route-card donation-route-card-${route.id}`}>
+              <article key={route.id} className={`support-card donation-route-card donation-route-card-${route.action}`}>
                 <div className="donation-route-card-head">
                   <div>
                     <h3>{route.title}</h3>
@@ -407,7 +382,7 @@ export function DonatePage({
                 </div>
                 <p>{route.body}</p>
                 <div className="donation-route-actions">
-                  {route.id === "endowment" ? (
+                  {route.action === "endowment" ? (
                     <>
                       <button className="secondary-button" type="button" onClick={() => setActiveInfo("endowment")}>
                         Learn More
@@ -418,7 +393,7 @@ export function DonatePage({
                     </>
                   ) : null}
 
-                  {route.id === "grant" ? (
+                  {route.action === "grant" ? (
                     <>
                       <button className="secondary-button" type="button" onClick={() => setActiveInfo("grant")}>
                         Learn More
@@ -427,7 +402,7 @@ export function DonatePage({
                     </>
                   ) : null}
 
-                  {route.id === "smallGift" ? (
+                  {route.action === "smallGift" ? (
                     <>
                       <button className="secondary-button" type="button" onClick={() => setActiveInfo("smallGift")}>
                         Learn More
@@ -436,7 +411,7 @@ export function DonatePage({
                     </>
                   ) : null}
 
-                  {route.id === "matching" ? (
+                  {route.action === "matching" ? (
                     <button className="primary-button" type="button" onClick={() => openRequestDialog("matching")}>
                       Check Eligibility
                     </button>

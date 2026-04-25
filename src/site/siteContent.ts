@@ -6,6 +6,7 @@ import type {
   CauseCard,
   CausesPageCopy,
   DonatePageCopy,
+  DonationRoute,
   EventAlbum,
   EventHighlight,
   GalleryImage,
@@ -31,7 +32,8 @@ import {
   sponsorTiers,
   secondaryPages,
   tabs,
-  contactChannels
+  contactChannels,
+  donationRoutes
 } from "./content.js";
 
 export const defaultHomeCopy: HomePageCopy = {
@@ -118,6 +120,21 @@ function normalizeCause(cause: Partial<CauseCard> | undefined, fallback: CauseCa
       Array.isArray(cause?.donationWays) && cause.donationWays.length
         ? cause.donationWays.filter((item) => typeof item === "string" && item.trim()).map((item) => item.trim())
         : fallback.donationWays
+  };
+}
+
+function normalizeDonationRoute(route: Partial<DonationRoute> | undefined, fallback: DonationRoute): DonationRoute {
+  const action = route?.action;
+
+  return {
+    id: typeof route?.id === "string" && route.id.trim() ? route.id.trim() : fallback.id,
+    title: typeof route?.title === "string" && route.title.trim() ? route.title.trim() : fallback.title,
+    minimum: typeof route?.minimum === "string" && route.minimum.trim() ? route.minimum.trim() : fallback.minimum,
+    body: typeof route?.body === "string" && route.body.trim() ? route.body.trim() : fallback.body,
+    action:
+      action === "endowment" || action === "grant" || action === "smallGift" || action === "matching"
+        ? action
+        : fallback.action
   };
 }
 
@@ -365,6 +382,7 @@ export const defaultSiteContent: SiteContent = {
   impactStats,
   priorityCards,
   causeCards,
+  donationRoutes,
   sponsorHighlights,
   sponsorTiers,
   connectMoments,
@@ -384,7 +402,9 @@ export const defaultSiteContent: SiteContent = {
 export function normalizeSiteContent(value: Partial<SiteContent>): SiteContent {
   const fallback = defaultSiteContent;
   const connectMomentCount = Math.max(value.connectMoments?.length ?? 0, fallback.connectMoments.length);
-  const folderCount = Math.max(value.groupedEventAlbums?.length ?? 0, fallback.groupedEventAlbums.length);
+  const folderCount = Array.isArray(value.groupedEventAlbums)
+    ? value.groupedEventAlbums.length
+    : fallback.groupedEventAlbums.length;
   const sponsorMaterialCount = Math.max(value.sponsorMaterials?.length ?? 0, fallback.sponsorMaterials.length);
   const tabsById = Array.isArray(value.tabs)
     ? new Map(
@@ -415,6 +435,11 @@ export function normalizeSiteContent(value: Partial<SiteContent>): SiteContent {
     causeCards: Array.isArray(value.causeCards)
       ? value.causeCards.map((item, index) => normalizeCause(item, fallback.causeCards[index] ?? fallback.causeCards[0]))
       : fallback.causeCards,
+    donationRoutes: Array.isArray(value.donationRoutes)
+      ? value.donationRoutes.map((item, index) =>
+          normalizeDonationRoute(item, fallback.donationRoutes[index] ?? fallback.donationRoutes[0])
+        )
+      : fallback.donationRoutes,
     sponsorHighlights: Array.isArray(value.sponsorHighlights)
       ? value.sponsorHighlights.map((item, index) => normalizeHighlight(item, fallback.sponsorHighlights[index] ?? fallback.sponsorHighlights[0]))
       : fallback.sponsorHighlights,

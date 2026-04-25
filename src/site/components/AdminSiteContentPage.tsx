@@ -3,6 +3,7 @@ import { defaultSiteContent, normalizeSiteContent } from "../siteContent";
 import {
   AlbumFolder,
   CauseCard,
+  DonationRouteAction,
   EventAlbum,
   GalleryImage,
   InquiryForm,
@@ -245,6 +246,11 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
   const [folderFormOpen, setFolderFormOpen] = useState(false);
   const [albumFormOpen, setAlbumFormOpen] = useState(false);
   const [imageFormOpen, setImageFormOpen] = useState(false);
+  const [causeFormOpen, setCauseFormOpen] = useState(false);
+  const [newCauseTitle, setNewCauseTitle] = useState("");
+  const [donationRouteFormOpen, setDonationRouteFormOpen] = useState(false);
+  const [newDonationRouteTitle, setNewDonationRouteTitle] = useState("");
+  const [newDonationRouteAction, setNewDonationRouteAction] = useState<DonationRouteAction>("smallGift");
 
   const currentFolders = editableContent.groupedEventAlbums;
   const selectedFolder = useMemo(
@@ -905,6 +911,97 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
     setImageFormOpen(false);
   };
 
+  const deleteFolder = (folderId: string) => {
+    const folder = currentFolders.find((item) => item.id === folderId);
+
+    if (!folder || !window.confirm(`Delete the folder "${folder.title}" and all subfolders/photos inside it?`)) {
+      return;
+    }
+
+    updateNestedContent("groupedEventAlbums", (folders) => folders.filter((item) => item.id !== folderId));
+
+    if (selectedFolderId === folderId) {
+      setSelectedFolderId("");
+      setSelectedAlbumId("");
+    }
+
+    setEditorStatus(`Deleted folder ${folder.title}. Save changes to publish.`);
+  };
+
+  const deleteAlbum = (albumId: string) => {
+    if (!selectedFolder) {
+      setEditorStatus("Choose a folder first.");
+      return;
+    }
+
+    const album = selectedFolder.albums.find((item) => item.id === albumId);
+
+    if (!album || !window.confirm(`Delete the subfolder "${album.title}" and all photos inside it?`)) {
+      return;
+    }
+
+    updateNestedContent("groupedEventAlbums", (folders) =>
+      folders.map((folder) =>
+        folder.id === selectedFolder.id
+          ? {
+              ...folder,
+              albums: folder.albums.filter((item) => item.id !== albumId)
+            }
+          : folder
+      )
+    );
+
+    if (selectedAlbumId === albumId) {
+      setSelectedAlbumId("");
+    }
+
+    setEditorStatus(`Deleted subfolder ${album.title}. Save changes to publish.`);
+  };
+
+  const deleteImage = (photoIndex: number) => {
+    const folderIndex = currentFolders.findIndex((folder) => folder.id === selectedFolderId);
+    const albumIndex = selectedFolder?.albums.findIndex((album) => album.id === selectedAlbumId) ?? -1;
+
+    if (folderIndex < 0 || albumIndex < 0 || !selectedAlbum) {
+      setEditorStatus("Choose a folder and subfolder first.");
+      return;
+    }
+
+    const photo = selectedAlbum.photos[photoIndex];
+
+    if (!photo || !window.confirm(`Delete the photo "${photo.caption}"?`)) {
+      return;
+    }
+
+    updateContent((current) => ({
+      ...current,
+      groupedEventAlbums: current.groupedEventAlbums.map((folder, currentFolderIndex) => {
+        if (currentFolderIndex !== folderIndex) {
+          return folder;
+        }
+
+        return {
+          ...folder,
+          albums: folder.albums.map((album, currentAlbumIndex) => {
+            if (currentAlbumIndex !== albumIndex) {
+              return album;
+            }
+
+            const nextPhotos = album.photos.filter((_, index) => index !== photoIndex);
+
+            return {
+              ...album,
+              photos: nextPhotos,
+              cover: nextPhotos[0] ?? album.cover
+            };
+          })
+        };
+      })
+    }));
+
+    setEditorStatus(`Deleted photo ${photo.caption}. Save changes to publish.`);
+  };
+
   const contentSummary = useMemo(
     () => [
       `${editableContent.tabs.length} tabs`,
@@ -927,6 +1024,87 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
     updateNestedContent("causeCards", (cards) =>
       cards.map((card, cardIndex) => (cardIndex === index ? { ...card, [key]: value } : card))
     );
+  };
+
+  const addCause = () => {
+    if (!newCauseTitle.trim()) {
+      setEditorStatus("Enter a cause title first.");
+      return;
+    }
+
+    const title = newCauseTitle.trim();
+    const nextCause: CauseCard = {
+      title,
+      summary: "Describe this cause.",
+      minimum: "From INR 500 | approx. USD 6",
+      purpose: "Describe the purpose of this cause.",
+      goal: "Add the fundraising goal.",
+      impact: "Add the expected impact.",
+      support: ["Add support options for this cause."],
+      donationWays: ["Add donation routes for this cause."]
+    };
+
+    updateNestedContent("causeCards", (cards) => [...cards, nextCause]);
+    setNewCauseTitle("");
+    setCauseFormOpen(false);
+    setEditorStatus(`Added cause ${title}. Save changes to publish.`);
+  };
+
+  const deleteCause = (index: number) => {
+    const cause = editableContent.causeCards[index];
+
+    if (!cause || !window.confirm(`Delete the cause "${cause.title}"?`)) {
+      return;
+    }
+
+    updateNestedContent("causeCards", (cards) => cards.filter((_, cardIndex) => cardIndex !== index));
+    setEditorStatus(`Deleted cause ${cause.title}. Save changes to publish.`);
+  };
+
+  const updateDonationRoute = (
+    index: number,
+    key: "title" | "minimum" | "body" | "action",
+    value: string
+  ) => {
+    updateNestedContent("donationRoutes", (routes) =>
+      routes.map((route, routeIndex) => (routeIndex === index ? { ...route, [key]: value } : route))
+    );
+  };
+
+  const addDonationRoute = () => {
+    if (!newDonationRouteTitle.trim()) {
+      setEditorStatus("Enter a donation route title first.");
+      return;
+    }
+
+    const title = newDonationRouteTitle.trim();
+
+    updateNestedContent("donationRoutes", (routes) => [
+      ...routes,
+      {
+        id: createId("donation-route", title),
+        title,
+        minimum: "Min: $1",
+        body: "Describe this donation route.",
+        action: newDonationRouteAction
+      }
+    ]);
+
+    setNewDonationRouteTitle("");
+    setNewDonationRouteAction("smallGift");
+    setDonationRouteFormOpen(false);
+    setEditorStatus(`Added donation route ${title}. Save changes to publish.`);
+  };
+
+  const deleteDonationRoute = (index: number) => {
+    const route = editableContent.donationRoutes[index];
+
+    if (!route || !window.confirm(`Delete the donation route "${route.title}"?`)) {
+      return;
+    }
+
+    updateNestedContent("donationRoutes", (routes) => routes.filter((_, routeIndex) => routeIndex !== index));
+    setEditorStatus(`Deleted donation route ${route.title}. Save changes to publish.`);
   };
 
   const updateContactChannel = (index: number, key: "label" | "value" | "href", value: string) => {
@@ -1473,37 +1651,178 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
         ) : null}
 
         {!isInquiryView && activeTab === "causes" ? (
-          <CausesPage
-            details={activeTabDetails}
-            causeCards={editableContent.causeCards}
-            causesCopy={editableContent.causesCopy}
-            editable={isEditing}
-            onChangeDetails={updateActiveTab}
-            onChangeCausesCopy={(key, value) =>
-              updateNestedContent("causesCopy", (causesCopy) => ({
-                ...causesCopy,
-                [key]: value
-              }))
-            }
-            onChangeCauseCard={updateCauseCard}
-            onSelectCause={setSelectedCause}
-          />
+          <>
+            <section className="admin-content-manager" aria-label="Cause controls">
+              <div className="admin-content-manager-head">
+                <div>
+                  <span className="section-kicker">Cause editor</span>
+                  <h3>Add or remove causes</h3>
+                </div>
+                <button className="secondary-button" type="button" onClick={() => setCauseFormOpen((current) => !current)}>
+                  Add cause
+                </button>
+              </div>
+
+              {causeFormOpen ? (
+                <div className="admin-inline-form-card admin-manager-form">
+                  <label>
+                    <span>Cause title</span>
+                    <input className="connect-edit-input" value={newCauseTitle} onChange={(event) => setNewCauseTitle(event.target.value)} />
+                  </label>
+                  <div className="admin-media-form-actions">
+                    <button className="primary-button" type="button" onClick={addCause}>
+                      Create cause
+                    </button>
+                    <button className="secondary-button" type="button" onClick={() => setCauseFormOpen(false)}>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="admin-manager-list">
+                {editableContent.causeCards.map((cause, index) => (
+                  <article className="admin-manager-row" key={`${cause.title}-${index}`}>
+                    <div>
+                      <strong>{cause.title}</strong>
+                      <span>{cause.minimum}</span>
+                    </div>
+                    <button className="admin-danger-button" type="button" onClick={() => deleteCause(index)}>
+                      Delete
+                    </button>
+                  </article>
+                ))}
+              </div>
+            </section>
+
+            <CausesPage
+              details={activeTabDetails}
+              causeCards={editableContent.causeCards}
+              causesCopy={editableContent.causesCopy}
+              editable={isEditing}
+              onChangeDetails={updateActiveTab}
+              onChangeCausesCopy={(key, value) =>
+                updateNestedContent("causesCopy", (causesCopy) => ({
+                  ...causesCopy,
+                  [key]: value
+                }))
+              }
+              onChangeCauseCard={updateCauseCard}
+              onSelectCause={setSelectedCause}
+            />
+          </>
         ) : null}
 
         {!isInquiryView && activeTab === "donate" ? (
-          <DonatePage
-            details={activeTabDetails}
-            donateCopy={editableContent.donateCopy}
-            editable={isEditing}
-            onDonateClick={() => setDonateDialogOpen(true)}
-            onChangeDetails={updateActiveTab}
-            onChangeDonateCopy={(key, value) =>
-              updateNestedContent("donateCopy", (donateCopy) => ({
-                ...donateCopy,
-                [key]: value
-              }))
-            }
-          />
+          <>
+            <section className="admin-content-manager" aria-label="Donation route controls">
+              <div className="admin-content-manager-head">
+                <div>
+                  <span className="section-kicker">Donate editor</span>
+                  <h3>Add, edit, or remove donation routes</h3>
+                </div>
+                <button className="secondary-button" type="button" onClick={() => setDonationRouteFormOpen((current) => !current)}>
+                  Add donation route
+                </button>
+              </div>
+
+              {donationRouteFormOpen ? (
+                <div className="admin-inline-form-card admin-manager-form admin-manager-form-grid">
+                  <label>
+                    <span>Route title</span>
+                    <input
+                      className="connect-edit-input"
+                      value={newDonationRouteTitle}
+                      onChange={(event) => setNewDonationRouteTitle(event.target.value)}
+                    />
+                  </label>
+                  <label>
+                    <span>Button behavior</span>
+                    <select
+                      className="connect-edit-input"
+                      value={newDonationRouteAction}
+                      onChange={(event) => setNewDonationRouteAction(event.target.value as DonationRouteAction)}
+                    >
+                      <option value="endowment">Endowment request</option>
+                      <option value="grant">Grant donation</option>
+                      <option value="smallGift">Small gift donation</option>
+                      <option value="matching">Employer matching</option>
+                    </select>
+                  </label>
+                  <div className="admin-media-form-actions full-width">
+                    <button className="primary-button" type="button" onClick={addDonationRoute}>
+                      Create route
+                    </button>
+                    <button className="secondary-button" type="button" onClick={() => setDonationRouteFormOpen(false)}>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="admin-manager-list">
+                {editableContent.donationRoutes.map((route, index) => (
+                  <article className="admin-manager-row admin-manager-row-edit" key={route.id}>
+                    <label>
+                      <span>Title</span>
+                      <input
+                        className="connect-edit-input"
+                        value={route.title}
+                        onChange={(event) => updateDonationRoute(index, "title", event.target.value)}
+                      />
+                    </label>
+                    <label>
+                      <span>Minimum</span>
+                      <input
+                        className="connect-edit-input"
+                        value={route.minimum}
+                        onChange={(event) => updateDonationRoute(index, "minimum", event.target.value)}
+                      />
+                    </label>
+                    <label className="full-width">
+                      <span>Description</span>
+                      <textarea
+                        className="connect-edit-input"
+                        value={route.body}
+                        onChange={(event) => updateDonationRoute(index, "body", event.target.value)}
+                      />
+                    </label>
+                    <label>
+                      <span>Button behavior</span>
+                      <select
+                        className="connect-edit-input"
+                        value={route.action}
+                        onChange={(event) => updateDonationRoute(index, "action", event.target.value)}
+                      >
+                        <option value="endowment">Endowment request</option>
+                        <option value="grant">Grant donation</option>
+                        <option value="smallGift">Small gift donation</option>
+                        <option value="matching">Employer matching</option>
+                      </select>
+                    </label>
+                    <button className="admin-danger-button" type="button" onClick={() => deleteDonationRoute(index)}>
+                      Delete
+                    </button>
+                  </article>
+                ))}
+              </div>
+            </section>
+
+            <DonatePage
+              details={activeTabDetails}
+              donateCopy={editableContent.donateCopy}
+              donationRoutes={editableContent.donationRoutes}
+              editable={isEditing}
+              onDonateClick={() => setDonateDialogOpen(true)}
+              onChangeDetails={updateActiveTab}
+              onChangeDonateCopy={(key, value) =>
+                updateNestedContent("donateCopy", (donateCopy) => ({
+                  ...donateCopy,
+                  [key]: value
+                }))
+              }
+            />
+          </>
         ) : null}
 
         {!isInquiryView && activeTab === "contact" ? (
@@ -1605,16 +1924,21 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
                   <>
                     <div className="folder-grid admin-media-stage-grid" aria-label="Media folders">
                       {currentFolders.map((folder) => (
-                        <button key={folder.id} type="button" className="folder-card" onClick={() => openFolder(folder.id)}>
-                          <div className="folder-card-thumb">
-                            <img src={folder.albums[0]?.cover.src ?? "/assets/jaana-wordmark.png"} alt={folder.title} />
-                          </div>
-                          <div className="folder-card-copy">
-                            <span>{folder.albums.length} subfolders</span>
-                            <h3>{folder.title}</h3>
-                            <p>Open folder</p>
-                          </div>
-                        </button>
+                        <article key={folder.id} className="folder-card admin-folder-card">
+                          <button type="button" className="folder-card-main" onClick={() => openFolder(folder.id)}>
+                            <div className="folder-card-thumb">
+                              <img src={folder.albums[0]?.cover.src ?? "/assets/jaana-wordmark.png"} alt={folder.title} />
+                            </div>
+                            <div className="folder-card-copy">
+                              <span>{folder.albums.length} subfolders</span>
+                              <h3>{folder.title}</h3>
+                              <p>Open folder</p>
+                            </div>
+                          </button>
+                          <button className="admin-danger-button admin-media-delete-button" type="button" onClick={() => deleteFolder(folder.id)}>
+                            Delete
+                          </button>
+                        </article>
                       ))}
 
                       <button
@@ -1660,16 +1984,21 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
                   <>
                     <div className="folder-grid admin-media-stage-grid" aria-label={`${selectedFolder.title} subfolders`}>
                       {selectedFolder.albums.map((album) => (
-                        <button key={album.id ?? album.title} type="button" className="folder-card" onClick={() => openAlbum(album.id ?? "")}>
-                          <div className="folder-card-thumb">
-                            <img src={album.cover.src} alt={album.cover.alt} />
-                          </div>
-                          <div className="folder-card-copy">
-                            <span>{album.photos.length} images</span>
-                            <h3>{album.title}</h3>
-                            <p>Open subfolder</p>
-                          </div>
-                        </button>
+                        <article key={album.id ?? album.title} className="folder-card admin-folder-card">
+                          <button type="button" className="folder-card-main" onClick={() => openAlbum(album.id ?? "")}>
+                            <div className="folder-card-thumb">
+                              <img src={album.cover.src} alt={album.cover.alt} />
+                            </div>
+                            <div className="folder-card-copy">
+                              <span>{album.photos.length} images</span>
+                              <h3>{album.title}</h3>
+                              <p>Open subfolder</p>
+                            </div>
+                          </button>
+                          <button className="admin-danger-button admin-media-delete-button" type="button" onClick={() => deleteAlbum(album.id ?? "")}>
+                            Delete
+                          </button>
+                        </article>
                       ))}
 
                       <button
@@ -1723,6 +2052,9 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
                         <article key={`${photo.src}-${index}`} className="folder-photo admin-media-image-card">
                           <img src={photo.src} alt={photo.alt} />
                           <span>{photo.caption}</span>
+                          <button className="admin-danger-button admin-media-delete-button" type="button" onClick={() => deleteImage(index)}>
+                            Delete
+                          </button>
                         </article>
                       ))}
 

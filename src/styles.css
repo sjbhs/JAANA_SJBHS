@@ -2732,6 +2732,135 @@ img {
   gap: 0.65rem;
 }
 
+.admin-content-manager {
+  width: min(100%, 82rem);
+  margin: 0 auto 1.25rem;
+  padding: 1rem;
+  border: 1px solid rgba(19, 53, 127, 0.1);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 18px 34px rgba(13, 31, 74, 0.06);
+}
+
+.admin-content-manager-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
+}
+
+.admin-content-manager-head h3 {
+  margin: 0.35rem 0 0;
+  color: var(--navy-deep);
+  font-family: Georgia, "Baskerville", "Times New Roman", serif;
+  font-size: clamp(1.3rem, 2vw, 1.8rem);
+  line-height: 1;
+}
+
+.admin-manager-form {
+  margin-bottom: 1rem;
+}
+
+.admin-manager-form-grid,
+.admin-manager-row-edit {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  gap: 0.8rem;
+  align-items: end;
+}
+
+.admin-manager-form-grid .full-width,
+.admin-manager-row-edit .full-width {
+  grid-column: 1 / -1;
+}
+
+.admin-manager-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.admin-manager-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem;
+  border: 1px solid rgba(19, 53, 127, 0.1);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.admin-manager-row > div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.admin-manager-row strong {
+  color: var(--navy-deep);
+}
+
+.admin-manager-row span,
+.admin-manager-form label span,
+.admin-manager-row label span {
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-manager-row label,
+.admin-manager-form label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.admin-manager-row textarea {
+  min-height: 5rem;
+  resize: vertical;
+}
+
+.admin-danger-button {
+  border: 1px solid rgba(150, 34, 34, 0.24);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #8a1f1f;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  padding: 0.65rem 1rem;
+}
+
+.admin-danger-button:hover {
+  background: rgba(150, 34, 34, 0.08);
+}
+
+.admin-folder-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.folder-card-main {
+  display: grid;
+  grid-template-columns: minmax(7.5rem, 9.5rem) 1fr;
+  gap: 1.05rem;
+  align-items: stretch;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.admin-media-delete-button {
+  justify-self: end;
+  align-self: end;
+}
+
 .folder-card-add,
 .folder-photo-add {
   border-style: dashed;
