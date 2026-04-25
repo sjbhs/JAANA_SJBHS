@@ -5,11 +5,12 @@ type CausesPageProps = {
   details: TabConfig;
   causeCards: CauseCard[];
   causesCopy: CausesPageCopy;
-  onSelectCause: (cause: CauseCard) => void;
+  onSelectCause: (cause: CauseCard, index: number) => void;
   editable?: boolean;
   onChangeDetails?: <K extends keyof TabConfig>(key: K, value: TabConfig[K]) => void;
   onChangeCausesCopy?: <K extends keyof CausesPageCopy>(key: K, value: CausesPageCopy[K]) => void;
   onChangeCauseCard?: (index: number, key: "title" | "summary" | "minimum", value: string) => void;
+  onDeleteCause?: (index: number) => void;
 };
 
 export function CausesPage({
@@ -20,7 +21,8 @@ export function CausesPage({
   editable = false,
   onChangeDetails,
   onChangeCausesCopy,
-  onChangeCauseCard
+  onChangeCauseCard,
+  onDeleteCause
 }: CausesPageProps) {
   return (
     <section id="causes-panel" className="subpage-shell donate-shell" role="tabpanel" aria-label="Causes">
@@ -72,10 +74,18 @@ export function CausesPage({
                       className="cause-minimum-edit"
                     />
                   </strong>
+                  <div className="cause-admin-actions">
+                    <button className="secondary-button" type="button" onClick={() => onSelectCause(cause, index)}>
+                      Edit details
+                    </button>
+                    <button className="admin-danger-button" type="button" onClick={() => onDeleteCause?.(index)}>
+                      Delete
+                    </button>
+                  </div>
                 </div>
               </article>
             ) : (
-              <button className="cause-list-item" key={`${cause.title}-${index}`} type="button" onClick={() => onSelectCause(cause)}>
+              <button className="cause-list-item" key={`${cause.title}-${index}`} type="button" onClick={() => onSelectCause(cause, index)}>
                 <div className="cause-list-copy">
                   <h3>{cause.title}</h3>
                   <p>{cause.summary}</p>

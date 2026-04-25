@@ -2750,6 +2750,72 @@ img {
   box-shadow: 0 18px 34px rgba(13, 31, 74, 0.06);
 }
 
+.admin-page-actions,
+.admin-page-inline-form {
+  width: min(100%, 82rem);
+  margin: 0 auto 1rem;
+}
+
+.admin-page-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(19, 53, 127, 0.1);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 16px 30px rgba(13, 31, 74, 0.05);
+}
+
+.admin-page-actions p {
+  margin: 0.5rem 0 0;
+  color: var(--muted);
+  font-size: 0.98rem;
+  line-height: 1.45;
+}
+
+.admin-page-inline-form {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.admin-page-inline-form label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.admin-page-inline-form label span {
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cause-admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.cause-admin-actions .secondary-button,
+.cause-admin-actions .admin-danger-button {
+  min-height: 2.55rem;
+  padding: 0 0.9rem;
+}
+
+.detail-list-edit-item {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.cause-dialog-add-line {
+  margin-top: 0.9rem;
+}
+
 .admin-content-manager-head {
   display: flex;
   align-items: center;

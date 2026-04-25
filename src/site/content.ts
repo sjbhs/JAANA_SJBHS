@@ -121,14 +121,14 @@ export const causeCards: CauseCard[] = [
   {
     title: "Student Scholarships",
     summary: "Help students remain at SJBHS and continue their education without financial interruption.",
-    minimum: "From INR 500 | approx. USD 6",
+    minimum: "From $6",
     purpose: "Make sure students who need financial aid can continue at SJBHS with dignity, stability, and continuity.",
-    goal: "Goal: INR 1,00,00,000 annually | USD 120,000 annually",
+    goal: "Goal: $120,000 annually",
     impact: "Impact: 114 students were supported in Academic Year 2024-25.",
     support: [
-      "Loyola Scholarship Scheme: annual commitment of INR 75,000 (approx. USD 900) per scholar for 10 years.",
-      "General grants from INR 500 (approx. USD 6) and multiples thereof.",
-      "Endowment fund minimum of INR 5,00,000 (approx. USD 6,000) for recurring annual support."
+      "Loyola Scholarship Scheme: annual commitment of $900 per scholar for 10 years.",
+      "General grants from $6 and multiples thereof.",
+      "Endowment fund minimum of $6,000 for recurring annual support."
     ],
     donationWays: [
       "Make a one-time grant to support students immediately.",
@@ -139,15 +139,15 @@ export const causeCards: CauseCard[] = [
   {
     title: "Teachers Insurance Program",
     summary: "Protect teaching staff, support staff, retired staff, and eligible families through insurance coverage.",
-    minimum: "From INR 500 | approx. USD 6",
+    minimum: "From $6",
     purpose:
       "Provide health and personal accident coverage for teaching staff, support staff, retired staff, and eligible family members.",
-    goal: "Goal: INR 30,00,000 annually | USD 35,000 annually",
+    goal: "Goal: $35,000 annually",
     impact:
-      "Impact: health insurance coverage of INR 3,00,000 for 540 lives, plus personal accident coverage for 180 teaching staff.",
+      "Impact: health insurance coverage for 540 lives, plus personal accident coverage for 180 teaching staff.",
     support: [
-      "General grants from INR 500 (approx. USD 6) and multiples thereof.",
-      "Endowment fund minimum of INR 5,00,000 (approx. USD 6,000) for recurring annual support."
+      "General grants from $6 and multiples thereof.",
+      "Endowment fund minimum of $6,000 for recurring annual support."
     ],
     donationWays: [
       "Fund the current insurance cycle through a one-time grant.",
@@ -158,13 +158,13 @@ export const causeCards: CauseCard[] = [
   {
     title: "Mid-Day Meal Program",
     summary: "Help provide a nourishing meal to children each school day.",
-    minimum: "From INR 500 | approx. USD 6",
+    minimum: "From $6",
     purpose: "Support a dependable mid-day meal programme that helps children learn and grow well.",
-    goal: "Goal: INR 21,00,000 annually | USD 25,000 annually",
+    goal: "Goal: $25,000 annually",
     impact: "Impact: 3,000 meals were supported in Academic Year 2024-25.",
     support: [
-      "General grants from INR 500 (approx. USD 6) and multiples thereof.",
-      "Endowment fund minimum of INR 5,00,000 (approx. USD 6,000) for recurring annual support."
+      "General grants from $6 and multiples thereof.",
+      "Endowment fund minimum of $6,000 for recurring annual support."
     ],
     donationWays: [
       "Make a one-time grant to fund meals now.",
@@ -175,13 +175,13 @@ export const causeCards: CauseCard[] = [
   {
     title: "Student Awards Program",
     summary: "Back prizes and recognition that celebrate excellence in academics, sport, and the arts.",
-    minimum: "INR 1,00,000 endowment | approx. USD 1,200",
+    minimum: "$1,200 endowment",
     purpose: "Strengthen aspiration, confidence, and recognition across school life through well-timed annual awards.",
     goal: "Goal: build an awards system that strengthens recognition, morale, and aspiration.",
     impact:
       "Impact: awards at key stages of school life reinforce confidence, achievement, and continuity across the student journey.",
     support: [
-      "Endowment fund minimum of INR 1,00,000 (approx. USD 1,200), with proceeds awarded annually.",
+      "Endowment fund minimum of $1,200, with proceeds awarded annually.",
       "Useful for donors who want named recognition attached to a recurring annual prize."
     ],
     donationWays: [
@@ -193,15 +193,15 @@ export const causeCards: CauseCard[] = [
   {
     title: "School Infrastructure Development",
     summary: "Support classrooms, laboratories, sports facilities, and other campus development needs.",
-    minimum: "From INR 500 | approx. USD 6",
+    minimum: "From $6",
     purpose: "Help improve the physical spaces where students learn, compete, and build community.",
-    goal: "Goal: INR 25,00,00,000 | USD 2,750,000",
+    goal: "Goal: $2,750,000",
     impact:
       "Impact: legacy-led contributions can fund named learning spaces and long-term improvements across the school campus.",
     support: [
-      "Name a classroom: INR 25,00,000 (approx. USD 30,000).",
-      "Name on a pillar or pavilion plaque: INR 5,00,000 (approx. USD 6,000).",
-      "General grants from INR 500 (approx. USD 6) and multiples thereof."
+      "Name a classroom: $30,000.",
+      "Name on a pillar or pavilion plaque: $6,000.",
+      "General grants from $6 and multiples thereof."
     ],
     donationWays: [
       "Make a one-time grant for immediate capital support.",
@@ -212,7 +212,7 @@ export const causeCards: CauseCard[] = [
   {
     title: "Other Jesuit causes",
     summary: "Direct support to allied BJES and Josephite causes beyond the core OBA priorities.",
-    minimum: "From INR 500 | approx. USD 6",
+    minimum: "From $6",
     purpose:
       "Support allied BJES and Josephite causes when donors want to direct their giving beyond the core OBA school-support priorities.",
     goal: "Goal: donor-directed support routed through the same compliant USA donation process.",

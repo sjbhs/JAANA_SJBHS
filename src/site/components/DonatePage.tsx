@@ -28,6 +28,8 @@ type DonatePageProps = {
   onDonateClick: () => void;
   onChangeDetails?: <K extends keyof TabConfig>(key: K, value: TabConfig[K]) => void;
   onChangeDonateCopy?: <K extends keyof DonatePageCopy>(key: K, value: DonatePageCopy[K]) => void;
+  onChangeDonationRoute?: (index: number, key: "title" | "minimum" | "body" | "action", value: string) => void;
+  onDeleteDonationRoute?: (index: number) => void;
 };
 
 type DonationInfoId = "endowment" | "grant" | "smallGift";
@@ -87,7 +89,7 @@ const donationInfoContent: Record<DonationInfoId, DonationInfoContent> = {
         title: "Why use JAANA?",
         items: [
           "US market access gives donors several investment options.",
-          "Long-term USD-to-INR movement can compound annual distributions.",
+          "Long-term invested giving can compound annual distributions.",
           ...sharedGrantReasons
         ]
       }
@@ -201,7 +203,9 @@ export function DonatePage({
   editable = false,
   onDonateClick,
   onChangeDetails,
-  onChangeDonateCopy
+  onChangeDonateCopy,
+  onChangeDonationRoute,
+  onDeleteDonationRoute
 }: DonatePageProps) {
   const [activeInfo, setActiveInfo] = useState<DonationInfoId | null>(null);
   const [activeRequest, setActiveRequest] = useState<DonationRequestKind | null>(null);
@@ -372,15 +376,35 @@ export function DonatePage({
           </div>
 
           <div className="donation-route-list">
-            {donationRoutes.map((route) => (
+            {donationRoutes.map((route, index) => (
               <article key={route.id} className={`support-card donation-route-card donation-route-card-${route.action}`}>
                 <div className="donation-route-card-head">
                   <div>
-                    <h3>{route.title}</h3>
+                    <h3>
+                      <InlineEditableText
+                        editable={editable}
+                        value={route.title}
+                        onChange={(value) => onChangeDonationRoute?.(index, "title", value)}
+                        className="section-title-edit"
+                      />
+                    </h3>
                   </div>
-                  <span className="donation-minimum">{route.minimum}</span>
+                  <span className="donation-minimum">
+                    <InlineEditableText
+                      editable={editable}
+                      value={route.minimum}
+                      onChange={(value) => onChangeDonationRoute?.(index, "minimum", value)}
+                    />
+                  </span>
                 </div>
-                <p>{route.body}</p>
+                <p>
+                  <InlineEditableText
+                    editable={editable}
+                    value={route.body}
+                    onChange={(value) => onChangeDonationRoute?.(index, "body", value)}
+                    multiline
+                  />
+                </p>
                 <div className="donation-route-actions">
                   {route.action === "endowment" ? (
                     <>
@@ -417,6 +441,27 @@ export function DonatePage({
                     </button>
                   ) : null}
                 </div>
+
+                {editable ? (
+                  <div className="donation-route-admin-controls">
+                    <label className="donation-route-action-picker">
+                      <span>Button behavior</span>
+                      <select
+                        className="connect-edit-input"
+                        value={route.action}
+                        onChange={(event) => onChangeDonationRoute?.(index, "action", event.target.value)}
+                      >
+                        <option value="endowment">Endowment request</option>
+                        <option value="grant">Grant donation</option>
+                        <option value="smallGift">Small gift donation</option>
+                        <option value="matching">Employer matching</option>
+                      </select>
+                    </label>
+                    <button className="admin-danger-button" type="button" onClick={() => onDeleteDonationRoute?.(index)}>
+                      Delete route
+                    </button>
+                  </div>
+                ) : null}
               </article>
             ))}
           </div>

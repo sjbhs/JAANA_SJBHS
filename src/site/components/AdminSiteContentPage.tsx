@@ -218,6 +218,7 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [backendOnline, setBackendOnline] = useState(false);
   const [selectedCause, setSelectedCause] = useState<CauseCard | null>(null);
+  const [selectedCauseIndex, setSelectedCauseIndex] = useState<number | null>(null);
   const [donateDialogOpen, setDonateDialogOpen] = useState(false);
   const [form, setForm] = useState(initialForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -233,6 +234,7 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
   const [inquiryDateTo, setInquiryDateTo] = useState("");
   const [inquiryExportingFormat, setInquiryExportingFormat] = useState<"idle" | "csv" | "excel">("idle");
   const [editorView, setEditorView] = useState<"content" | "media" | "inquiries">("content");
+  const [mediaReturnView, setMediaReturnView] = useState<"content" | "inquiries">("content");
   const [jsonDraft, setJsonDraft] = useState(JSON.stringify(defaultSiteContent, null, 2));
   const [jsonError, setJsonError] = useState("");
   const [jsonDirty, setJsonDirty] = useState(false);
@@ -636,6 +638,7 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
   };
 
   const openMediaView = () => {
+    setMediaReturnView(editorView === "inquiries" ? "inquiries" : "content");
     openMediaRoot();
   };
 
@@ -1020,9 +1023,29 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
     );
   };
 
-  const updateCauseCard = (index: number, key: "title" | "summary" | "minimum", value: string) => {
+  const updateCauseCard = (
+    index: number,
+    key: "title" | "summary" | "minimum" | "purpose" | "goal" | "impact",
+    value: string
+  ) => {
     updateNestedContent("causeCards", (cards) =>
       cards.map((card, cardIndex) => (cardIndex === index ? { ...card, [key]: value } : card))
+    );
+  };
+
+  const updateCauseList = (index: number, key: "support" | "donationWays", value: string) => {
+    updateNestedContent("causeCards", (cards) =>
+      cards.map((card, cardIndex) =>
+        cardIndex === index
+          ? {
+              ...card,
+              [key]: value
+                .split("\n")
+                .map((item) => item.trim())
+                .filter(Boolean)
+            }
+          : card
+      )
     );
   };
 
@@ -1036,7 +1059,7 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
     const nextCause: CauseCard = {
       title,
       summary: "Describe this cause.",
-      minimum: "From INR 500 | approx. USD 6",
+      minimum: "From $6",
       purpose: "Describe the purpose of this cause.",
       goal: "Add the fundraising goal.",
       impact: "Add the expected impact.",
@@ -1058,7 +1081,80 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
     }
 
     updateNestedContent("causeCards", (cards) => cards.filter((_, cardIndex) => cardIndex !== index));
+    setSelectedCauseIndex((current) => (current === index ? null : current !== null && current > index ? current - 1 : current));
     setEditorStatus(`Deleted cause ${cause.title}. Save changes to publish.`);
+  };
+
+  const openCauseDetails = (cause: CauseCard, index: number) => {
+    setSelectedCause(cause);
+    setSelectedCauseIndex(index);
+  };
+
+  const closeCauseDetails = () => {
+    setSelectedCause(null);
+    setSelectedCauseIndex(null);
+  };
+
+  const updateSelectedCause = <K extends "title" | "purpose" | "minimum" | "goal" | "impact">(
+    key: K,
+    value: CauseCard[K]
+  ) => {
+    if (selectedCauseIndex === null) {
+      return;
+    }
+
+    updateCauseCard(selectedCauseIndex, key, value);
+  };
+
+  const updateSelectedCauseSupportItem = (supportIndex: number, value: string) => {
+    if (selectedCauseIndex === null) {
+      return;
+    }
+
+    updateNestedContent("causeCards", (cards) =>
+      cards.map((card, cardIndex) =>
+        cardIndex === selectedCauseIndex
+          ? {
+              ...card,
+              support: card.support.map((item, itemIndex) => (itemIndex === supportIndex ? value : item))
+            }
+          : card
+      )
+    );
+  };
+
+  const addSelectedCauseSupportItem = () => {
+    if (selectedCauseIndex === null) {
+      return;
+    }
+
+    updateNestedContent("causeCards", (cards) =>
+      cards.map((card, cardIndex) =>
+        cardIndex === selectedCauseIndex
+          ? {
+              ...card,
+              support: [...card.support, "Add support details."]
+            }
+          : card
+      )
+    );
+  };
+
+  const deleteSelectedCauseSupportItem = (supportIndex: number) => {
+    if (selectedCauseIndex === null) {
+      return;
+    }
+
+    updateNestedContent("causeCards", (cards) =>
+      cards.map((card, cardIndex) =>
+        cardIndex === selectedCauseIndex
+          ? {
+              ...card,
+              support: card.support.filter((_, itemIndex) => itemIndex !== supportIndex)
+            }
+          : card
+      )
+    );
   };
 
   const updateDonationRoute = (
@@ -1124,7 +1220,8 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
   };
 
   const closeMediaManager = () => {
-    setEditorView("content");
+    setEditorView(mediaReturnView);
+    setEditorStatus(mediaReturnView === "inquiries" ? "Review and export incoming inquiries." : "Open edit mode to change visible copy.");
     setSelectedFolderId("");
     setSelectedAlbumId("");
     setFolderFormOpen(false);
@@ -1383,6 +1480,8 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
   const isInquiryView = editorView === "inquiries";
 
   const isOverviewTab = activeTab === "home";
+  const activeSelectedCause =
+    selectedCauseIndex !== null ? editableContent.causeCards[selectedCauseIndex] ?? null : selectedCause;
 
   return (
     <div className="site-shell admin-site-shell">
@@ -1482,9 +1581,16 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
             <button
               className={isInquiryView ? "secondary-button is-active" : "secondary-button"}
               type="button"
-              onClick={() => void openInquiriesView()}
+              onClick={() => {
+                if (isInquiryView) {
+                  openContentView();
+                  return;
+                }
+
+                void openInquiriesView();
+              }}
             >
-              Inquiries
+              {isInquiryView ? "Content" : "Inquiries"}
             </button>
             {isContentView ? (
               <>
@@ -1648,48 +1754,32 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
 
         {!isInquiryView && activeTab === "causes" ? (
           <>
-            <section className="admin-content-manager" aria-label="Cause controls">
-              <div className="admin-content-manager-head">
-                <div>
-                  <span className="section-kicker">Cause editor</span>
-                  <h3>Add or remove causes</h3>
-                </div>
-                <button className="secondary-button" type="button" onClick={() => setCauseFormOpen((current) => !current)}>
-                  Add cause
-                </button>
+            <section className="admin-page-actions" aria-label="Cause controls">
+              <div>
+                <span className="section-kicker">Cause editor</span>
+                <p>Use the public cause cards below. Turn on edit mode to change card text, or open details to edit dialog text.</p>
               </div>
-
-              {causeFormOpen ? (
-                <div className="admin-inline-form-card admin-manager-form">
-                  <label>
-                    <span>Cause title</span>
-                    <input className="connect-edit-input" value={newCauseTitle} onChange={(event) => setNewCauseTitle(event.target.value)} />
-                  </label>
-                  <div className="admin-media-form-actions">
-                    <button className="primary-button" type="button" onClick={addCause}>
-                      Create cause
-                    </button>
-                    <button className="secondary-button" type="button" onClick={() => setCauseFormOpen(false)}>
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              ) : null}
-
-              <div className="admin-manager-list">
-                {editableContent.causeCards.map((cause, index) => (
-                  <article className="admin-manager-row" key={`${cause.title}-${index}`}>
-                    <div>
-                      <strong>{cause.title}</strong>
-                      <span>{cause.minimum}</span>
-                    </div>
-                    <button className="admin-danger-button" type="button" onClick={() => deleteCause(index)}>
-                      Delete
-                    </button>
-                  </article>
-                ))}
-              </div>
+              <button className="secondary-button" type="button" onClick={() => setCauseFormOpen((current) => !current)}>
+                Add cause
+              </button>
             </section>
+
+            {causeFormOpen ? (
+              <section className="admin-inline-form-card admin-page-inline-form" aria-label="Add cause form">
+                <label>
+                  <span>Cause title</span>
+                  <input className="connect-edit-input" value={newCauseTitle} onChange={(event) => setNewCauseTitle(event.target.value)} />
+                </label>
+                <div className="admin-media-form-actions">
+                  <button className="primary-button" type="button" onClick={addCause}>
+                    Create cause
+                  </button>
+                  <button className="secondary-button" type="button" onClick={() => setCauseFormOpen(false)}>
+                    Cancel
+                  </button>
+                </div>
+              </section>
+            ) : null}
 
             <CausesPage
               details={activeTabDetails}
@@ -1704,7 +1794,8 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
                 }))
               }
               onChangeCauseCard={updateCauseCard}
-              onSelectCause={setSelectedCause}
+              onDeleteCause={deleteCause}
+              onSelectCause={openCauseDetails}
             />
           </>
         ) : null}
@@ -2140,12 +2231,17 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
         </div>
       </footer>
 
-      {selectedCause ? (
+      {activeSelectedCause ? (
         <CauseDialog
-          cause={selectedCause}
-          onClose={() => setSelectedCause(null)}
+          cause={activeSelectedCause}
+          onClose={closeCauseDetails}
           onDonateClick={() => setDonateDialogOpen(true)}
           disableEscape={donateDialogOpen}
+          editable={isEditing}
+          onChangeCause={updateSelectedCause}
+          onChangeSupportItem={updateSelectedCauseSupportItem}
+          onAddSupportItem={addSelectedCauseSupportItem}
+          onDeleteSupportItem={deleteSelectedCauseSupportItem}
         />
       ) : null}
 

@@ -752,7 +752,7 @@ function App() {
             details={activeTabDetails}
             causeCards={causeCards}
             causesCopy={causesCopy}
-            onSelectCause={setSelectedCause}
+            onSelectCause={(cause) => setSelectedCause(cause)}
           />
         ) : null}
 
