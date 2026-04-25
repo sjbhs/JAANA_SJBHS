@@ -171,8 +171,10 @@ ADMIN_PASSWORD=CommonPassJAANA1858$
 ADMIN_SESSION_SECRET=change-this-to-a-long-random-string
 ADMIN_EMAIL_FROM=JAANA Admin <no-reply@jaana.app>
 INQUIRY_EMAIL_FROM=JAANA Website <no-reply@jaana.app>
-INQUIRY_EMAIL_TO=jaanafinance@gmail.com
+INQUIRY_EMAIL_TO_GENERAL=jaanagroup@gmail.com
+INQUIRY_EMAIL_TO_FINANCE=jaanafinance@gmail.com
 INQUIRY_EMAIL_CC=
+REQUIRE_INQUIRY_EMAIL=true
 RESEND_API_KEY=
 VITE_API_PROXY_TARGET=http://127.0.0.1:3001
 VITE_HOST=127.0.0.1
@@ -201,10 +203,16 @@ What they control:
   Verified sender address or identity used by the password reminder email.
 - `INQUIRY_EMAIL_FROM`
   Verified sender address or identity used by inquiry notification emails.
-- `INQUIRY_EMAIL_TO`
-  Comma-separated recipients for inquiry notification emails. Defaults to `jaanafinance@gmail.com`.
+- `INQUIRY_EMAIL_TO_GENERAL`
+  Comma-separated recipients for general inquiry notification emails. Defaults to `jaanagroup@gmail.com`.
+- `INQUIRY_EMAIL_TO_FINANCE`
+  Comma-separated recipients for finance inquiry notification emails. Defaults to `jaanafinance@gmail.com`.
 - `INQUIRY_EMAIL_CC`
   Optional comma-separated CC recipients for inquiry notification emails.
+- Inquiry delivery behavior
+  All public inquiry submissions route through the shared `/api/inquiries` backend, including the main Contact Us inquiry form and the Donate-page endowment and employer-matching request forms. General inquiries go to `jaanagroup@gmail.com` and finance inquiries go to `jaanafinance@gmail.com`. Replies use the submitter as the `Reply-To` address.
+- `REQUIRE_INQUIRY_EMAIL`
+  Set to `true` in deployment so inquiry submissions fail visibly if email delivery is not configured. Vercel deployments default to requiring email delivery unless this is explicitly set to `false`.
 - `RESEND_API_KEY`
   API key used to send password reminder and inquiry notification emails through Resend.
 - `VITE_API_PROXY_TARGET`
@@ -399,7 +407,10 @@ Deploy flow:
 
 1. Import the repo into Vercel.
 2. Use the existing project settings from `vercel.json`.
-3. Deploy.
+3. Add production environment variables for `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET`, `RESEND_API_KEY`, `ADMIN_EMAIL_FROM`, `INQUIRY_EMAIL_FROM`, `INQUIRY_EMAIL_TO`, and `REQUIRE_INQUIRY_EMAIL=true`.
+4. Deploy.
+
+The inquiry form depends on Resend in deployment. If `RESEND_API_KEY` or a verified `INQUIRY_EMAIL_FROM` sender is missing, deployed submissions return an error instead of pretending the message reached JAANA.
 
 ## Notes for the next developer
 

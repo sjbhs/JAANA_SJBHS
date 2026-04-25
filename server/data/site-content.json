@@ -11,7 +11,7 @@
       "id": "causes",
       "label": "Causes",
       "kicker": "Causes",
-      "title": "Choose the causes JAANA can support for St. Joseph's Boys' High School.",
+      "title": "Causes JAANA can support for SJBHS.",
       "copy": "Review the priority funds currently open for support, compare their purpose and impact, and decide where you want your contribution to go."
     },
     {
@@ -27,6 +27,13 @@
       "kicker": "North America Connect 2026",
       "title": "North America Connect 2026 is the next major alumni gathering across North America.",
       "copy": "Save the date for the September 2026 reunion weekend, review sponsor information, and browse event albums from across the OBA community."
+    },
+    {
+      "id": "contact",
+      "label": "Contact Us",
+      "kicker": "Contact Us",
+      "title": "Contact JAANA",
+      "copy": "Use this page for donation questions, sponsorship inquiries, alumni coordination, and general outreach."
     }
   ],
   "impactStats": [
@@ -266,6 +273,7 @@
       "description": "Association-wide gatherings, formal milestones, and signature OBA evenings.",
       "albums": [
         {
+          "id": "oba-0-oba-day-2025",
           "title": "OBA Day 2025",
           "category": "oba",
           "label": "August 2025",
@@ -289,6 +297,7 @@
           ]
         },
         {
+          "id": "oba-1-annual-general-meeting-2025",
           "title": "Annual General Meeting 2025",
           "category": "oba",
           "label": "AGM",
@@ -312,6 +321,7 @@
           ]
         },
         {
+          "id": "oba-2-blue-white-ball-2025",
           "title": "Blue & White Ball 2025",
           "category": "oba",
           "label": "September 2025",
@@ -342,6 +352,7 @@
       "description": "Christmas-season gatherings, festive dinners, and year-end fellowship.",
       "albums": [
         {
+          "id": "christmas-0-oba-christmas-dinner-2025",
           "title": "OBA Christmas Dinner 2025",
           "category": "christmas",
           "label": "December 2025",
@@ -375,6 +386,7 @@
           ]
         },
         {
+          "id": "christmas-1-kerala-christmas-meet-2025",
           "title": "Kerala Christmas Meet 2025",
           "category": "christmas",
           "label": "Kerala chapter",
@@ -400,6 +412,7 @@
       "description": "Regional Connects and chapter reunions across India and abroad.",
       "albums": [
         {
+          "id": "connect-0-chennai-connect-2025",
           "title": "Chennai Connect 2025",
           "category": "connect",
           "label": "Chapter meet",
@@ -418,6 +431,7 @@
           ]
         },
         {
+          "id": "connect-1-uk-connect-2025",
           "title": "UK Connect 2025",
           "category": "connect",
           "label": "London meet",
@@ -436,6 +450,7 @@
           ]
         },
         {
+          "id": "connect-2-coorg-chapter-2025",
           "title": "Coorg Chapter 2025",
           "category": "connect",
           "label": "Coorg chapter",
@@ -459,6 +474,7 @@
           ]
         },
         {
+          "id": "connect-3-delhi-connect-2026",
           "title": "Delhi Connect 2026",
           "category": "connect",
           "label": "February 2026",
@@ -494,6 +510,7 @@
       "description": "Football, golf, cricket, and other competitive alumni events.",
       "albums": [
         {
+          "id": "sports-0-josephite-run-2026",
           "title": "Josephite Run 2026",
           "category": "sports",
           "label": "January 2026",
@@ -527,6 +544,7 @@
           ]
         },
         {
+          "id": "sports-1-inter-batch-football-tournament-10-0",
           "title": "Inter-Batch Football Tournament 10.0",
           "category": "sports",
           "label": "October 2025",
@@ -550,6 +568,7 @@
           ]
         },
         {
+          "id": "sports-2-prestige-sjbhs-oba-golf-tournament-9-0",
           "title": "Prestige–SJBHS OBA Golf Tournament 9.0",
           "category": "sports",
           "label": "Golf Tournament",
@@ -573,6 +592,7 @@
           ]
         },
         {
+          "id": "sports-3-jimmy-anklesaria-cricket-tournament-2025",
           "title": "Jimmy Anklesaria Cricket Tournament 2025",
           "category": "sports",
           "label": "November 2025",
@@ -603,6 +623,7 @@
       "description": "School-facing events and student engagement programmes captured in the Calling.",
       "albums": [
         {
+          "id": "school-0-welcome-to-the-oba-josexcel-awards-2026",
           "title": "Welcome to the OBA & Josexcel Awards 2026",
           "category": "school",
           "label": "Student induction",
@@ -626,6 +647,7 @@
           ]
         },
         {
+          "id": "school-1-women-who-lead-jayna-kothari-session",
           "title": "Women Who Lead - Jayna Kothari Session",
           "category": "school",
           "label": "Talk initiative",

@@ -1,7 +1,36 @@
-import { adminEmailAddress, createAdminSessionCookie, verifyAdminCredentials } from "../../server/lib/adminAuth";
-import { readJsonBody } from "./_shared";
+import {
+  adminEmailAddress,
+  createAdminSessionCookie,
+  getAdminAuthConfigurationError,
+  isAdminAuthConfigured,
+  verifyAdminCredentials
+} from "../../server/lib/adminAuth";
+import { checkRateLimit, getClientIpFromRequestHeaders } from "../../server/lib/rateLimit";
+import { readJsonBody, tooManyRequestsResponse } from "./_shared";
+
+const loginRateLimit = { limit: 5, windowMs: 10 * 60 * 1000 };
 
 export async function POST(request: Request) {
+  if (!isAdminAuthConfigured()) {
+    return Response.json(
+      {
+        error: getAdminAuthConfigurationError()
+      },
+      {
+        status: 503,
+        headers: {
+          "Cache-Control": "no-store"
+        }
+      }
+    );
+  }
+
+  const rateLimit = checkRateLimit(`admin-login:${getClientIpFromRequestHeaders(request.headers)}`, loginRateLimit);
+
+  if (!rateLimit.allowed) {
+    return tooManyRequestsResponse(rateLimit, "Too many sign-in attempts. Please try again later.");
+  }
+
   const payload = await readJsonBody(request);
 
   if (!payload || typeof payload !== "object") {
@@ -10,7 +39,10 @@ export async function POST(request: Request) {
         error: "Enter a valid JSON payload."
       },
       {
-        status: 400
+        status: 400,
+        headers: {
+          "Cache-Control": "no-store"
+        }
       }
     );
   }
@@ -24,7 +56,10 @@ export async function POST(request: Request) {
         error: "Invalid admin email or password."
       },
       {
-        status: 401
+        status: 401,
+        headers: {
+          "Cache-Control": "no-store"
+        }
       }
     );
   }
@@ -36,6 +71,7 @@ export async function POST(request: Request) {
     },
     {
       headers: {
+        "Cache-Control": "no-store",
         "Set-Cookie": createAdminSessionCookie()
       }
     }

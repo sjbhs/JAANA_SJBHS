@@ -14,12 +14,11 @@ export type PasswordResetResult =
       error: string;
     };
 
-export const adminEmailAddress = process.env.ADMIN_EMAIL?.trim() || "jaanamedia@gmail.com";
-export const adminPasswordValue = process.env.ADMIN_PASSWORD?.trim() || "CommonPassJAANA1858$";
+export const adminEmailAddress = process.env.ADMIN_EMAIL?.trim() || "";
+export const adminPasswordValue = process.env.ADMIN_PASSWORD?.trim() || "";
 
-const adminSessionSecret =
-  process.env.ADMIN_SESSION_SECRET?.trim() || `${adminEmailAddress}:${adminPasswordValue}:jaana-admin-session`;
-const adminEmailFrom = process.env.ADMIN_EMAIL_FROM?.trim() || "JAANA Admin <no-reply@jaana.app>";
+const adminSessionSecret = process.env.ADMIN_SESSION_SECRET?.trim() || "";
+const adminEmailFrom = process.env.ADMIN_EMAIL_FROM?.trim() || process.env.INQUIRY_EMAIL_FROM?.trim() || "";
 const resendApiKey = process.env.RESEND_API_KEY?.trim();
 const sessionCookieName = "jaana_admin_session";
 const sessionDurationSeconds = 60 * 60 * 24 * 7;
@@ -50,13 +49,33 @@ function safeCompare(actual: string, expected: string) {
 }
 
 function createCookieValue(name: string, value: string, maxAgeSeconds: number) {
-  const attributes = [`Path=/`, `HttpOnly`, `SameSite=Lax`, `Max-Age=${maxAgeSeconds}`];
+  const attributes = [`Path=/`, `HttpOnly`, `SameSite=Strict`, `Max-Age=${maxAgeSeconds}`, `Priority=High`];
 
   if (useSecureCookies) {
     attributes.push("Secure");
   }
 
   return `${name}=${value}; ${attributes.join("; ")}`;
+}
+
+export function getAdminAuthConfigurationError() {
+  if (!adminEmailAddress) {
+    return "ADMIN_EMAIL is not configured.";
+  }
+
+  if (!adminPasswordValue) {
+    return "ADMIN_PASSWORD is not configured.";
+  }
+
+  if (!adminSessionSecret) {
+    return "ADMIN_SESSION_SECRET is not configured.";
+  }
+
+  return "";
+}
+
+export function isAdminAuthConfigured() {
+  return !getAdminAuthConfigurationError();
 }
 
 function readCookies(cookieHeader: string | null | undefined) {
@@ -89,6 +108,10 @@ function readCookies(cookieHeader: string | null | undefined) {
 }
 
 function createSessionToken(email: string) {
+  if (!isAdminAuthConfigured()) {
+    throw new Error(getAdminAuthConfigurationError());
+  }
+
   const payload: AdminSession = {
     email: normalizeEmail(email),
     exp: Date.now() + sessionDurationSeconds * 1000
@@ -101,7 +124,11 @@ function createSessionToken(email: string) {
 }
 
 export function verifyAdminCredentials(email: string, password: string) {
-  return normalizeEmail(email) === normalizeEmail(adminEmailAddress) && password === adminPasswordValue;
+  if (!isAdminAuthConfigured()) {
+    return false;
+  }
+
+  return normalizeEmail(email) === normalizeEmail(adminEmailAddress) && safeCompare(password, adminPasswordValue);
 }
 
 export function createAdminSessionCookie() {
@@ -113,6 +140,10 @@ export function clearAdminSessionCookie() {
 }
 
 export function getAdminSessionFromCookie(cookieHeader: string | null | undefined) {
+  if (!isAdminAuthConfigured()) {
+    return null;
+  }
+
   const cookies = readCookies(cookieHeader);
   const token = cookies[sessionCookieName];
 
@@ -160,19 +191,36 @@ export function isAdminSessionValid(cookieHeader: string | null | undefined) {
 }
 
 export async function sendAdminPasswordResetEmail(): Promise<PasswordResetResult> {
-  if (!resendApiKey) {
+  if (!isAdminAuthConfigured()) {
     return {
       ok: false,
-      error: "Email reset is not configured. Set RESEND_API_KEY and ADMIN_EMAIL_FROM."
+      error: getAdminAuthConfigurationError()
     };
   }
 
-  const subject = "JAANA admin password reminder";
+  if (!resendApiKey) {
+    return {
+      ok: false,
+      error: "Email sign-in help is not configured. Set RESEND_API_KEY."
+    };
+  }
+
+  if (!adminEmailFrom) {
+    return {
+      ok: false,
+      error: "Email sign-in help is not configured. Set ADMIN_EMAIL_FROM or INQUIRY_EMAIL_FROM."
+    };
+  }
+
+  const subject = "JAANA admin sign-in reminder";
   const text = [
-    "A password reminder was requested for the JAANA admin panel.",
+    "A sign-in reminder was requested for the JAANA admin panel.",
     "",
     `Login email: ${adminEmailAddress}`,
-    `Password: ${adminPasswordValue}`,
+    "Admin path: /admin",
+    "",
+    "For security, JAANA does not send passwords by email.",
+    "If the password needs to be changed, update ADMIN_PASSWORD in the deployment environment and redeploy.",
     "",
     "Open /admin to sign in."
   ].join("\n");
@@ -197,7 +245,7 @@ export async function sendAdminPasswordResetEmail(): Promise<PasswordResetResult
 
       return {
         ok: false,
-        error: body ? `Unable to send password reminder: ${body}` : "Unable to send password reminder."
+        error: body ? `Unable to send sign-in reminder: ${body}` : "Unable to send sign-in reminder."
       };
     }
 
@@ -207,7 +255,7 @@ export async function sendAdminPasswordResetEmail(): Promise<PasswordResetResult
   } catch {
     return {
       ok: false,
-      error: "Unable to send password reminder."
+      error: "Unable to send sign-in reminder."
     };
   }
 }

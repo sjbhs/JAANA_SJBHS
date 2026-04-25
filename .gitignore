@@ -2,4 +2,4 @@ node_modules
 dist
 .env
 server/data/inquiries.json
-
+SECURITY.md

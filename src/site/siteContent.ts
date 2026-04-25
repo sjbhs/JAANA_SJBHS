@@ -45,7 +45,7 @@ export const defaultHomeCopy: HomePageCopy = {
   causesCardTitle: "Causes",
   causesCardBody: "Review the active school causes and decide where you want your support to go.",
   donateCardTitle: "Donate",
-  donateCardBody: "Open the Zeffy donation form or use the contact points below if you need help with a gift.",
+  donateCardBody: "Review giving routes on the Donate page, then use Contact Us if you need help with a gift.",
   connectCardTitle: "North America Connect 2026",
   connectCardBody: "Check sponsor details and reunion updates for the September 2026 weekend.",
   eventsTitle: "Upcoming JAANA events | Past JAANA events",
@@ -61,9 +61,9 @@ export const defaultCausesCopy: CausesPageCopy = {
 
 export const defaultDonateCopy: DonatePageCopy = {
   onlineGivingHeading: "Ways to donate",
-  onlineGivingBody: "Choose the route that fits your giving plan. Grant and small-gift donations open Zeffy.",
+  onlineGivingBody: "",
   contactHeading: "Contacts",
-  contactBody: "Use the details below if you need them.",
+  contactBody: "Use the details below or send a note through the inquiry form.",
   formHeading: "Inquiry form",
   formBody: "Use this form for donations, sponsorship inquiries, or alumni questions."
 };
@@ -383,15 +383,19 @@ export const defaultSiteContent: SiteContent = {
 
 export function normalizeSiteContent(value: Partial<SiteContent>): SiteContent {
   const fallback = defaultSiteContent;
-  const tabCount = Math.max(value.tabs?.length ?? 0, fallback.tabs.length);
   const connectMomentCount = Math.max(value.connectMoments?.length ?? 0, fallback.connectMoments.length);
   const folderCount = Math.max(value.groupedEventAlbums?.length ?? 0, fallback.groupedEventAlbums.length);
   const sponsorMaterialCount = Math.max(value.sponsorMaterials?.length ?? 0, fallback.sponsorMaterials.length);
+  const tabsById = Array.isArray(value.tabs)
+    ? new Map(
+        value.tabs
+          .filter((tab) => typeof tab?.id === "string" && tab.id.trim().length > 0)
+          .map((tab) => [tab.id as TabConfig["id"], tab])
+      )
+    : null;
 
   return {
-    tabs: Array.isArray(value.tabs)
-      ? Array.from({ length: tabCount }, (_, index) => normalizeTab(value.tabs?.[index], fallback.tabs[index] ?? fallback.tabs[0]))
-      : fallback.tabs,
+    tabs: Array.isArray(value.tabs) ? fallback.tabs.map((tab) => normalizeTab(tabsById?.get(tab.id), tab)) : fallback.tabs,
     impactStats:
       Array.isArray(value.impactStats) && value.impactStats.length
         ? value.impactStats.map((item, index) => ({

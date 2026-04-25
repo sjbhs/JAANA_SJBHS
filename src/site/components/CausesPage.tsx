@@ -34,32 +34,10 @@ export function CausesPage({
               className="section-title-edit"
             />
           </h2>
-          {details.copy ? (
-            <div className="body-copy">
-              <InlineEditableText
-                editable={editable}
-                value={details.copy}
-                onChange={(value) => onChangeDetails?.("copy", value)}
-                multiline
-                className="body-copy-edit"
-              />
-            </div>
-          ) : null}
         </div>
       </div>
 
       <section className="give-section">
-        <div className="give-section-head">
-          <h3>
-            <InlineEditableText
-              editable={editable}
-              value={causesCopy.sectionHeading}
-              onChange={(value) => onChangeCausesCopy?.("sectionHeading", value)}
-              className="section-title-edit"
-            />
-          </h3>
-        </div>
-
         <div className="cause-list" aria-label="Cause list">
           {causeCards.map((cause, index) => (
             editable ? (

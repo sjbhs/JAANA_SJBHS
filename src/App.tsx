@@ -4,6 +4,7 @@ import { AlbumDialog } from "./site/components/AlbumDialog";
 import { AdminSiteContentPage } from "./site/components/AdminSiteContentPage";
 import { CausesPage } from "./site/components/CausesPage";
 import { CauseDialog } from "./site/components/CauseDialog";
+import { ContactPage } from "./site/components/ContactPage";
 import { ConnectPage } from "./site/components/ConnectPage";
 import { DonatePage } from "./site/components/DonatePage";
 import { HomePage } from "./site/components/HomePage";
@@ -19,7 +20,7 @@ import {
   SiteContent,
   TabId
 } from "./site/types";
-import { defaultSiteContent } from "./site/siteContent";
+import { defaultSiteContent, normalizeSiteContent } from "./site/siteContent";
 
 function App() {
   const [activeTab, setActiveTab] = useState<TabId>("home");
@@ -86,8 +87,10 @@ function App() {
       const nextTab =
         hashTab === "overview"
           ? "home"
-          : hashTab === "give" || hashTab === "contact"
+          : hashTab === "give"
             ? "donate"
+            : hashTab === "contact"
+              ? "contact"
             : hashTab;
 
       if (tabs.some((tab) => tab.id === nextTab)) {
@@ -181,10 +184,7 @@ function App() {
         const payload = (await response.json()) as Partial<SiteContent>;
 
         if (!cancelled && payload && typeof payload === "object") {
-          setSiteContent((current) => ({
-            ...current,
-            ...payload
-          }));
+          setSiteContent(normalizeSiteContent(payload));
         }
       } catch {
         if (!cancelled) {
@@ -597,7 +597,10 @@ function App() {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify(form)
+        body: JSON.stringify({
+          ...form,
+          recipientGroup: "general"
+        })
       });
 
       const payload = (await response.json()) as { message?: string; error?: string };
@@ -651,12 +654,12 @@ function App() {
 
   if (isAdminRoute) {
     return (
-      <AdminSiteContentPage
-        details={connectTabDetails}
-        onContentSaved={(content) => {
-          setSiteContent(content);
-        }}
-      />
+        <AdminSiteContentPage
+          details={connectTabDetails}
+          onContentSaved={(content) => {
+          setSiteContent(normalizeSiteContent(content));
+          }}
+        />
     );
   }
 
@@ -753,19 +756,17 @@ function App() {
         ) : null}
 
         {activeTab === "donate" ? (
-          <DonatePage
-            details={activeTabDetails}
-            backendOnline={backendOnline}
-            contactChannels={contactChannels}
-            inquiryTopics={inquiryTopics}
-            donateCopy={donateCopy}
+          <DonatePage details={activeTabDetails} donateCopy={donateCopy} onDonateClick={handleOpenDonateDialog} />
+        ) : null}
+
+        {activeTab === "contact" ? (
+          <ContactPage
             form={form}
             isSubmitting={isSubmitting}
             statusMessage={statusMessage}
             statusTone={statusTone}
             onSubmit={handleSubmit}
             onFieldChange={handleFormFieldChange}
-            onDonateClick={handleOpenDonateDialog}
           />
         ) : null}
 

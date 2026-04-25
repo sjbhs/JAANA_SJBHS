@@ -1,5 +1,5 @@
 import { isAdminSessionValid } from "../../server/lib/adminAuth";
-import { getRecentInquiries } from "../../server/lib/inquiryStore";
+import { getInquiries } from "../../server/lib/inquiryStore";
 import { unauthorizedResponse } from "./_shared";
 
 export async function GET(request: Request) {
@@ -8,17 +8,35 @@ export async function GET(request: Request) {
   }
 
   try {
-    const limit = Number(new URL(request.url).searchParams.get("limit") ?? 10);
-    const inquiries = await getRecentInquiries(Number.isFinite(limit) ? Math.max(1, Math.min(50, Math.floor(limit))) : 10);
+    const searchParams = new URL(request.url).searchParams;
+    const limitParam = searchParams.get("limit");
+    const parsedLimit =
+      limitParam === null || limitParam === "" || limitParam === "all"
+        ? null
+        : Number.isFinite(Number(limitParam))
+          ? Math.max(1, Math.min(500, Math.floor(Number(limitParam))))
+          : 10;
+    const inquiries = await getInquiries({
+      limit: parsedLimit,
+      from: searchParams.get("from") ?? undefined,
+      to: searchParams.get("to") ?? undefined
+    });
 
-    return Response.json(inquiries);
+    return Response.json(inquiries, {
+      headers: {
+        "Cache-Control": "no-store"
+      }
+    });
   } catch {
     return Response.json(
       {
         error: "The server hit an unexpected error."
       },
       {
-        status: 500
+        status: 500,
+        headers: {
+          "Cache-Control": "no-store"
+        }
       }
     );
   }

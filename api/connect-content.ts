@@ -3,7 +3,11 @@ import { readConnectContent } from "../server/lib/connectContentStore";
 export async function GET() {
   try {
     const content = await readConnectContent();
-    return Response.json(content);
+    return Response.json(content, {
+      headers: {
+        "Cache-Control": "no-store"
+      }
+    });
   } catch {
     return Response.json(
       {

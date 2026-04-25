@@ -7,11 +7,17 @@ export type InquiryEntry = {
   email: string;
   organization: string;
   interest: string;
+  phone?: string;
   notes: string;
   createdAt: string;
 };
 
 type NewInquiryEntry = Omit<InquiryEntry, "id" | "createdAt">;
+type InquiryListOptions = {
+  limit?: number | null;
+  from?: string;
+  to?: string;
+};
 
 const defaultStoragePath = path.resolve(process.cwd(), "server/data/inquiries.json");
 const temporaryStoragePath = path.join(process.env.TMPDIR ?? "/tmp", "jaana-sjbhs-inquiries.json");
@@ -59,6 +65,26 @@ async function writeEntries(entries: InquiryEntry[]) {
   await fs.writeFile(storagePath, `${JSON.stringify(entries, null, 2)}\n`, "utf8");
 }
 
+function parseDateBoundary(value: string | undefined, boundary: "start" | "end") {
+  if (!value?.trim()) {
+    return null;
+  }
+
+  const normalized = value.trim();
+  const dateOnlyMatch = /^\d{4}-\d{2}-\d{2}$/.test(normalized);
+  const parsed = new Date(dateOnlyMatch ? `${normalized}T00:00:00.000Z` : normalized);
+
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+
+  if (dateOnlyMatch && boundary === "end") {
+    parsed.setUTCDate(parsed.getUTCDate() + 1);
+  }
+
+  return parsed;
+}
+
 export async function createInquiry(entry: NewInquiryEntry) {
   const entries = await readEntries();
   const nextEntry: InquiryEntry = {
@@ -85,10 +111,36 @@ export async function getInquiryStats() {
 }
 
 export async function getRecentInquiries(limit = 10) {
+  return getInquiries({ limit });
+}
+
+export async function getInquiries(options: InquiryListOptions = {}) {
   const entries = await readEntries();
+  const start = parseDateBoundary(options.from, "start");
+  const endExclusive = parseDateBoundary(options.to, "end");
+  const filteredEntries = entries.filter((entry) => {
+    const createdAt = new Date(entry.createdAt);
+
+    if (Number.isNaN(createdAt.getTime())) {
+      return false;
+    }
+
+    if (start && createdAt < start) {
+      return false;
+    }
+
+    if (endExclusive && createdAt >= endExclusive) {
+      return false;
+    }
+
+    return true;
+  });
+  const normalizedLimit =
+    typeof options.limit === "number" && Number.isFinite(options.limit) ? Math.max(0, Math.floor(options.limit)) : null;
 
   return {
     total: entries.length,
-    inquiries: entries.slice(0, Math.max(0, limit))
+    filteredTotal: filteredEntries.length,
+    inquiries: normalizedLimit === null ? filteredEntries : filteredEntries.slice(0, normalizedLimit)
   };
 }

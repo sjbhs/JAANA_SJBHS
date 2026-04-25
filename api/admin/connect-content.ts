@@ -15,7 +15,10 @@ export async function PUT(request: Request) {
         error: "Enter a valid JSON payload."
       },
       {
-        status: 400
+        status: 400,
+        headers: {
+          "Cache-Control": "no-store"
+        }
       }
     );
   }
@@ -28,7 +31,10 @@ export async function PUT(request: Request) {
         error: validation.error
       },
       {
-        status: 400
+        status: 400,
+        headers: {
+          "Cache-Control": "no-store"
+        }
       }
     );
   }
@@ -41,7 +47,10 @@ export async function PUT(request: Request) {
         content
       },
       {
-        status: 200
+        status: 200,
+        headers: {
+          "Cache-Control": "no-store"
+        }
       }
     );
   } catch {
@@ -50,7 +59,10 @@ export async function PUT(request: Request) {
         error: "The server hit an unexpected error."
       },
       {
-        status: 500
+        status: 500,
+        headers: {
+          "Cache-Control": "no-store"
+        }
       }
     );
   }
@@ -64,14 +76,21 @@ export async function GET(request: Request) {
   try {
     const content = await readConnectContent();
 
-    return Response.json(content);
+    return Response.json(content, {
+      headers: {
+        "Cache-Control": "no-store"
+      }
+    });
   } catch {
     return Response.json(
       {
         error: "The server hit an unexpected error."
       },
       {
-        status: 500
+        status: 500,
+        headers: {
+          "Cache-Control": "no-store"
+        }
       }
     );
   }

@@ -1,27 +1,32 @@
 import { FormEvent, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { DonatePageCopy, InquiryForm, TabConfig } from "../types";
+import {
+  DONATION_REQUEST_ACCOUNT_NAME_MAX_LENGTH,
+  DONATION_REQUEST_BATCH_MAX_LENGTH,
+  DONATION_REQUEST_CAUSE_MAX_LENGTH,
+  DONATION_REQUEST_EMPLOYER_MAX_LENGTH,
+  DONATION_REQUEST_LOCATION_MAX_LENGTH,
+  INQUIRY_EMAIL_MAX_LENGTH,
+  INQUIRY_NAME_INPUT_PATTERN,
+  INQUIRY_NAME_MAX_LENGTH,
+  INQUIRY_PHONE_INPUT_PATTERN,
+  INQUIRY_PHONE_MAX_LENGTH,
+  isValidInquiryName,
+  isValidPhoneNumber,
+  sanitizeInquiryNameInput,
+  sanitizePhoneNumberInput
+} from "../inquiryConstraints";
+import { DonatePageCopy, TabConfig } from "../types";
 import { PlaceholderDonateButton } from "./PlaceholderDonateButton";
 import { InlineEditableText } from "./InlineEditableText";
 
 type DonatePageProps = {
   details: TabConfig;
-  backendOnline: boolean;
-  contactChannels: { label: string; value: string; href: string }[];
-  inquiryTopics: string[];
   donateCopy: DonatePageCopy;
   editable?: boolean;
-  form: InquiryForm;
-  isSubmitting: boolean;
-  statusMessage: string;
-  statusTone: "idle" | "success" | "error";
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
-  onFieldChange: <K extends keyof InquiryForm>(field: K, value: InquiryForm[K]) => void;
   onDonateClick: () => void;
   onChangeDetails?: <K extends keyof TabConfig>(key: K, value: TabConfig[K]) => void;
   onChangeDonateCopy?: <K extends keyof DonatePageCopy>(key: K, value: DonatePageCopy[K]) => void;
-  onChangeContactChannel?: (index: number, key: "label" | "value" | "href", value: string) => void;
-  onChangeInquiryTopics?: (topics: string[]) => void;
 };
 
 type DonationInfoId = "endowment" | "grant" | "smallGift";
@@ -73,7 +78,7 @@ const donationRoutes = [
   },
   {
     id: "matching" as const,
-    title: "Matching",
+    title: "Employer Matching",
     minimum: "Employer matching",
     body: "Check whether your employer can match your donation."
   }
@@ -197,8 +202,7 @@ const emptyDonationRequestForm: DonationRequestForm = {
 function formatRequestNotes(kind: DonationRequestKind, form: DonationRequestForm) {
   const fields: [string, string][] = [
     ["Request type", requestDialogCopy[kind].title],
-    ["Batch", form.batch],
-    ["Phone", form.phone]
+    ["Batch", form.batch]
   ];
 
   if (kind === "endowment") {
@@ -218,22 +222,11 @@ function formatRequestNotes(kind: DonationRequestKind, form: DonationRequestForm
 
 export function DonatePage({
   details,
-  backendOnline,
-  contactChannels,
-  inquiryTopics,
   donateCopy,
   editable = false,
-  form,
-  isSubmitting,
-  statusMessage,
-  statusTone,
-  onSubmit,
-  onFieldChange,
   onDonateClick,
   onChangeDetails,
-  onChangeDonateCopy,
-  onChangeContactChannel,
-  onChangeInquiryTopics
+  onChangeDonateCopy
 }: DonatePageProps) {
   const [activeInfo, setActiveInfo] = useState<DonationInfoId | null>(null);
   const [activeRequest, setActiveRequest] = useState<DonationRequestKind | null>(null);
@@ -279,6 +272,20 @@ export function DonatePage({
     }
 
     const requestKind = activeRequest;
+    const normalizedName = requestForm.name.trim();
+    const normalizedPhone = requestForm.phone.trim();
+
+    if (!isValidInquiryName(normalizedName)) {
+      setRequestStatusTone("error");
+      setRequestStatusMessage(`Name must use letters only and be ${INQUIRY_NAME_MAX_LENGTH} characters or fewer.`);
+      return;
+    }
+
+    if (!isValidPhoneNumber(normalizedPhone)) {
+      setRequestStatusTone("error");
+      setRequestStatusMessage("Phone numbers may only include a leading + and digits.");
+      return;
+    }
 
     setRequestSubmitting(true);
     setRequestStatusMessage("");
@@ -291,10 +298,12 @@ export function DonatePage({
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          name: requestForm.name,
+          name: normalizedName,
           email: requestForm.email,
           organization: requestForm.batch,
           interest: requestDialogCopy[requestKind].interest,
+          phone: normalizedPhone,
+          recipientGroup: "finance",
           notes: formatRequestNotes(requestKind, requestForm)
         })
       });
@@ -369,17 +378,6 @@ export function DonatePage({
                 className="section-title-edit"
               />
             </h2>
-            {details.copy ? (
-              <div className="body-copy">
-                <InlineEditableText
-                  editable={editable}
-                  value={details.copy}
-                  onChange={(value) => onChangeDetails?.("copy", value)}
-                  multiline
-                  className="body-copy-edit"
-                />
-              </div>
-            ) : null}
             <p className="donation-cause-link">
               Learn more about each cause we support: <a href="#causes">JAANA/OBA Causes</a>.
             </p>
@@ -396,15 +394,6 @@ export function DonatePage({
                 className="section-title-edit"
               />
             </h3>
-            <div className="body-copy">
-              <InlineEditableText
-                editable={editable}
-                value={donateCopy.onlineGivingBody}
-                onChange={(value) => onChangeDonateCopy?.("onlineGivingBody", value)}
-                multiline
-                className="body-copy-edit"
-              />
-            </div>
           </div>
 
           <div className="donation-route-list">
@@ -457,119 +446,6 @@ export function DonatePage({
             ))}
           </div>
         </section>
-
-        {editable ? (
-          <section className="give-section">
-            <div className="give-section-head">
-              <h3>
-                <InlineEditableText
-                  editable={editable}
-                  value={donateCopy.contactHeading}
-                  onChange={(value) => onChangeDonateCopy?.("contactHeading", value)}
-                  className="section-title-edit"
-                />
-              </h3>
-              <div className="body-copy">
-                <InlineEditableText
-                  editable={editable}
-                  value={donateCopy.contactBody}
-                  onChange={(value) => onChangeDonateCopy?.("contactBody", value)}
-                  multiline
-                  className="body-copy-edit"
-                />
-              </div>
-            </div>
-
-            <div className="contact-panel">
-              <div className="contact-sidebar">
-                <article className="contact-card">
-                  <h3>Contacts</h3>
-                  <ul className="contact-list">
-                    {contactChannels.map((channel, index) =>
-                      editable ? (
-                        <li key={channel.label}>
-                          <input
-                            className="connect-edit-input contact-label-edit"
-                            value={channel.label}
-                            onChange={(event) => onChangeContactChannel?.(index, "label", event.target.value)}
-                          />
-                          <input
-                            className="connect-edit-input contact-value-edit"
-                            value={channel.value}
-                            onChange={(event) => onChangeContactChannel?.(index, "value", event.target.value)}
-                          />
-                          <input
-                            className="connect-edit-input contact-href-edit"
-                            value={channel.href}
-                            onChange={(event) => onChangeContactChannel?.(index, "href", event.target.value)}
-                          />
-                        </li>
-                      ) : null
-                    )}
-                  </ul>
-                </article>
-
-                <article className="contact-card">
-                  <h3>{backendOnline ? "Status" : "Offline"}</h3>
-                  <p>
-                    {backendOnline
-                      ? "Use the form below to start a donation, sponsorship, or alumni coordination conversation."
-                      : "The form is visible for review, but the connected service is not currently responding."}
-                  </p>
-                </article>
-              </div>
-
-              <InquiryFormCard
-                editable={editable}
-                donateCopy={donateCopy}
-                form={form}
-                isSubmitting={isSubmitting}
-                statusMessage={statusMessage}
-                statusTone={statusTone}
-                onSubmit={onSubmit}
-                onFieldChange={onFieldChange}
-                onChangeDonateCopy={onChangeDonateCopy}
-                inquiryTopics={inquiryTopics}
-              />
-            </div>
-          </section>
-        ) : (
-          <section className="give-section donation-form-section">
-            <InquiryFormCard
-              editable={editable}
-              donateCopy={donateCopy}
-              form={form}
-              isSubmitting={isSubmitting}
-              statusMessage={statusMessage}
-              statusTone={statusTone}
-              onSubmit={onSubmit}
-              onFieldChange={onFieldChange}
-              onChangeDonateCopy={onChangeDonateCopy}
-              inquiryTopics={inquiryTopics}
-            />
-          </section>
-        )}
-
-        {editable && onChangeInquiryTopics ? (
-          <section className="give-section admin-inline-section">
-            <div className="give-section-head">
-              <h3>Inquiry topics</h3>
-              <p>Edit the dropdown choices one per line.</p>
-            </div>
-            <textarea
-              className="connect-edit-textarea"
-              value={inquiryTopics.join("\n")}
-              onChange={(event) =>
-                onChangeInquiryTopics(
-                  event.target.value
-                    .split("\n")
-                    .map((item) => item.trim())
-                    .filter(Boolean)
-                )
-              }
-            />
-          </section>
-        ) : null}
       </section>
 
       {dialogLayer}
@@ -680,22 +556,51 @@ function DonationRequestDialog({
                 <div className="form-grid">
                   <label>
                     <span>Name</span>
-                    <input required type="text" value={form.name} onChange={(event) => onFieldChange("name", event.target.value)} />
+                    <input
+                      required
+                      type="text"
+                      value={form.name}
+                      maxLength={INQUIRY_NAME_MAX_LENGTH}
+                      pattern={INQUIRY_NAME_INPUT_PATTERN}
+                      autoComplete="name"
+                      title="Name may only include letters and spaces."
+                      onChange={(event) => onFieldChange("name", sanitizeInquiryNameInput(event.target.value))}
+                    />
                   </label>
 
                   <label>
                     <span>Email</span>
-                    <input required type="email" value={form.email} onChange={(event) => onFieldChange("email", event.target.value)} />
+                    <input
+                      required
+                      type="email"
+                      value={form.email}
+                      maxLength={INQUIRY_EMAIL_MAX_LENGTH}
+                      autoComplete="email"
+                      onChange={(event) => onFieldChange("email", event.target.value)}
+                    />
                   </label>
 
                   <label>
                     <span>Batch</span>
-                    <input type="text" value={form.batch} onChange={(event) => onFieldChange("batch", event.target.value)} />
+                    <input
+                      type="text"
+                      value={form.batch}
+                      maxLength={DONATION_REQUEST_BATCH_MAX_LENGTH}
+                      onChange={(event) => onFieldChange("batch", event.target.value)}
+                    />
                   </label>
 
                   <label>
                     <span>Phone</span>
-                    <input type="tel" value={form.phone} onChange={(event) => onFieldChange("phone", event.target.value)} />
+                    <input
+                      type="tel"
+                      value={form.phone}
+                      maxLength={INQUIRY_PHONE_MAX_LENGTH}
+                      inputMode="tel"
+                      pattern={INQUIRY_PHONE_INPUT_PATTERN}
+                      title="Phone numbers may only include a leading + and digits."
+                      onChange={(event) => onFieldChange("phone", sanitizePhoneNumberInput(event.target.value))}
+                    />
                   </label>
                 </div>
               </section>
@@ -714,6 +619,7 @@ function DonationRequestDialog({
                         required
                         type="text"
                         value={form.employerName}
+                        maxLength={DONATION_REQUEST_EMPLOYER_MAX_LENGTH}
                         onChange={(event) => onFieldChange("employerName", event.target.value)}
                       />
                     </label>
@@ -722,6 +628,7 @@ function DonationRequestDialog({
                       <input
                         type="text"
                         value={form.employerLocation}
+                        maxLength={DONATION_REQUEST_LOCATION_MAX_LENGTH}
                         onChange={(event) => onFieldChange("employerLocation", event.target.value)}
                       />
                     </label>
@@ -742,6 +649,7 @@ function DonationRequestDialog({
                       <input
                         type="text"
                         value={form.proposedEndowmentName}
+                        maxLength={DONATION_REQUEST_ACCOUNT_NAME_MAX_LENGTH}
                         onChange={(event) => onFieldChange("proposedEndowmentName", event.target.value)}
                       />
                     </label>
@@ -750,6 +658,7 @@ function DonationRequestDialog({
                       <input
                         type="text"
                         value={form.proposedEndowmentCause}
+                        maxLength={DONATION_REQUEST_CAUSE_MAX_LENGTH}
                         onChange={(event) => onFieldChange("proposedEndowmentCause", event.target.value)}
                       />
                     </label>
@@ -768,101 +677,5 @@ function DonationRequestDialog({
         </div>
       </div>
     </div>
-  );
-}
-
-type InquiryFormCardProps = {
-  editable: boolean;
-  donateCopy: DonatePageCopy;
-  form: InquiryForm;
-  isSubmitting: boolean;
-  statusMessage: string;
-  statusTone: "idle" | "success" | "error";
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
-  onFieldChange: <K extends keyof InquiryForm>(field: K, value: InquiryForm[K]) => void;
-  onChangeDonateCopy?: <K extends keyof DonatePageCopy>(key: K, value: DonatePageCopy[K]) => void;
-  inquiryTopics: string[];
-};
-
-function InquiryFormCard({
-  editable,
-  donateCopy,
-  form,
-  isSubmitting,
-  statusMessage,
-  statusTone,
-  onSubmit,
-  onFieldChange,
-  onChangeDonateCopy,
-  inquiryTopics
-}: InquiryFormCardProps) {
-  return (
-    <form className={`inquiry-card ${editable ? "" : "inquiry-card--solo"}`} onSubmit={onSubmit}>
-      <div className="form-heading">
-        <h3>
-          <InlineEditableText
-            editable={editable}
-            value={donateCopy.formHeading}
-            onChange={(value) => onChangeDonateCopy?.("formHeading", value)}
-            className="section-title-edit"
-          />
-        </h3>
-        <div className="body-copy">
-          <InlineEditableText
-            editable={editable}
-            value={donateCopy.formBody}
-            onChange={(value) => onChangeDonateCopy?.("formBody", value)}
-            multiline
-            className="body-copy-edit"
-          />
-        </div>
-      </div>
-
-      <div className="form-grid">
-        <label>
-          <span>Name</span>
-          <input required type="text" value={form.name} onChange={(event) => onFieldChange("name", event.target.value)} />
-        </label>
-
-        <label>
-          <span>Email</span>
-          <input required type="email" value={form.email} onChange={(event) => onFieldChange("email", event.target.value)} />
-        </label>
-
-        <label>
-          <span>Batch / City / Organization</span>
-          <input type="text" value={form.organization} onChange={(event) => onFieldChange("organization", event.target.value)} />
-        </label>
-
-        <label>
-          <span>What is this about?</span>
-          <select required value={form.interest} onChange={(event) => onFieldChange("interest", event.target.value)}>
-            <option value="">Select one</option>
-            {inquiryTopics.map((topic) => (
-              <option key={topic} value={topic}>
-                {topic}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="full-width">
-          <span>Notes</span>
-          <textarea
-            rows={4}
-            value={form.notes}
-            placeholder="Share context, timing, the cause you want to support, or any sponsorship requirements."
-            onChange={(event) => onFieldChange("notes", event.target.value)}
-          />
-        </label>
-      </div>
-
-      <div className="form-footer">
-        <button className="primary-button" type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Sending..." : "Submit inquiry"}
-        </button>
-        {statusMessage ? <p className={`status-note ${statusTone}`}>{statusMessage}</p> : null}
-      </div>
-    </form>
   );
 }

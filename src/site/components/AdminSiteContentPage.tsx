@@ -12,6 +12,7 @@ import {
 } from "../types";
 import { CausesPage } from "./CausesPage";
 import { CauseDialog } from "./CauseDialog";
+import { ContactPage } from "./ContactPage";
 import { ConnectPage } from "./ConnectPage";
 import { DonatePage } from "./DonatePage";
 import { HomePage } from "./HomePage";
@@ -24,8 +25,16 @@ type InquiryEntry = {
   email: string;
   organization: string;
   interest: string;
+  phone?: string;
   notes: string;
   createdAt: string;
+};
+
+type InquiryResponse = {
+  total?: number;
+  filteredTotal?: number;
+  inquiries?: InquiryEntry[];
+  error?: string;
 };
 
 type AdminSiteContentPageProps = {
@@ -86,11 +95,116 @@ function readFileAsDataUrl(file: File) {
   });
 }
 
+function escapeCsvCell(value: string) {
+  if (/[",\n]/.test(value)) {
+    return `"${value.replace(/"/g, "\"\"")}"`;
+  }
+
+  return value;
+}
+
+function formatInquiryTimestamp(value: string) {
+  return new Date(value).toLocaleString();
+}
+
+function buildInquiryCsv(inquiries: InquiryEntry[]) {
+  const headers = ["Submitted At", "Name", "Email", "Phone", "Interest", "Batch / City / Organization", "Notes"];
+  const rows = inquiries.map((inquiry) =>
+    [
+      formatInquiryTimestamp(inquiry.createdAt),
+      inquiry.name,
+      inquiry.email,
+      inquiry.phone || "",
+      inquiry.interest,
+      inquiry.organization || "",
+      inquiry.notes || ""
+    ]
+      .map((cell) => escapeCsvCell(cell))
+      .join(",")
+  );
+
+  return `\uFEFF${[headers.join(","), ...rows].join("\n")}`;
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function buildInquiryExcelDocument(inquiries: InquiryEntry[]) {
+  const rows = inquiries
+    .map(
+      (inquiry) => `
+        <tr>
+          <td>${escapeHtml(formatInquiryTimestamp(inquiry.createdAt))}</td>
+          <td>${escapeHtml(inquiry.name)}</td>
+          <td>${escapeHtml(inquiry.email)}</td>
+          <td>${escapeHtml(inquiry.phone || "")}</td>
+          <td>${escapeHtml(inquiry.interest)}</td>
+          <td>${escapeHtml(inquiry.organization || "")}</td>
+          <td>${escapeHtml(inquiry.notes || "")}</td>
+        </tr>`
+    )
+    .join("");
+
+  return `<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      table { border-collapse: collapse; width: 100%; }
+      th, td { border: 1px solid #cfd8ea; padding: 8px; text-align: left; vertical-align: top; }
+      th { background: #eef3ff; font-weight: 700; }
+    </style>
+  </head>
+  <body>
+    <table>
+      <thead>
+        <tr>
+          <th>Submitted At</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Interest</th>
+          <th>Batch / City / Organization</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </body>
+</html>`;
+}
+
+function downloadTextFile(contents: string, filename: string, mimeType: string) {
+  const blob = new Blob([contents], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+function buildInquiryExportFilename(extension: "csv" | "xls", from: string, to: string) {
+  const suffix =
+    from && to ? `${from}_to_${to}` : from ? `from_${from}` : to ? `through_${to}` : "all_time";
+
+  return `jaana_inquiries_${suffix}.${extension}`;
+}
+
 export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteContentPageProps) {
   const [authState, setAuthState] = useState<"loading" | "signedOut" | "signedIn">("loading");
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [loginStatus, setLoginStatus] = useState("Sign in to edit the site content.");
+  const [configuredAdminEmail, setConfiguredAdminEmail] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
   const [isSendingReset, setIsSendingReset] = useState(false);
@@ -110,10 +224,14 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
   const [statusTone, setStatusTone] = useState<"idle" | "success" | "error">("idle");
   const [editorStatus, setEditorStatus] = useState("Saved content stays on the public site.");
   const [inquiryTotal, setInquiryTotal] = useState(0);
+  const [inquiryFilteredTotal, setInquiryFilteredTotal] = useState(0);
   const [recentInquiries, setRecentInquiries] = useState<InquiryEntry[]>([]);
   const [inquiriesLoading, setInquiriesLoading] = useState(false);
   const [inquiriesStatus, setInquiriesStatus] = useState("Latest inquiries appear here once loaded.");
-  const [editorView, setEditorView] = useState<"content" | "media">("content");
+  const [inquiryDateFrom, setInquiryDateFrom] = useState("");
+  const [inquiryDateTo, setInquiryDateTo] = useState("");
+  const [inquiryExportingFormat, setInquiryExportingFormat] = useState<"idle" | "csv" | "excel">("idle");
+  const [editorView, setEditorView] = useState<"content" | "media" | "inquiries">("content");
   const [jsonDraft, setJsonDraft] = useState(JSON.stringify(defaultSiteContent, null, 2));
   const [jsonError, setJsonError] = useState("");
   const [jsonDirty, setJsonDirty] = useState(false);
@@ -185,12 +303,33 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
     return true;
   };
 
-  const loadInquiryInbox = async () => {
+  const loadInquiryInbox = async ({
+    from = inquiryDateFrom,
+    to = inquiryDateTo,
+    limit = 100,
+    silent = false
+  }: {
+    from?: string;
+    to?: string;
+    limit?: number | "all";
+    silent?: boolean;
+  } = {}) => {
     setInquiriesLoading(true);
-    setInquiriesStatus("Loading inquiries...");
+    if (!silent) {
+      setInquiriesStatus("Loading inquiries...");
+    }
 
     try {
-      const response = await fetch("/api/admin/inquiries?limit=10", {
+      const searchParams = new URLSearchParams();
+      searchParams.set("limit", String(limit));
+      if (from) {
+        searchParams.set("from", from);
+      }
+      if (to) {
+        searchParams.set("to", to);
+      }
+
+      const response = await fetch(`/api/admin/inquiries?${searchParams.toString()}`, {
         credentials: "include"
       });
 
@@ -201,7 +340,7 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
         return false;
       }
 
-      const payload = (await readJson(response)) as { total?: number; inquiries?: InquiryEntry[]; error?: string };
+      const payload = (await readJson(response)) as InquiryResponse;
 
       if (!response.ok) {
         setInquiriesStatus(payload.error ?? "Unable to load inquiries.");
@@ -209,8 +348,9 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
       }
 
       setInquiryTotal(typeof payload.total === "number" ? payload.total : 0);
+      setInquiryFilteredTotal(typeof payload.filteredTotal === "number" ? payload.filteredTotal : 0);
       setRecentInquiries(Array.isArray(payload.inquiries) ? payload.inquiries : []);
-      setInquiriesStatus("Loaded latest inquiries.");
+      setInquiriesStatus(limit === "all" ? "Loaded inquiries for export." : "Loaded latest inquiries.");
       return true;
     } catch {
       setInquiriesStatus("Unable to load inquiries.");
@@ -229,10 +369,14 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
           credentials: "include"
         });
 
-        const payload = (await readJson(response)) as { authenticated?: boolean; error?: string };
+        const payload = (await readJson(response)) as { authenticated?: boolean; adminEmail?: string; error?: string };
 
         if (cancelled) {
           return;
+        }
+
+        if (typeof payload.adminEmail === "string") {
+          setConfiguredAdminEmail(payload.adminEmail);
         }
 
         if (!response.ok || !payload.authenticated) {
@@ -343,8 +487,13 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
     event.preventDefault();
     setIsLoggingIn(true);
     setLoginStatus("Checking credentials...");
+    const emailToSubmit = loginEmail.trim();
 
     try {
+      if (!emailToSubmit) {
+        throw new Error("Enter the admin email.");
+      }
+
       const response = await fetch("/api/admin/login", {
         method: "POST",
         credentials: "include",
@@ -352,15 +501,19 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          email: loginEmail,
+          email: emailToSubmit,
           password: loginPassword
         })
       });
 
-      const payload = (await readJson(response)) as { authenticated?: boolean; error?: string };
+      const payload = (await readJson(response)) as { authenticated?: boolean; email?: string; error?: string };
 
       if (!response.ok || !payload.authenticated) {
         throw new Error(payload.error ?? "Unable to sign in.");
+      }
+
+      if (typeof payload.email === "string") {
+        setConfiguredAdminEmail(payload.email);
       }
 
       setAuthState("signedIn");
@@ -379,29 +532,34 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
 
   const handleResetPassword = async () => {
     setIsSendingReset(true);
-    setResetStatus("Sending password reminder...");
+    setResetStatus("Sending sign-in reminder...");
+    const resetEmail = loginEmail.trim();
 
     try {
+      if (!resetEmail) {
+        throw new Error("Enter the admin email first.");
+      }
+
       const response = await fetch("/api/admin/password-reset", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          email: loginEmail
+          email: resetEmail
         })
       });
 
       const payload = (await readJson(response)) as { message?: string; error?: string };
 
       if (!response.ok) {
-        throw new Error(payload.error ?? "Unable to send the password reminder.");
+        throw new Error(payload.error ?? "Unable to send the sign-in reminder.");
       }
 
-      setResetStatus(payload.message ?? "Password reminder sent.");
+      setResetStatus(payload.message ?? "Sign-in reminder sent.");
       setForgotPasswordOpen(false);
     } catch (error) {
-      setResetStatus(error instanceof Error ? error.message : "Unable to send the password reminder.");
+      setResetStatus(error instanceof Error ? error.message : "Unable to send the sign-in reminder.");
     } finally {
       setIsSendingReset(false);
     }
@@ -419,7 +577,10 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify(form)
+        body: JSON.stringify({
+          ...form,
+          recipientGroup: "general"
+        })
       });
 
       const payload = (await response.json()) as { message?: string; error?: string };
@@ -457,8 +618,87 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
       setEditorView("content");
       setEditorStatus("Sign in to edit the site content.");
       setInquiryTotal(0);
+      setInquiryFilteredTotal(0);
       setRecentInquiries([]);
       setInquiriesStatus("Sign in to view inquiries.");
+    }
+  };
+
+  const openContentView = () => {
+    setEditorView("content");
+    setEditorStatus(isEditing ? "Text on the page is editable in place." : "Open edit mode to change visible copy.");
+  };
+
+  const openMediaView = () => {
+    openMediaRoot();
+  };
+
+  const openInquiriesView = async () => {
+    setEditorView("inquiries");
+    setEditorStatus("Review and export incoming inquiries.");
+    await loadInquiryInbox({ limit: 100 });
+  };
+
+  const handleApplyInquiryFilters = async () => {
+    await loadInquiryInbox({ limit: 100 });
+  };
+
+  const handleClearInquiryFilters = async () => {
+    setInquiryDateFrom("");
+    setInquiryDateTo("");
+    await loadInquiryInbox({ from: "", to: "", limit: 100 });
+  };
+
+  const exportInquiries = async (format: "csv" | "excel") => {
+    setInquiryExportingFormat(format);
+    setInquiriesStatus(`Preparing ${format === "csv" ? "CSV" : "Excel"} export...`);
+
+    try {
+      const searchParams = new URLSearchParams();
+      searchParams.set("limit", "all");
+      if (inquiryDateFrom) {
+        searchParams.set("from", inquiryDateFrom);
+      }
+      if (inquiryDateTo) {
+        searchParams.set("to", inquiryDateTo);
+      }
+
+      const response = await fetch(`/api/admin/inquiries?${searchParams.toString()}`, {
+        credentials: "include"
+      });
+      const payload = (await readJson(response)) as InquiryResponse;
+
+      if (response.status === 401) {
+        setAuthState("signedOut");
+        setLoginStatus("Sign in to edit the site content.");
+        throw new Error("Your admin session expired. Sign in again.");
+      }
+
+      if (!response.ok) {
+        throw new Error(payload.error ?? "Unable to export inquiries.");
+      }
+
+      const inquiries = Array.isArray(payload.inquiries) ? payload.inquiries : [];
+
+      if (!inquiries.length) {
+        throw new Error("No inquiries match the selected time frame.");
+      }
+
+      if (format === "csv") {
+        downloadTextFile(buildInquiryCsv(inquiries), buildInquiryExportFilename("csv", inquiryDateFrom, inquiryDateTo), "text/csv;charset=utf-8");
+      } else {
+        downloadTextFile(
+          buildInquiryExcelDocument(inquiries),
+          buildInquiryExportFilename("xls", inquiryDateFrom, inquiryDateTo),
+          "application/vnd.ms-excel;charset=utf-8"
+        );
+      }
+
+      setInquiriesStatus(`Downloaded ${inquiries.length} inquiries.`);
+    } catch (error) {
+      setInquiriesStatus(error instanceof Error ? error.message : "Unable to export inquiries.");
+    } finally {
+      setInquiryExportingFormat("idle");
     }
   };
 
@@ -779,13 +1019,14 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
     closeMediaManager();
   };
 
-  const adminPanelTitle = editorView === "media" ? "Media manager" : isEditing ? "Editing enabled" : "Preview mode";
-  const adminPanelDescription =
+  const adminPanelTitle =
     editorView === "media"
-      ? "Folders open into subfolders, and subfolders open into images."
-      : isEditing
-        ? "Text on the page is editable in place."
-        : "Open edit mode to change visible copy.";
+      ? "Media manager"
+      : editorView === "inquiries"
+        ? "Inquiry inbox"
+        : isEditing
+          ? "Editing mode"
+          : "Preview mode";
   const mediaTitle =
     mediaLevel === "folders" ? "Folders" : mediaLevel === "subfolders" ? selectedFolder?.title ?? "Subfolders" : selectedAlbum?.title ?? "Images";
   const mediaDescription =
@@ -827,6 +1068,7 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
               type="email"
               value={loginEmail}
               onChange={(event) => setLoginEmail(event.target.value)}
+              placeholder="admin@example.com"
               autoComplete="email"
               required
             />
@@ -854,7 +1096,7 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
               onClick={() => setForgotPasswordOpen((current) => !current)}
               disabled={isLoggingIn}
             >
-              Forgot password?
+              Need sign-in help?
             </button>
           </div>
         </form>
@@ -867,10 +1109,10 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
 
         {forgotPasswordOpen ? (
           <div className="admin-reset-panel">
-            <p>Send a password reminder to the email you typed above.</p>
+            <p>Send a sign-in reminder to the email you typed above.</p>
             <div className="admin-auth-actions">
               <button className="secondary-button" type="button" onClick={handleResetPassword} disabled={isSendingReset}>
-                {isSendingReset ? "Sending..." : "Email password reminder"}
+                {isSendingReset ? "Sending..." : "Email sign-in reminder"}
               </button>
               <button
                 className="secondary-button"
@@ -893,24 +1135,79 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
 
   if (authState !== "signedIn") {
     return (
-      <section id="admin-panel" className="subpage-shell donate-shell" aria-label="Admin site editor">
-        <div className="subpage-hero">
-          <div className="subpage-copy">
-            <span className="section-kicker">Admin</span>
-            <h2>Sign in to edit the site</h2>
-            <p>The public site stays the same. Only the admin route can change text and media.</p>
-          </div>
+      <div className="site-shell admin-site-shell">
+        <header className="site-header">
+          <div className="site-header-inner admin-header-inner">
+            <a className="brand-lockup" href="/" aria-label="Go to public site">
+              <img src="/assets/jaana-logo-blue.png" alt="JAANA logo" />
+            </a>
 
-          <aside className="subpage-aside admin-auth-sidebar">{authCard}</aside>
-        </div>
-      </section>
+            <div className="house-shields header-shields" aria-label="SJBHS house shields">
+              {editableContent.houseShields.map((shield) => (
+                <div className="house-shield" key={shield.src}>
+                  <img src={shield.src} alt={shield.alt} />
+                </div>
+              ))}
+            </div>
+
+            <div className="header-actions">
+              <span className="section-kicker admin-route-badge">Admin</span>
+            </div>
+          </div>
+        </header>
+
+        <main className="main-subpage">
+          <section id="admin-panel" className="subpage-shell donate-shell" aria-label="Admin site editor">
+            <div className="donation-page-header">
+              <div className="donation-page-copy">
+                <span className="section-kicker">Admin</span>
+                <h2>Manage JAANA site content.</h2>
+                <p>Sign in to edit public page copy, review incoming inquiries, and manage gallery media.</p>
+              </div>
+            </div>
+
+            <div className="contact-panel">
+              <article className="contact-card">
+                <h3>Private editor</h3>
+                <p>Use the admin account to access the content editor. The public site stays live while changes are reviewed here.</p>
+              </article>
+
+              <aside className="contact-card admin-auth-sidebar">{authCard}</aside>
+            </div>
+          </section>
+        </main>
+
+        <footer className="site-footer">
+          <div className="footer-brand">
+            <strong>JAANA</strong>
+            <span>The Josephite Alumni Association of North America.</span>
+          </div>
+          <div className="footer-contacts">
+            {editableContent.contactChannels.map((channel) => (
+              <a
+                key={channel.label}
+                href={channel.href}
+                target={channel.href.startsWith("http") ? "_blank" : undefined}
+                rel={channel.href.startsWith("http") ? "noreferrer" : undefined}
+              >
+                <span className="contact-label">{channel.label}</span>
+                <span className="contact-value">{channel.value}</span>
+              </a>
+            ))}
+          </div>
+        </footer>
+      </div>
     );
   }
+
+  const isContentView = editorView === "content";
+  const isMediaView = editorView === "media";
+  const isInquiryView = editorView === "inquiries";
 
   const isOverviewTab = activeTab === "home";
 
   return (
-    <div className="site-shell">
+    <div className="site-shell admin-site-shell">
       <header className="site-header">
         <div className="site-header-inner">
           <div className="mobile-nav-shell">
@@ -991,30 +1288,47 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
           <div className="admin-controls-copy">
             <span className="section-kicker">Admin tools</span>
             <h3>{adminPanelTitle}</h3>
-            <p>{adminPanelDescription}</p>
           </div>
 
           <div className="admin-controls-actions">
             <button
-              className={isEditing ? "secondary-button is-active" : "secondary-button"}
+              className={isContentView ? "secondary-button is-active" : "secondary-button"}
               type="button"
-              onClick={() => setIsEditing((current) => !current)}
+              onClick={openContentView}
             >
-              {isEditing ? "Done editing" : "Edit texts"}
+              Content
             </button>
             <button
-              className={editorView === "media" ? "secondary-button is-active" : "secondary-button"}
+              className={isMediaView ? "secondary-button is-active" : "secondary-button"}
               type="button"
-              onClick={() => (editorView === "media" ? closeMediaManager() : openMediaRoot())}
+              onClick={openMediaView}
             >
-              Manage media
+              Media
             </button>
-            <button className="primary-button" type="button" onClick={handleSave} disabled={isSaving || !hasUnsavedChanges}>
-              {isSaving ? "Saving..." : "Save changes"}
+            <button
+              className={isInquiryView ? "secondary-button is-active" : "secondary-button"}
+              type="button"
+              onClick={() => void openInquiriesView()}
+            >
+              Inquiries
             </button>
-            <button className="secondary-button" type="button" onClick={undoChanges} disabled={!hasUnsavedChanges || isSaving}>
-              Undo
-            </button>
+            {isContentView ? (
+              <>
+                <button
+                  className={isEditing ? "secondary-button is-active" : "secondary-button"}
+                  type="button"
+                  onClick={() => setIsEditing((current) => !current)}
+                >
+                  {isEditing ? "Done editing" : "Edit texts"}
+                </button>
+                <button className="primary-button" type="button" onClick={handleSave} disabled={isSaving || !hasUnsavedChanges}>
+                  {isSaving ? "Saving..." : "Save changes"}
+                </button>
+                <button className="secondary-button" type="button" onClick={undoChanges} disabled={!hasUnsavedChanges || isSaving}>
+                  Undo
+                </button>
+              </>
+            ) : null}
             <button className="secondary-button" type="button" onClick={handleLogout}>
               Sign out
             </button>
@@ -1022,68 +1336,126 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
         </div>
       </section>
 
-      <section className="section-block admin-inquiry-section" aria-label="Inquiry inbox">
-        <div className="featured-heading admin-inquiry-head">
-          <div>
-            <h3>Inquiry inbox</h3>
-            <p>Review the latest donation and sponsor requests coming in from the public site.</p>
-          </div>
-          <button className="secondary-button" type="button" onClick={() => void loadInquiryInbox()} disabled={inquiriesLoading}>
-            {inquiriesLoading ? "Refreshing..." : "Refresh inbox"}
-          </button>
-        </div>
+      <main className={!isInquiryView && isOverviewTab ? "main-overview" : "main-subpage"}>
+        {isInquiryView ? (
+          <section className="section-block admin-inquiry-section" aria-label="Inquiry inbox">
+            <div className="featured-heading admin-inquiry-head">
+              <div>
+                <h3>Inquiry inbox</h3>
+                <p>Review the latest donation and sponsor requests coming in from the public site.</p>
+              </div>
+            </div>
 
-        <div className="admin-inquiry-summary">
-          <article>
-            <span>Total inquiries</span>
-            <strong>{inquiryTotal}</strong>
-          </article>
-          <article>
-            <span>Loaded now</span>
-            <strong>{recentInquiries.length}</strong>
-          </article>
-        </div>
+            <div className="admin-inquiry-toolbar">
+              <div className="admin-inquiry-filters">
+                <label className="admin-auth-field">
+                  <span>From</span>
+                  <input
+                    className="connect-edit-input"
+                    type="date"
+                    value={inquiryDateFrom}
+                    onChange={(event) => setInquiryDateFrom(event.target.value)}
+                  />
+                </label>
+                <label className="admin-auth-field">
+                  <span>To</span>
+                  <input
+                    className="connect-edit-input"
+                    type="date"
+                    value={inquiryDateTo}
+                    onChange={(event) => setInquiryDateTo(event.target.value)}
+                  />
+                </label>
+              </div>
 
-        {inquiriesStatus ? (
-          <p className="admin-auth-status" aria-live="polite">
-            {inquiriesStatus}
-          </p>
+              <div className="admin-inquiry-actions">
+                <button className="secondary-button" type="button" onClick={() => void handleApplyInquiryFilters()} disabled={inquiriesLoading}>
+                  {inquiriesLoading ? "Loading..." : "Apply filters"}
+                </button>
+                <button className="secondary-button" type="button" onClick={() => void handleClearInquiryFilters()} disabled={inquiriesLoading}>
+                  Clear
+                </button>
+                <button className="secondary-button" type="button" onClick={() => void loadInquiryInbox({ limit: 100 })} disabled={inquiriesLoading}>
+                  Refresh inbox
+                </button>
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() => void exportInquiries("csv")}
+                  disabled={inquiryExportingFormat !== "idle"}
+                >
+                  {inquiryExportingFormat === "csv" ? "Exporting CSV..." : "Download CSV"}
+                </button>
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() => void exportInquiries("excel")}
+                  disabled={inquiryExportingFormat !== "idle"}
+                >
+                  {inquiryExportingFormat === "excel" ? "Exporting Excel..." : "Download Excel"}
+                </button>
+              </div>
+            </div>
+
+            <div className="admin-inquiry-summary">
+              <article>
+                <span>Total inquiries</span>
+                <strong>{inquiryTotal}</strong>
+              </article>
+              <article>
+                <span>Matching time frame</span>
+                <strong>{inquiryFilteredTotal}</strong>
+              </article>
+              <article>
+                <span>Loaded now</span>
+                <strong>{recentInquiries.length}</strong>
+              </article>
+            </div>
+
+            {inquiriesStatus ? (
+              <p className="admin-auth-status" aria-live="polite">
+                {inquiriesStatus}
+              </p>
+            ) : null}
+
+            <div className="admin-inquiry-list">
+              {recentInquiries.length ? (
+                recentInquiries.map((inquiry) => (
+                  <article key={inquiry.id} className="admin-inquiry-card">
+                    <div className="admin-inquiry-card-head">
+                      <div>
+                        <strong>{inquiry.name}</strong>
+                        <span>{inquiry.interest}</span>
+                      </div>
+                      <time dateTime={inquiry.createdAt}>{new Date(inquiry.createdAt).toLocaleString()}</time>
+                    </div>
+                    <dl className="admin-inquiry-meta">
+                      <div>
+                        <dt>Email</dt>
+                        <dd>
+                          <a href={`mailto:${inquiry.email}`}>{inquiry.email}</a>
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Phone</dt>
+                        <dd>{inquiry.phone || "Not provided"}</dd>
+                      </div>
+                      <div>
+                        <dt>Batch / City / Organization</dt>
+                        <dd>{inquiry.organization || "Not provided"}</dd>
+                      </div>
+                    </dl>
+                    <p>{inquiry.notes || "No notes provided."}</p>
+                  </article>
+                ))
+              ) : (
+                <p className="admin-inquiry-empty">No inquiries match the current filter.</p>
+              )}
+            </div>
+          </section>
         ) : null}
 
-        <div className="admin-inquiry-list">
-          {recentInquiries.length ? (
-            recentInquiries.map((inquiry) => (
-              <article key={inquiry.id} className="admin-inquiry-card">
-                <div className="admin-inquiry-card-head">
-                  <div>
-                    <strong>{inquiry.name}</strong>
-                    <span>{inquiry.interest}</span>
-                  </div>
-                  <time dateTime={inquiry.createdAt}>{new Date(inquiry.createdAt).toLocaleString()}</time>
-                </div>
-                <dl className="admin-inquiry-meta">
-                  <div>
-                    <dt>Email</dt>
-                    <dd>
-                      <a href={`mailto:${inquiry.email}`}>{inquiry.email}</a>
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Batch / City / Organization</dt>
-                    <dd>{inquiry.organization || "Not provided"}</dd>
-                  </div>
-                </dl>
-                <p>{inquiry.notes || "No notes provided."}</p>
-              </article>
-            ))
-          ) : (
-            <p className="admin-inquiry-empty">No inquiries loaded yet.</p>
-          )}
-        </div>
-      </section>
-
-      <main className={isOverviewTab ? "main-overview" : "main-subpage"}>
-        {activeTab === "home" ? (
+        {!isInquiryView && activeTab === "home" ? (
           <HomePage
             connectMoments={editableContent.connectMoments}
             homeCopy={editableContent.homeCopy}
@@ -1100,7 +1472,7 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
           />
         ) : null}
 
-        {activeTab === "causes" ? (
+        {!isInquiryView && activeTab === "causes" ? (
           <CausesPage
             details={activeTabDetails}
             causeCards={editableContent.causeCards}
@@ -1118,20 +1490,11 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
           />
         ) : null}
 
-        {activeTab === "donate" ? (
+        {!isInquiryView && activeTab === "donate" ? (
           <DonatePage
             details={activeTabDetails}
-            backendOnline={backendOnline}
-            contactChannels={editableContent.contactChannels}
-            inquiryTopics={editableContent.inquiryTopics}
             donateCopy={editableContent.donateCopy}
             editable={isEditing}
-            form={form}
-            isSubmitting={isSubmitting}
-            statusMessage={statusMessage}
-            statusTone={statusTone}
-            onSubmit={handleSubmit}
-            onFieldChange={handleFormFieldChange}
             onDonateClick={() => setDonateDialogOpen(true)}
             onChangeDetails={updateActiveTab}
             onChangeDonateCopy={(key, value) =>
@@ -1140,12 +1503,21 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
                 [key]: value
               }))
             }
-            onChangeContactChannel={updateContactChannel}
-            onChangeInquiryTopics={updateInquiryTopics}
           />
         ) : null}
 
-        {activeTab === "connect" ? (
+        {!isInquiryView && activeTab === "contact" ? (
+          <ContactPage
+            form={form}
+            isSubmitting={isSubmitting}
+            statusMessage={statusMessage}
+            statusTone={statusTone}
+            onSubmit={handleSubmit}
+            onFieldChange={handleFormFieldChange}
+          />
+        ) : null}
+
+        {!isInquiryView && activeTab === "connect" ? (
           <ConnectPage
             details={activeTabDetails}
             connectContent={editableContent.connectPage}

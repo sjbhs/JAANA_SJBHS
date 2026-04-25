@@ -7,6 +7,7 @@ export async function POST() {
     },
     {
       headers: {
+        "Cache-Control": "no-store",
         "Set-Cookie": clearAdminSessionCookie()
       }
     }

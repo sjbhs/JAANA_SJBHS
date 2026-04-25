@@ -3,7 +3,11 @@ import { readSiteContent } from "../server/lib/siteContentStore";
 export async function GET() {
   try {
     const content = await readSiteContent();
-    return Response.json(content);
+    return Response.json(content, {
+      headers: {
+        "Cache-Control": "no-store"
+      }
+    });
   } catch {
     return Response.json(
       {

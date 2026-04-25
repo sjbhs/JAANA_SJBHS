@@ -1,4 +1,4 @@
-export type TabId = "home" | "causes" | "donate" | "connect";
+export type TabId = "home" | "causes" | "donate" | "contact" | "connect";
 
 export type InquiryForm = {
   name: string;
@@ -6,6 +6,7 @@ export type InquiryForm = {
   organization: string;
   interest: string;
   notes: string;
+  recipientGroup: "general" | "finance";
 };
 
 export type TabConfig = {

@@ -169,7 +169,7 @@ export function AdminConnectPage({ details }: AdminConnectPageProps) {
 
   const handleResetPassword = async () => {
     setIsSendingReset(true);
-    setResetStatus("Sending password reminder...");
+    setResetStatus("Sending sign-in reminder...");
 
     try {
       const response = await fetch("/api/admin/password-reset", {
@@ -185,13 +185,13 @@ export function AdminConnectPage({ details }: AdminConnectPageProps) {
       const payload = (await readJson(response)) as { message?: string; error?: string };
 
       if (!response.ok) {
-        throw new Error(payload.error ?? "Unable to send the password reminder.");
+        throw new Error(payload.error ?? "Unable to send the sign-in reminder.");
       }
 
-      setResetStatus(payload.message ?? "Password reminder sent.");
+      setResetStatus(payload.message ?? "Sign-in reminder sent.");
       setForgotPasswordOpen(false);
     } catch (error) {
-      setResetStatus(error instanceof Error ? error.message : "Unable to send the password reminder.");
+      setResetStatus(error instanceof Error ? error.message : "Unable to send the sign-in reminder.");
     } finally {
       setIsSendingReset(false);
     }
@@ -312,7 +312,7 @@ export function AdminConnectPage({ details }: AdminConnectPageProps) {
               onClick={() => setForgotPasswordOpen((current) => !current)}
               disabled={isLoggingIn}
             >
-              Forgot password?
+              Need sign-in help?
             </button>
           </div>
         </form>
@@ -325,10 +325,10 @@ export function AdminConnectPage({ details }: AdminConnectPageProps) {
 
         {forgotPasswordOpen ? (
           <div className="admin-reset-panel">
-            <p>Send a password reminder to the email you typed above.</p>
+            <p>Send a sign-in reminder to the email you typed above.</p>
             <div className="admin-auth-actions">
               <button className="secondary-button" type="button" onClick={handleResetPassword} disabled={isSendingReset}>
-                {isSendingReset ? "Sending..." : "Email password reminder"}
+                {isSendingReset ? "Sending..." : "Email sign-in reminder"}
               </button>
               <button
                 className="secondary-button"

@@ -41,13 +41,13 @@ export const tabs: TabConfig[] = [
     kicker: "Causes",
     title: "Choose the causes JAANA can support for St. Joseph's Boys' High School.",
     copy:
-      "Review the priority funds currently open for support, compare their purpose and impact, and decide where you want your contribution to go."
+      ""
   },
   {
     id: "donate",
     label: "Donate",
     kicker: "Donate",
-    title: "Donate to JAANA",
+    title: "Donate to JAANA, SJBHS-OBA, BJES",
     copy: "Support JAANA, SJBHS-OBA, and BJES through the donation routes on this page."
   },
   {
@@ -57,6 +57,13 @@ export const tabs: TabConfig[] = [
     title: "North America Connect 2026 is the next major alumni gathering across North America.",
     copy:
       "Save the date for the September 2026 reunion weekend, review sponsor information, and browse event albums from across the OBA community."
+  },
+  {
+    id: "contact",
+    label: "Contact Us",
+    kicker: "Contact Us",
+    title: "Contact JAANA",
+    copy: "Use this page for donation questions, sponsorship inquiries, alumni coordination, and general outreach."
   }
 ];
 
@@ -84,12 +91,12 @@ export const priorityCards: PriorityCard[] = [
   },
   {
     title: "Donate",
-    body: "Open the Donate page to use the embedded Zeffy form and review current contact details for donors.",
+    body: "Open the Donate page to review giving routes and launch the secure Zeffy donation flow.",
     points: [
-      "Embedded Zeffy donation form",
+      "Endowment, grant, matching, and small-gift routes",
       "Cause-based donation support",
-      "Donation questions handled directly",
-      "JAANA finance contact remains available"
+      "Secure Zeffy checkout for supported routes",
+      "A separate Contact Us page for inquiries"
     ],
     cta: "Open Donate page",
     tab: "donate"
@@ -809,5 +816,6 @@ export const initialForm: InquiryForm = {
   email: "",
   organization: "",
   interest: "",
-  notes: ""
+  notes: "",
+  recipientGroup: "general"
 };
