@@ -6,6 +6,7 @@ import type {
   CauseCard,
   CausesPageCopy,
   DonatePageCopy,
+  DonationInfoContent,
   DonationRoute,
   EventAlbum,
   EventHighlight,
@@ -33,6 +34,7 @@ import {
   secondaryPages,
   tabs,
   contactChannels,
+  donationInfo,
   donationRoutes
 } from "./content.js";
 
@@ -135,6 +137,39 @@ function normalizeDonationRoute(route: Partial<DonationRoute> | undefined, fallb
       action === "endowment" || action === "grant" || action === "smallGift" || action === "matching"
         ? action
         : fallback.action
+  };
+}
+
+function normalizeDonationInfo(info: Partial<DonationInfoContent> | undefined, fallback: DonationInfoContent): DonationInfoContent {
+  const fallbackSections = fallback.sections;
+  const sectionCount = Math.max(info?.sections?.length ?? 0, fallbackSections.length);
+
+  return {
+    id:
+      info?.id === "endowment" || info?.id === "grant" || info?.id === "smallGift"
+        ? info.id
+        : fallback.id,
+    label: typeof info?.label === "string" && info.label.trim() ? info.label.trim() : fallback.label,
+    title: typeof info?.title === "string" && info.title.trim() ? info.title.trim() : fallback.title,
+    summary: typeof info?.summary === "string" && info.summary.trim() ? info.summary.trim() : fallback.summary,
+    sections: Array.from({ length: sectionCount }, (_, sectionIndex) => {
+      const section = info?.sections?.[sectionIndex];
+      const fallbackSection = fallbackSections[sectionIndex] ?? {
+        title: "Details",
+        items: ["Add detail."]
+      };
+
+      return {
+        title:
+          typeof section?.title === "string" && section.title.trim()
+            ? section.title.trim()
+            : fallbackSection.title,
+        items:
+          Array.isArray(section?.items) && section.items.length
+            ? section.items.filter((item): item is string => typeof item === "string" && Boolean(item.trim())).map((item) => item.trim())
+            : fallbackSection.items
+      };
+    })
   };
 }
 
@@ -383,6 +418,7 @@ export const defaultSiteContent: SiteContent = {
   priorityCards,
   causeCards,
   donationRoutes,
+  donationInfo,
   sponsorHighlights,
   sponsorTiers,
   connectMoments,
@@ -440,6 +476,13 @@ export function normalizeSiteContent(value: Partial<SiteContent>): SiteContent {
           normalizeDonationRoute(item, fallback.donationRoutes[index] ?? fallback.donationRoutes[0])
         )
       : fallback.donationRoutes,
+    donationInfo: Array.isArray(value.donationInfo)
+      ? fallback.donationInfo.map((item) => {
+          const incoming = value.donationInfo?.find((info) => info?.id === item.id);
+
+          return normalizeDonationInfo(incoming, item);
+        })
+      : fallback.donationInfo,
     sponsorHighlights: Array.isArray(value.sponsorHighlights)
       ? value.sponsorHighlights.map((item, index) => normalizeHighlight(item, fallback.sponsorHighlights[index] ?? fallback.sponsorHighlights[0]))
       : fallback.sponsorHighlights,

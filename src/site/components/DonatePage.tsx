@@ -16,7 +16,7 @@ import {
   sanitizeInquiryNameInput,
   sanitizePhoneNumberInput
 } from "../inquiryConstraints";
-import { DonatePageCopy, DonationRoute, TabConfig } from "../types";
+import { DonatePageCopy, DonationInfoContent, DonationInfoId, DonationRoute, TabConfig } from "../types";
 import { PlaceholderDonateButton } from "./PlaceholderDonateButton";
 import { InlineEditableText } from "./InlineEditableText";
 
@@ -24,15 +24,22 @@ type DonatePageProps = {
   details: TabConfig;
   donateCopy: DonatePageCopy;
   donationRoutes: DonationRoute[];
+  donationInfo: DonationInfoContent[];
   editable?: boolean;
   onDonateClick: () => void;
   onChangeDetails?: <K extends keyof TabConfig>(key: K, value: TabConfig[K]) => void;
   onChangeDonateCopy?: <K extends keyof DonatePageCopy>(key: K, value: DonatePageCopy[K]) => void;
   onChangeDonationRoute?: (index: number, key: "title" | "minimum" | "body" | "action", value: string) => void;
   onDeleteDonationRoute?: (index: number) => void;
+  onChangeDonationInfo?: (id: DonationInfoId, key: "label" | "title" | "summary", value: string) => void;
+  onChangeDonationInfoSection?: (id: DonationInfoId, sectionIndex: number, value: string) => void;
+  onChangeDonationInfoItem?: (id: DonationInfoId, sectionIndex: number, itemIndex: number, value: string) => void;
+  onAddDonationInfoSection?: (id: DonationInfoId) => void;
+  onDeleteDonationInfoSection?: (id: DonationInfoId, sectionIndex: number) => void;
+  onAddDonationInfoItem?: (id: DonationInfoId, sectionIndex: number) => void;
+  onDeleteDonationInfoItem?: (id: DonationInfoId, sectionIndex: number, itemIndex: number) => void;
 };
 
-type DonationInfoId = "endowment" | "grant" | "smallGift";
 type DonationRequestKind = "endowment" | "matching";
 type RequestTone = "idle" | "success" | "error";
 
@@ -47,96 +54,7 @@ type DonationRequestForm = {
   employerLocation: string;
 };
 
-type DonationInfoContent = {
-  id: DonationInfoId;
-  label: string;
-  title: string;
-  summary: string;
-  sections: {
-    title: string;
-    items: string[];
-  }[];
-};
-
 const financeEmail = "jaanafinance@gmail.com";
-
-const sharedGrantReasons = [
-  "Tax deductions: To obtain a US tax deduction, donors need to donate to a 501(c)(3) non-profit. JAANA has established a partnership with Learn For Life Foundation - LFL, a US registered 501(c)(3) public charity established by Thomas Thekkethala, SJBHS '77.",
-  "Compliance: Foreign donations to SJBHS, BJES, and the OBA should comply with India's FCRA rules. JAANA works with LFL and BJES to ensure statutory requirements are met.",
-  "Employer matching: As a 501(c)(3) organization, LFL is eligible for several employer matching programs. Please check with your employer or reach out with your employer's name to check eligibility.",
-  "Low administrative costs: JAANA is entirely volunteer run. Administrative costs are less than $500 annually, helping ensure donations go to recipients."
-];
-
-const donationInfoContent: Record<DonationInfoId, DonationInfoContent> = {
-  endowment: {
-    id: "endowment",
-    label: "Endowment",
-    title: "Endowment details",
-    summary:
-      "Endowments can be created by individuals, batches, or corporations, and may be named in honor of someone.",
-    sections: [
-      {
-        title: "How it works",
-        items: [
-          "The amount donated is held in JAANA's US-based Fidelity account.",
-          "Donors may choose from index funds available through Fidelity, or choose other investments in consultation with their tax advisors.",
-          "Donors may opt for access to the Fidelity discount.",
-          "A minimum of 5% of the endowment account balance, or a higher donor-selected percentage, is distributed annually to the SJBHS OBA via the BJES FCRA account.",
-          "Donors may specify the causes supported by their endowment."
-        ]
-      },
-      {
-        title: "Why use JAANA?",
-        items: [
-          "US market access gives donors several investment options.",
-          "Long-term invested giving can compound annual distributions.",
-          ...sharedGrantReasons
-        ]
-      }
-    ]
-  },
-  grant: {
-    id: "grant",
-    label: "Grant",
-    title: "Grant details",
-    summary: "Grants of $1,000 or more can be directed to a donor-selected JAANA/OBA cause.",
-    sections: [
-      {
-        title: "How it works",
-        items: [
-          "Minimum grant amount is $1,000.",
-          "The entire amount donated is transferred to the SJBHS OBA during JAANA's periodic distribution wire transfers to the BJES FCRA account.",
-          "Donors may specify the causes supported by their grant.",
-          "Donors receive a tax receipt automatically."
-        ]
-      },
-      {
-        title: "Why use JAANA?",
-        items: sharedGrantReasons
-      }
-    ]
-  },
-  smallGift: {
-    id: "smallGift",
-    label: "Small gifts",
-    title: "Small gifts details",
-    summary: "Every donation makes an impact for the school, students, and teachers.",
-    sections: [
-      {
-        title: "How it works",
-        items: [
-          "Small gifts under $1,000 are held in JAANA's US-based Fidelity account.",
-          "JAANA, in consultation with the SJBHS OBA, deploys these funds annually based on the programs with the greatest need.",
-          "All donations are welcome."
-        ]
-      },
-      {
-        title: "Why use JAANA?",
-        items: sharedGrantReasons
-      }
-    ]
-  }
-};
 
 const requestDialogCopy: Record<
   DonationRequestKind,
@@ -200,12 +118,20 @@ export function DonatePage({
   details,
   donateCopy,
   donationRoutes,
+  donationInfo,
   editable = false,
   onDonateClick,
   onChangeDetails,
   onChangeDonateCopy,
   onChangeDonationRoute,
-  onDeleteDonationRoute
+  onDeleteDonationRoute,
+  onChangeDonationInfo,
+  onChangeDonationInfoSection,
+  onChangeDonationInfoItem,
+  onAddDonationInfoSection,
+  onDeleteDonationInfoSection,
+  onAddDonationInfoItem,
+  onDeleteDonationInfoItem
 }: DonatePageProps) {
   const [activeInfo, setActiveInfo] = useState<DonationInfoId | null>(null);
   const [activeRequest, setActiveRequest] = useState<DonationRequestKind | null>(null);
@@ -304,7 +230,7 @@ export function DonatePage({
     }
   };
 
-  const infoContent = activeInfo ? donationInfoContent[activeInfo] : null;
+  const infoContent = activeInfo ? donationInfo.find((info) => info.id === activeInfo) ?? null : null;
   const requestContent = activeRequest ? requestDialogCopy[activeRequest] : null;
   const dialogLayer =
     typeof document === "undefined"
@@ -324,6 +250,14 @@ export function DonatePage({
                       }
                     : undefined
                 }
+                editable={editable}
+                onChangeInfo={onChangeDonationInfo}
+                onChangeSection={onChangeDonationInfoSection}
+                onChangeItem={onChangeDonationInfoItem}
+                onAddSection={onAddDonationInfoSection}
+                onDeleteSection={onDeleteDonationInfoSection}
+                onAddItem={onAddDonationInfoItem}
+                onDeleteItem={onDeleteDonationInfoItem}
               />
             ) : null}
 
@@ -397,14 +331,15 @@ export function DonatePage({
                     />
                   </span>
                 </div>
-                <p>
+                <div className="donation-route-body">
                   <InlineEditableText
                     editable={editable}
                     value={route.body}
                     onChange={(value) => onChangeDonationRoute?.(index, "body", value)}
                     multiline
+                    richText
                   />
-                </p>
+                </div>
                 <div className="donation-route-actions">
                   {route.action === "endowment" ? (
                     <>
@@ -478,9 +413,30 @@ type DonationInfoDialogProps = {
   onClose: () => void;
   onOpenRequest?: () => void;
   onDonateClick?: () => void;
+  editable?: boolean;
+  onChangeInfo?: (id: DonationInfoId, key: "label" | "title" | "summary", value: string) => void;
+  onChangeSection?: (id: DonationInfoId, sectionIndex: number, value: string) => void;
+  onChangeItem?: (id: DonationInfoId, sectionIndex: number, itemIndex: number, value: string) => void;
+  onAddSection?: (id: DonationInfoId) => void;
+  onDeleteSection?: (id: DonationInfoId, sectionIndex: number) => void;
+  onAddItem?: (id: DonationInfoId, sectionIndex: number) => void;
+  onDeleteItem?: (id: DonationInfoId, sectionIndex: number, itemIndex: number) => void;
 };
 
-function DonationInfoDialog({ info, onClose, onOpenRequest, onDonateClick }: DonationInfoDialogProps) {
+function DonationInfoDialog({
+  info,
+  onClose,
+  onOpenRequest,
+  onDonateClick,
+  editable = false,
+  onChangeInfo,
+  onChangeSection,
+  onChangeItem,
+  onAddSection,
+  onDeleteSection,
+  onAddItem,
+  onDeleteItem
+}: DonationInfoDialogProps) {
   return (
     <div className="donation-info-dialog" role="dialog" aria-modal="true" aria-labelledby={`donation-info-${info.id}`} onClick={onClose}>
       <div className="donation-info-dialog-shell" onClick={(event) => event.stopPropagation()}>
@@ -489,22 +445,86 @@ function DonationInfoDialog({ info, onClose, onOpenRequest, onDonateClick }: Don
         </button>
 
         <header className="donation-info-dialog-header">
-          <p className="support-note">{info.label}</p>
-          <h3 id={`donation-info-${info.id}`}>{info.title}</h3>
-          <p>{info.summary}</p>
+          <p className="support-note">
+            <InlineEditableText
+              editable={editable}
+              value={info.label}
+              onChange={(value) => onChangeInfo?.(info.id, "label", value)}
+            />
+          </p>
+          <h3 id={`donation-info-${info.id}`}>
+            <InlineEditableText
+              editable={editable}
+              value={info.title}
+              onChange={(value) => onChangeInfo?.(info.id, "title", value)}
+              className="section-title-edit"
+            />
+          </h3>
+          <div className="body-copy">
+            <InlineEditableText
+              editable={editable}
+              value={info.summary}
+              onChange={(value) => onChangeInfo?.(info.id, "summary", value)}
+              multiline
+              richText
+              className="body-copy-edit"
+            />
+          </div>
         </header>
 
         <div className="donation-info-dialog-body">
-          {info.sections.map((section) => (
-            <section key={section.title} className="donation-info-section">
-              <h4>{section.title}</h4>
+          {info.sections.map((section, sectionIndex) => (
+            <section key={`${section.title}-${sectionIndex}`} className="donation-info-section">
+              <div className="donation-info-section-head">
+                <h4>
+                  <InlineEditableText
+                    editable={editable}
+                    value={section.title}
+                    onChange={(value) => onChangeSection?.(info.id, sectionIndex, value)}
+                    className="section-title-edit"
+                  />
+                </h4>
+                {editable ? (
+                  <button className="admin-danger-button" type="button" onClick={() => onDeleteSection?.(info.id, sectionIndex)}>
+                    Remove section
+                  </button>
+                ) : null}
+              </div>
               <ul className="detail-list">
-                {section.items.map((item) => (
-                  <li key={item}>{item}</li>
+                {section.items.map((item, itemIndex) => (
+                  <li key={`${item}-${itemIndex}`} className={editable ? "detail-list-edit-item" : undefined}>
+                    <InlineEditableText
+                      editable={editable}
+                      value={item}
+                      onChange={(value) => onChangeItem?.(info.id, sectionIndex, itemIndex, value)}
+                      multiline
+                      richText
+                      className="body-copy-edit"
+                    />
+                    {editable ? (
+                      <button
+                        className="admin-danger-button"
+                        type="button"
+                        onClick={() => onDeleteItem?.(info.id, sectionIndex, itemIndex)}
+                      >
+                        Remove
+                      </button>
+                    ) : null}
+                  </li>
                 ))}
               </ul>
+              {editable ? (
+                <button className="secondary-button cause-dialog-add-line" type="button" onClick={() => onAddItem?.(info.id, sectionIndex)}>
+                  Add bullet
+                </button>
+              ) : null}
             </section>
           ))}
+          {editable ? (
+            <button className="secondary-button cause-dialog-add-line" type="button" onClick={() => onAddSection?.(info.id)}>
+              Add section
+            </button>
+          ) : null}
         </div>
 
         <footer className="donation-info-actions">

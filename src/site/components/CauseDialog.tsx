@@ -68,15 +68,16 @@ export function CauseDialog({
               className="section-title-edit"
             />
           </h3>
-          <p id="cause-dialog-description">
+          <div id="cause-dialog-description" className="body-copy">
             <InlineEditableText
               editable={editable}
               value={cause.purpose}
               onChange={(value) => onChangeCause?.("purpose", value)}
               multiline
+              richText
               className="body-copy-edit"
             />
-          </p>
+          </div>
         </header>
 
         <div className="cause-dialog-grid">
@@ -112,15 +113,16 @@ export function CauseDialog({
           <article className="cause-dialog-panel cause-dialog-content-panel">
             <div className="cause-dialog-section">
               <h4>Impact</h4>
-              <p>
+              <div className="body-copy">
                 <InlineEditableText
                   editable={editable}
                   value={editable ? cause.impact : impact}
                   onChange={(value) => onChangeCause?.("impact", value)}
                   multiline
+                  richText
                   className="body-copy-edit"
                 />
-              </p>
+              </div>
             </div>
 
             <div className="cause-dialog-section">
@@ -133,6 +135,7 @@ export function CauseDialog({
                       value={item}
                       onChange={(value) => onChangeSupportItem?.(index, value)}
                       multiline
+                      richText
                       className="body-copy-edit"
                     />
                     {editable ? (

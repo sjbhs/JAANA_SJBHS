@@ -646,6 +646,7 @@ function App() {
     causesCopy,
     donateCopy,
     donationRoutes,
+    donationInfo,
     connectCopy
   } = siteContent;
   const isAdminRoute = window.location.pathname.startsWith("/admin");
@@ -761,6 +762,7 @@ function App() {
             details={activeTabDetails}
             donateCopy={donateCopy}
             donationRoutes={donationRoutes}
+            donationInfo={donationInfo}
             onDonateClick={handleOpenDonateDialog}
           />
         ) : null}

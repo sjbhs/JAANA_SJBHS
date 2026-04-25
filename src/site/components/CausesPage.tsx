@@ -59,6 +59,7 @@ export function CausesPage({
                       value={cause.summary}
                       onChange={(value) => onChangeCauseCard?.(index, "summary", value)}
                       multiline
+                      richText
                       className="body-copy-edit"
                     />
                   </div>
@@ -88,7 +89,9 @@ export function CausesPage({
               <button className="cause-list-item" key={`${cause.title}-${index}`} type="button" onClick={() => onSelectCause(cause, index)}>
                 <div className="cause-list-copy">
                   <h3>{cause.title}</h3>
-                  <p>{cause.summary}</p>
+                  <div className="body-copy">
+                    <InlineEditableText editable={false} value={cause.summary} onChange={() => undefined} richText />
+                  </div>
                 </div>
 
                 <div className="cause-list-meta">

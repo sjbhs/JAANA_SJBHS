@@ -59,6 +59,21 @@ export type DonationRoute = {
   action: DonationRouteAction;
 };
 
+export type DonationInfoId = "endowment" | "grant" | "smallGift";
+
+export type DonationInfoSection = {
+  title: string;
+  items: string[];
+};
+
+export type DonationInfoContent = {
+  id: DonationInfoId;
+  label: string;
+  title: string;
+  summary: string;
+  sections: DonationInfoSection[];
+};
+
 export type ConnectPageCopy = {
   posterLabel: string;
   posterTitle: string;
@@ -151,6 +166,7 @@ export type SiteContent = {
   priorityCards: PriorityCard[];
   causeCards: CauseCard[];
   donationRoutes: DonationRoute[];
+  donationInfo: DonationInfoContent[];
   sponsorHighlights: EventHighlight[];
   sponsorTiers: SponsorTier[];
   connectMoments: GalleryImage[];

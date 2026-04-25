@@ -1405,6 +1405,22 @@ img {
   margin-top: 0;
 }
 
+.donation-route-body {
+  position: relative;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.donation-route-body p {
+  margin: 0;
+}
+
+.donation-route-body p + p,
+.donation-route-body .rich-text-list + p {
+  margin-top: 0.55rem;
+}
+
 .donation-minimum {
   flex: 0 0 auto;
   max-width: 11.5rem;
@@ -1440,6 +1456,30 @@ img {
   background:
     radial-gradient(circle at top right, rgba(19, 53, 127, 0.1), transparent 30%),
     linear-gradient(180deg, rgba(255, 253, 248, 0.98), rgba(243, 238, 228, 0.98));
+}
+
+.donation-route-admin-controls {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: end;
+  margin-top: 0.35rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(19, 53, 127, 0.1);
+}
+
+.donation-route-action-picker {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.donation-route-action-picker span {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .secondary-support-grid {
@@ -2129,6 +2169,45 @@ img {
   min-height: 3.5rem;
 }
 
+.inline-edit-rich-wrap {
+  display: grid;
+  gap: 0.45rem;
+  width: 100%;
+}
+
+.inline-edit-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.inline-edit-toolbar button {
+  min-height: 2rem;
+  padding: 0 0.7rem;
+  border: 1px solid rgba(19, 53, 127, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--navy-deep);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.rich-text-list {
+  margin: 0.3rem 0 0;
+  padding-left: 1.25rem;
+}
+
+.rich-text-list li + li {
+  margin-top: 0.25rem;
+}
+
+.rich-text-list + p,
+.rich-text-list + .rich-text-list {
+  margin-top: 0.55rem;
+}
+
 .section-title-edit {
   font-size: inherit;
   font-weight: inherit;
@@ -2780,6 +2859,11 @@ img {
   gap: 0.85rem;
 }
 
+.admin-page-inline-form-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 0.45fr);
+  align-items: end;
+}
+
 .admin-page-inline-form label {
   display: grid;
   gap: 0.35rem;
@@ -3398,6 +3482,19 @@ img {
   background: rgba(255, 255, 255, 0.55);
 }
 
+.donation-info-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.85rem;
+}
+
+.donation-info-section-head .admin-danger-button {
+  min-height: 2.25rem;
+  padding: 0 0.75rem;
+  font-size: 0.78rem;
+}
+
 .donation-info-section h4 {
   font-size: clamp(1.04rem, 1.8vw, 1.35rem);
   line-height: 1.15;
@@ -3428,6 +3525,14 @@ img {
   height: 0.36rem;
   border-radius: 999px;
   background: var(--gold);
+}
+
+.donation-info-section .detail-list li.detail-list-edit-item {
+  padding-left: 0;
+}
+
+.donation-info-section .detail-list li.detail-list-edit-item::before {
+  display: none;
 }
 
 .donation-info-actions {

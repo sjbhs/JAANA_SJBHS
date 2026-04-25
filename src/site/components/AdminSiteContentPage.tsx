@@ -3,6 +3,7 @@ import { defaultSiteContent, normalizeSiteContent } from "../siteContent";
 import {
   AlbumFolder,
   CauseCard,
+  DonationInfoId,
   DonationRouteAction,
   EventAlbum,
   GalleryImage,
@@ -1203,6 +1204,105 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
     setEditorStatus(`Deleted donation route ${route.title}. Save changes to publish.`);
   };
 
+  const updateDonationInfo = (id: DonationInfoId, key: "label" | "title" | "summary", value: string) => {
+    updateNestedContent("donationInfo", (items) =>
+      items.map((item) => (item.id === id ? { ...item, [key]: value } : item))
+    );
+  };
+
+  const updateDonationInfoSection = (id: DonationInfoId, sectionIndex: number, value: string) => {
+    updateNestedContent("donationInfo", (items) =>
+      items.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              sections: item.sections.map((section, index) =>
+                index === sectionIndex ? { ...section, title: value } : section
+              )
+            }
+          : item
+      )
+    );
+  };
+
+  const updateDonationInfoItem = (id: DonationInfoId, sectionIndex: number, itemIndex: number, value: string) => {
+    updateNestedContent("donationInfo", (items) =>
+      items.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              sections: item.sections.map((section, index) =>
+                index === sectionIndex
+                  ? {
+                      ...section,
+                      items: section.items.map((detail, detailIndex) => (detailIndex === itemIndex ? value : detail))
+                    }
+                  : section
+              )
+            }
+          : item
+      )
+    );
+  };
+
+  const addDonationInfoSection = (id: DonationInfoId) => {
+    updateNestedContent("donationInfo", (items) =>
+      items.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              sections: [...item.sections, { title: "New section", items: ["Add detail."] }]
+            }
+          : item
+      )
+    );
+  };
+
+  const deleteDonationInfoSection = (id: DonationInfoId, sectionIndex: number) => {
+    updateNestedContent("donationInfo", (items) =>
+      items.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              sections: item.sections.filter((_, index) => index !== sectionIndex)
+            }
+          : item
+      )
+    );
+  };
+
+  const addDonationInfoItem = (id: DonationInfoId, sectionIndex: number) => {
+    updateNestedContent("donationInfo", (items) =>
+      items.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              sections: item.sections.map((section, index) =>
+                index === sectionIndex ? { ...section, items: [...section.items, "Add detail."] } : section
+              )
+            }
+          : item
+      )
+    );
+  };
+
+  const deleteDonationInfoItem = (id: DonationInfoId, sectionIndex: number, itemIndex: number) => {
+    updateNestedContent("donationInfo", (items) =>
+      items.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              sections: item.sections.map((section, index) =>
+                index === sectionIndex
+                  ? { ...section, items: section.items.filter((_, detailIndex) => detailIndex !== itemIndex) }
+                  : section
+              )
+            }
+          : item
+      )
+    );
+  };
+
   const updateContactChannel = (index: number, key: "label" | "value" | "href", value: string) => {
     updateNestedContent("contactChannels", (channels) =>
       channels.map((channel, channelIndex) => (channelIndex === index ? { ...channel, [key]: value } : channel))
@@ -1802,103 +1902,55 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
 
         {!isInquiryView && activeTab === "donate" ? (
           <>
-            <section className="admin-content-manager" aria-label="Donation route controls">
-              <div className="admin-content-manager-head">
-                <div>
-                  <span className="section-kicker">Donate editor</span>
-                  <h3>Add, edit, or remove donation routes</h3>
-                </div>
-                <button className="secondary-button" type="button" onClick={() => setDonationRouteFormOpen((current) => !current)}>
-                  Add donation route
-                </button>
+            <section className="admin-page-actions" aria-label="Donation route controls">
+              <div>
+                <span className="section-kicker">Donate editor</span>
+                <p>Edit the public donation cards below. Use rich text in descriptions for bullets, bold text, and line breaks.</p>
               </div>
-
-              {donationRouteFormOpen ? (
-                <div className="admin-inline-form-card admin-manager-form admin-manager-form-grid">
-                  <label>
-                    <span>Route title</span>
-                    <input
-                      className="connect-edit-input"
-                      value={newDonationRouteTitle}
-                      onChange={(event) => setNewDonationRouteTitle(event.target.value)}
-                    />
-                  </label>
-                  <label>
-                    <span>Button behavior</span>
-                    <select
-                      className="connect-edit-input"
-                      value={newDonationRouteAction}
-                      onChange={(event) => setNewDonationRouteAction(event.target.value as DonationRouteAction)}
-                    >
-                      <option value="endowment">Endowment request</option>
-                      <option value="grant">Grant donation</option>
-                      <option value="smallGift">Small gift donation</option>
-                      <option value="matching">Employer matching</option>
-                    </select>
-                  </label>
-                  <div className="admin-media-form-actions full-width">
-                    <button className="primary-button" type="button" onClick={addDonationRoute}>
-                      Create route
-                    </button>
-                    <button className="secondary-button" type="button" onClick={() => setDonationRouteFormOpen(false)}>
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              ) : null}
-
-              <div className="admin-manager-list">
-                {editableContent.donationRoutes.map((route, index) => (
-                  <article className="admin-manager-row admin-manager-row-edit" key={route.id}>
-                    <label>
-                      <span>Title</span>
-                      <input
-                        className="connect-edit-input"
-                        value={route.title}
-                        onChange={(event) => updateDonationRoute(index, "title", event.target.value)}
-                      />
-                    </label>
-                    <label>
-                      <span>Minimum</span>
-                      <input
-                        className="connect-edit-input"
-                        value={route.minimum}
-                        onChange={(event) => updateDonationRoute(index, "minimum", event.target.value)}
-                      />
-                    </label>
-                    <label className="full-width">
-                      <span>Description</span>
-                      <textarea
-                        className="connect-edit-input"
-                        value={route.body}
-                        onChange={(event) => updateDonationRoute(index, "body", event.target.value)}
-                      />
-                    </label>
-                    <label>
-                      <span>Button behavior</span>
-                      <select
-                        className="connect-edit-input"
-                        value={route.action}
-                        onChange={(event) => updateDonationRoute(index, "action", event.target.value)}
-                      >
-                        <option value="endowment">Endowment request</option>
-                        <option value="grant">Grant donation</option>
-                        <option value="smallGift">Small gift donation</option>
-                        <option value="matching">Employer matching</option>
-                      </select>
-                    </label>
-                    <button className="admin-danger-button" type="button" onClick={() => deleteDonationRoute(index)}>
-                      Delete
-                    </button>
-                  </article>
-                ))}
-              </div>
+              <button className="secondary-button" type="button" onClick={() => setDonationRouteFormOpen((current) => !current)}>
+                Add donation route
+              </button>
             </section>
+
+            {donationRouteFormOpen ? (
+              <section className="admin-inline-form-card admin-page-inline-form admin-page-inline-form-grid" aria-label="New donation route">
+                <label>
+                  <span>Route title</span>
+                  <input
+                    className="connect-edit-input"
+                    value={newDonationRouteTitle}
+                    onChange={(event) => setNewDonationRouteTitle(event.target.value)}
+                  />
+                </label>
+                <label>
+                  <span>Button behavior</span>
+                  <select
+                    className="connect-edit-input"
+                    value={newDonationRouteAction}
+                    onChange={(event) => setNewDonationRouteAction(event.target.value as DonationRouteAction)}
+                  >
+                    <option value="endowment">Endowment request</option>
+                    <option value="grant">Grant donation</option>
+                    <option value="smallGift">Small gift donation</option>
+                    <option value="matching">Employer matching</option>
+                  </select>
+                </label>
+                <div className="admin-media-form-actions full-width">
+                  <button className="primary-button" type="button" onClick={addDonationRoute}>
+                    Create route
+                  </button>
+                  <button className="secondary-button" type="button" onClick={() => setDonationRouteFormOpen(false)}>
+                    Cancel
+                  </button>
+                </div>
+              </section>
+            ) : null}
 
             <DonatePage
               details={activeTabDetails}
               donateCopy={editableContent.donateCopy}
               donationRoutes={editableContent.donationRoutes}
+              donationInfo={editableContent.donationInfo}
               editable={isEditing}
               onDonateClick={() => setDonateDialogOpen(true)}
               onChangeDetails={updateActiveTab}
@@ -1908,6 +1960,15 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
                   [key]: value
                 }))
               }
+              onChangeDonationRoute={updateDonationRoute}
+              onDeleteDonationRoute={deleteDonationRoute}
+              onChangeDonationInfo={updateDonationInfo}
+              onChangeDonationInfoSection={updateDonationInfoSection}
+              onChangeDonationInfoItem={updateDonationInfoItem}
+              onAddDonationInfoSection={addDonationInfoSection}
+              onDeleteDonationInfoSection={deleteDonationInfoSection}
+              onAddDonationInfoItem={addDonationInfoItem}
+              onDeleteDonationInfoItem={deleteDonationInfoItem}
             />
           </>
         ) : null}

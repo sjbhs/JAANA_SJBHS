@@ -3,6 +3,7 @@ import type {
   CauseCard,
   ContactChannel,
   ConnectPageContent,
+  DonationInfoContent,
   DonationRoute,
   EventAlbum,
   EventHighlight,
@@ -259,6 +260,84 @@ export const donationRoutes: DonationRoute[] = [
     minimum: "Employer matching",
     body: "Check whether your employer can match your donation.",
     action: "matching"
+  }
+];
+
+const sharedGrantReasons = [
+  "Tax deductions: To obtain a US tax deduction, donors need to donate to a 501(c)(3) non-profit. JAANA has established a partnership with Learn For Life Foundation - LFL, a US registered 501(c)(3) public charity established by Thomas Thekkethala, SJBHS '77.",
+  "Compliance: Foreign donations to SJBHS, BJES, and the OBA should comply with India's FCRA rules. JAANA works with LFL and BJES to ensure statutory requirements are met.",
+  "Employer matching: As a 501(c)(3) organization, LFL is eligible for several employer matching programs. Please check with your employer or reach out with your employer's name to check eligibility.",
+  "Low administrative costs: JAANA is entirely volunteer run. Administrative costs are less than $500 annually, helping ensure donations go to recipients."
+];
+
+export const donationInfo: DonationInfoContent[] = [
+  {
+    id: "endowment",
+    label: "Endowment",
+    title: "Endowment details",
+    summary:
+      "Endowments can be created by individuals, batches, or corporations, and may be named in honor of someone.",
+    sections: [
+      {
+        title: "How it works",
+        items: [
+          "The amount donated is held in JAANA's US-based Fidelity account.",
+          "Donors may choose from index funds available through Fidelity, or choose other investments in consultation with their tax advisors.",
+          "Donors may opt for access to the Fidelity discount.",
+          "A minimum of 5% of the endowment account balance, or a higher donor-selected percentage, is distributed annually to the SJBHS OBA via the BJES FCRA account.",
+          "Donors may specify the causes supported by their endowment."
+        ]
+      },
+      {
+        title: "Why use JAANA?",
+        items: [
+          "US market access gives donors several investment options.",
+          "Long-term invested giving can compound annual distributions.",
+          ...sharedGrantReasons
+        ]
+      }
+    ]
+  },
+  {
+    id: "grant",
+    label: "Grant",
+    title: "Grant details",
+    summary: "Grants of $1,000 or more can be directed to a donor-selected JAANA/OBA cause.",
+    sections: [
+      {
+        title: "How it works",
+        items: [
+          "Minimum grant amount is $1,000.",
+          "The entire amount donated is transferred to the SJBHS OBA during JAANA's periodic distribution wire transfers to the BJES FCRA account.",
+          "Donors may specify the causes supported by their grant.",
+          "Donors receive a tax receipt automatically."
+        ]
+      },
+      {
+        title: "Why use JAANA?",
+        items: sharedGrantReasons
+      }
+    ]
+  },
+  {
+    id: "smallGift",
+    label: "Small gifts",
+    title: "Small gifts details",
+    summary: "Every donation makes an impact for the school, students, and teachers.",
+    sections: [
+      {
+        title: "How it works",
+        items: [
+          "Small gifts under $1,000 are held in JAANA's US-based Fidelity account.",
+          "JAANA, in consultation with the SJBHS OBA, deploys these funds annually based on the programs with the greatest need.",
+          "All donations are welcome."
+        ]
+      },
+      {
+        title: "Why use JAANA?",
+        items: sharedGrantReasons
+      }
+    ]
   }
 ];
 
