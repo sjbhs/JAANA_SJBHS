@@ -27,7 +27,9 @@ export async function GET(request: Request) {
         "Cache-Control": "no-store"
       }
     });
-  } catch {
+  } catch (error) {
+    console.error(error);
+
     return Response.json(
       {
         error: "The server hit an unexpected error."

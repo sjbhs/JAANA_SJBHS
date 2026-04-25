@@ -27,7 +27,13 @@ function getStoragePath() {
     process.env.INQUIRY_STORAGE_PATH?.trim() ?? process.env.WAITLIST_STORAGE_PATH?.trim();
 
   if (configuredPath) {
-    return path.resolve(process.cwd(), configuredPath);
+    const resolvedPath = path.resolve(process.cwd(), configuredPath);
+
+    if (process.env.VERCEL && !resolvedPath.startsWith("/tmp/")) {
+      return temporaryStoragePath;
+    }
+
+    return resolvedPath;
   }
 
   return process.env.VERCEL ? temporaryStoragePath : defaultStoragePath;

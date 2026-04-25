@@ -1458,6 +1458,9 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
               ))}
             </nav>
           </div>
+          <button className="secondary-button admin-header-signout" type="button" onClick={handleLogout}>
+            Sign out
+          </button>
         </div>
       </header>
 
@@ -1469,13 +1472,6 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
           </div>
 
           <div className="admin-controls-actions">
-            <button
-              className={isContentView ? "secondary-button is-active" : "secondary-button"}
-              type="button"
-              onClick={openContentView}
-            >
-              Content
-            </button>
             <button
               className={isMediaView ? "secondary-button is-active" : "secondary-button"}
               type="button"
@@ -1507,9 +1503,6 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
                 </button>
               </>
             ) : null}
-            <button className="secondary-button" type="button" onClick={handleLogout}>
-              Sign out
-            </button>
           </div>
         </div>
       </section>
@@ -1547,6 +1540,9 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
               </div>
 
               <div className="admin-inquiry-actions">
+                <button className="secondary-button" type="button" onClick={openContentView}>
+                  Content
+                </button>
                 <button className="secondary-button" type="button" onClick={() => void handleApplyInquiryFilters()} disabled={inquiriesLoading}>
                   {inquiriesLoading ? "Loading..." : "Apply filters"}
                 </button>
