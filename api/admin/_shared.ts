@@ -1,4 +1,5 @@
-import { buildRateLimitHeaders, RateLimitResult } from "../../server/lib/rateLimit";
+import { buildRateLimitHeaders } from "../../server/lib/rateLimit.js";
+import type { RateLimitResult } from "../../server/lib/rateLimit.js";
 
 export async function readJsonBody(request: Request) {
   try {

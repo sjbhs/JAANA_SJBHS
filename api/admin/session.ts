@@ -1,4 +1,4 @@
-import { adminEmailAddress, getAdminSessionFromCookie } from "../../server/lib/adminAuth";
+import { adminEmailAddress, getAdminSessionFromCookie } from "../../server/lib/adminAuth.js";
 
 export async function GET(request: Request) {
   const session = getAdminSessionFromCookie(request.headers.get("cookie"));

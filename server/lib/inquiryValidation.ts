@@ -8,7 +8,7 @@ import {
   isValidInquiryName,
   isValidPhoneNumber,
   normalizeSingleLineInput
-} from "../../src/site/inquiryConstraints";
+} from "../../src/site/inquiryConstraints.js";
 
 export type InquiryPayload = {
   name?: string;

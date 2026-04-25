@@ -1,4 +1,4 @@
-import { NormalizedInquiry } from "./inquiryValidation";
+import type { NormalizedInquiry } from "./inquiryValidation.js";
 
 export type InquiryNotificationResult =
   | {

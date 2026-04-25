@@ -1,4 +1,4 @@
-import {
+import type {
   AlbumFolder,
   ConnectPageCopy,
   ConnectPageContent,
@@ -16,7 +16,7 @@ import {
   SiteContent,
   SponsorTier,
   TabConfig
-} from "./types";
+} from "./types.js";
 import {
   causeCards,
   connectMoments,
@@ -32,7 +32,7 @@ import {
   secondaryPages,
   tabs,
   contactChannels
-} from "./content";
+} from "./content.js";
 
 export const defaultHomeCopy: HomePageCopy = {
   heroMotto: "Fide et Labore.",

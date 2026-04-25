@@ -1,4 +1,4 @@
-import { getInquiryStats } from "../../server/lib/inquiryStore";
+import { getInquiryStats } from "../../server/lib/inquiryStore.js";
 
 export async function GET() {
   try {

@@ -4,9 +4,9 @@ import {
   getAdminAuthConfigurationError,
   isAdminAuthConfigured,
   verifyAdminCredentials
-} from "../../server/lib/adminAuth";
-import { checkRateLimit, getClientIpFromRequestHeaders } from "../../server/lib/rateLimit";
-import { readJsonBody, tooManyRequestsResponse } from "./_shared";
+} from "../../server/lib/adminAuth.js";
+import { checkRateLimit, getClientIpFromRequestHeaders } from "../../server/lib/rateLimit.js";
+import { readJsonBody, tooManyRequestsResponse } from "./_shared.js";
 
 const loginRateLimit = { limit: 5, windowMs: 10 * 60 * 1000 };
 

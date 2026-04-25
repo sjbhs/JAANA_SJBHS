@@ -1,6 +1,6 @@
-import { isAdminSessionValid } from "../../server/lib/adminAuth";
-import { getInquiries } from "../../server/lib/inquiryStore";
-import { unauthorizedResponse } from "./_shared";
+import { isAdminSessionValid } from "../../server/lib/adminAuth.js";
+import { getInquiries } from "../../server/lib/inquiryStore.js";
+import { unauthorizedResponse } from "./_shared.js";
 
 export async function GET(request: Request) {
   if (!isAdminSessionValid(request.headers.get("cookie"))) {

@@ -1,4 +1,4 @@
-import { readConnectContent } from "../server/lib/connectContentStore";
+import { readConnectContent } from "../server/lib/connectContentStore.js";
 
 export async function GET() {
   try {

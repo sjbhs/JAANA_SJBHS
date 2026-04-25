@@ -1,4 +1,4 @@
-import { readSiteContent } from "../server/lib/siteContentStore";
+import { readSiteContent } from "../server/lib/siteContentStore.js";
 
 export async function GET() {
   try {

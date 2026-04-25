@@ -1,4 +1,4 @@
-import { clearAdminSessionCookie } from "../../server/lib/adminAuth";
+import { clearAdminSessionCookie } from "../../server/lib/adminAuth.js";
 
 export async function POST() {
   return Response.json(

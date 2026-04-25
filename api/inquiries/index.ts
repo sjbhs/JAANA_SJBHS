@@ -1,7 +1,8 @@
-import { createInquiry } from "../../server/lib/inquiryStore";
-import { isInquiryEmailDeliveryRequired, sendInquiryNotification } from "../../server/lib/inquiryNotifications";
-import { InquiryPayload, validateInquiryPayload } from "../../server/lib/inquiryValidation";
-import { buildRateLimitHeaders, checkRateLimit, getClientIpFromRequestHeaders } from "../../server/lib/rateLimit";
+import { createInquiry } from "../../server/lib/inquiryStore.js";
+import { isInquiryEmailDeliveryRequired, sendInquiryNotification } from "../../server/lib/inquiryNotifications.js";
+import { validateInquiryPayload } from "../../server/lib/inquiryValidation.js";
+import type { InquiryPayload } from "../../server/lib/inquiryValidation.js";
+import { buildRateLimitHeaders, checkRateLimit, getClientIpFromRequestHeaders } from "../../server/lib/rateLimit.js";
 
 const inquirySubmitRateLimit = { limit: 10, windowMs: 15 * 60 * 1000 };
 

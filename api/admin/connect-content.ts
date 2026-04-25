@@ -1,6 +1,6 @@
-import { isAdminSessionValid } from "../../server/lib/adminAuth";
-import { unauthorizedResponse, readJsonBody } from "./_shared";
-import { readConnectContent, validateConnectContent, writeConnectContent } from "../../server/lib/connectContentStore";
+import { isAdminSessionValid } from "../../server/lib/adminAuth.js";
+import { unauthorizedResponse, readJsonBody } from "./_shared.js";
+import { readConnectContent, validateConnectContent, writeConnectContent } from "../../server/lib/connectContentStore.js";
 
 export async function PUT(request: Request) {
   if (!isAdminSessionValid(request.headers.get("cookie"))) {

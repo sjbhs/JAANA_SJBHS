@@ -1,4 +1,4 @@
-import {
+import type {
   AlbumFolder,
   CauseCard,
   ContactChannel,
@@ -12,7 +12,7 @@ import {
   SecondaryPage,
   SponsorTier,
   TabConfig
-} from "./types";
+} from "./types.js";
 
 const albumAssetVersion = "2026-04-15-1";
 const defaultConnectSponsorMessage =

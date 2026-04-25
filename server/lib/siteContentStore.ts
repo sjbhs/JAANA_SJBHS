@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { defaultSiteContent, normalizeSiteContent } from "../../src/site/siteContent";
-import { SiteContent } from "../../src/site/types";
+import { defaultSiteContent, normalizeSiteContent } from "../../src/site/siteContent.js";
+import type { SiteContent } from "../../src/site/types.js";
 
 const defaultStoragePath = path.resolve(process.cwd(), "server/data/site-content.json");
 const temporaryStoragePath = path.join(process.env.TMPDIR ?? "/tmp", "jaana-sjbhs-site-content.json");
