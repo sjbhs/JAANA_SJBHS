@@ -38,7 +38,7 @@ export function InquiryFormCard({
             maxLength={INQUIRY_NAME_MAX_LENGTH}
             pattern={INQUIRY_NAME_INPUT_PATTERN}
             autoComplete="name"
-            title="Name may only include letters and spaces."
+            title="Enter a name using letters and spaces only."
             onChange={(event) => onFieldChange("name", sanitizeInquiryNameInput(event.target.value))}
           />
         </label>
@@ -92,7 +92,11 @@ export function InquiryFormCard({
         <button className="primary-button" type="submit" disabled={isSubmitting}>
           {isSubmitting ? "Sending..." : "Submit inquiry"}
         </button>
-        {statusMessage ? <p className={`status-note ${statusTone}`}>{statusMessage}</p> : null}
+        {statusMessage ? (
+          <p className={`status-note ${statusTone}`} role={statusTone === "error" ? "alert" : "status"} aria-live={statusTone === "error" ? "assertive" : "polite"}>
+            {statusMessage}
+          </p>
+        ) : null}
       </div>
     </form>
   );

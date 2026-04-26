@@ -9,6 +9,7 @@ type InlineEditableTextProps = {
   richText?: boolean;
   className?: string;
   placeholder?: string;
+  ariaLabel?: string;
 };
 
 function renderInlineFormatting(text: string): ReactNode[] {
@@ -75,9 +76,11 @@ export function InlineEditableText({
   multiline = false,
   richText = false,
   className = "",
-  placeholder = ""
+  placeholder = "",
+  ariaLabel
 }: InlineEditableTextProps) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const editableLabel = ariaLabel ?? (multiline ? "Editable multiline text" : "Editable text");
 
   const insertText = (before: string, after = "") => {
     const textarea = textareaRef.current;
@@ -113,7 +116,7 @@ export function InlineEditableText({
     return (
       <span className="inline-edit-rich-wrap">
         {richText ? (
-          <span className="inline-edit-toolbar" aria-label="Rich text formatting">
+          <span className="inline-edit-toolbar" role="toolbar" aria-label="Rich text formatting">
             <button type="button" onClick={() => insertText("- ")}>
               Bullet
             </button>
@@ -130,6 +133,7 @@ export function InlineEditableText({
           className={`inline-edit-field inline-edit-textarea ${className}`.trim()}
           value={value}
           placeholder={placeholder}
+          aria-label={editableLabel}
           onChange={(event) => onChange(event.target.value)}
         />
       </span>
@@ -141,6 +145,7 @@ export function InlineEditableText({
       className={`inline-edit-field ${className}`.trim()}
       value={value}
       placeholder={placeholder}
+      aria-label={editableLabel}
       onChange={(event) => onChange(event.target.value)}
     />
   );

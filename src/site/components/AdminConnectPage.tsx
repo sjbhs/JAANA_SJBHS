@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { defaultConnectPageContent } from "../content";
 import { ConnectPageContent, TabConfig } from "../types";
+import { handleRovingTabKeyDown } from "../accessibility";
 
 type AdminConnectPageProps = {
   details: TabConfig;
@@ -376,7 +377,6 @@ export function AdminConnectPage({ details }: AdminConnectPageProps) {
           <div className="section-block">
             <div className="connect-sponsor-callout">
               <div>
-                <span className="section-kicker">Call to Sponsors</span>
                 <h3>Support North America Connect 2026.</h3>
                 <textarea
                   className="connect-edit-textarea"
@@ -404,19 +404,29 @@ export function AdminConnectPage({ details }: AdminConnectPageProps) {
               <div className="connect-schedule-tabs" role="tablist" aria-label="Connect details tabs">
                 {editableContent.placeholders.map((item, index) => (
                   <button
-                    key={`${item.title}-${index}`}
+                    key={`admin-connect-detail-${index}`}
                     type="button"
+                    id={`admin-connect-detail-tab-${index}`}
                     role="tab"
                     aria-selected={activeScheduleTab === index}
+                    aria-controls={`admin-connect-detail-panel-${index}`}
+                    tabIndex={activeScheduleTab === index ? 0 : -1}
                     className={`connect-schedule-tab ${activeScheduleTab === index ? "is-active" : ""}`}
                     onClick={() => setActiveScheduleTab(index)}
+                    onKeyDown={handleRovingTabKeyDown}
                   >
                     {item.title || `Details ${index + 1}`}
                   </button>
                 ))}
               </div>
 
-              <div className="connect-schedule-panel" role="tabpanel">
+              <div
+                id={`admin-connect-detail-panel-${activeScheduleTab}`}
+                className="connect-schedule-panel"
+                role="tabpanel"
+                aria-labelledby={`admin-connect-detail-tab-${activeScheduleTab}`}
+                tabIndex={0}
+              >
                 <input
                   className="connect-edit-input"
                   value={editableContent.placeholders[activeScheduleTab]?.title ?? ""}

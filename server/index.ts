@@ -24,8 +24,8 @@ import {
   validateSiteContent,
   writeSiteContent
 } from "./lib/siteContentStore";
-import { createInquiry, getInquiryStats, getInquiries } from "./lib/inquiryStore";
-import { isInquiryEmailDeliveryRequired, sendInquiryNotification } from "./lib/inquiryNotifications";
+import { createInquiry, deleteInquiry, getInquiryStats, getInquiries, updateInquiryReplyStatus } from "./lib/inquiryStore";
+import { sendInquiryNotification } from "./lib/inquiryNotifications";
 import { InquiryPayload, validateInquiryPayload } from "./lib/inquiryValidation";
 import { buildRateLimitHeaders, checkRateLimit, getClientIpFromNodeHeaders } from "./lib/rateLimit";
 
@@ -268,7 +268,15 @@ app.get("/api/admin/inquiries", requireAdminSession, async (request, response, n
           : 10;
     const from = readSingleQueryValue(request.query.from);
     const to = readSingleQueryValue(request.query.to);
-    const inquiries = await getInquiries({ limit, from, to });
+    const replyStatuses = (readSingleQueryValue(request.query.statuses) ?? "")
+      .split(",")
+      .map((value) => value.trim())
+      .filter((value): value is "pending" | "complete" => value === "pending" || value === "complete");
+    const interests = (readSingleQueryValue(request.query.categories) ?? "")
+      .split(",")
+      .map((value) => value.trim())
+      .filter(Boolean);
+    const inquiries = await getInquiries({ limit, from, to, replyStatuses, interests });
 
     response.json(inquiries);
   } catch (error) {
@@ -290,6 +298,66 @@ app.put("/api/admin/site-content", requireAdminSession, async (request, response
 
     response.json({
       content
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.patch("/api/admin/inquiries/:id", requireAdminSession, async (request, response, next) => {
+  try {
+    const id = typeof request.params.id === "string" ? request.params.id.trim() : "";
+    const replyStatus = request.body?.replyStatus === "complete" ? "complete" : "";
+
+    if (!id) {
+      return response.status(400).json({
+        error: "Inquiry id is required."
+      });
+    }
+
+    if (!replyStatus) {
+      return response.status(400).json({
+        error: "A valid inquiry status is required."
+      });
+    }
+
+    const inquiry = await updateInquiryReplyStatus(id, replyStatus);
+
+    if (!inquiry) {
+      return response.status(404).json({
+        error: "Inquiry not found."
+      });
+    }
+
+    response.json({
+      inquiry,
+      message: "Inquiry marked complete."
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.delete("/api/admin/inquiries/:id", requireAdminSession, async (request, response, next) => {
+  try {
+    const id = typeof request.params.id === "string" ? request.params.id.trim() : "";
+
+    if (!id) {
+      return response.status(400).json({
+        error: "Inquiry id is required."
+      });
+    }
+
+    const deleted = await deleteInquiry(id);
+
+    if (!deleted) {
+      return response.status(404).json({
+        error: "Inquiry not found."
+      });
+    }
+
+    response.json({
+      message: "Inquiry deleted."
     });
   } catch (error) {
     next(error);
@@ -323,29 +391,16 @@ app.post("/api/inquiries", async (request, response, next) => {
       });
     }
 
+    const result = await createInquiry(validation.data);
+    const total = result.total;
     const notification = await sendInquiryNotification(validation.data);
 
     if (!notification.ok) {
       console.warn(notification.error);
-
-      if (isInquiryEmailDeliveryRequired()) {
-        return response.status(503).json({
-          error: "The inquiry email service is not configured. Please email jaanagroup@gmail.com directly."
-        });
-      }
-    }
-
-    let total: number | null = null;
-
-    try {
-      const result = await createInquiry(validation.data);
-      total = result.total;
-    } catch (error) {
-      console.warn(error);
     }
 
     response.status(201).json({
-      message: notification.ok ? "Thanks. Your inquiry has been sent to JAANA." : "Thanks. Your inquiry has been received by JAANA.",
+      message: "Form submitted successfully.",
       total
     });
   } catch (error) {

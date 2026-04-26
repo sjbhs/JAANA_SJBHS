@@ -49,7 +49,7 @@ export type DonatePageCopy = {
   formBody: string;
 };
 
-export type DonationRouteAction = "endowment" | "grant" | "smallGift" | "matching";
+export type DonationRouteAction = "endowment" | "grant" | "smallGift" | "matching" | "custom";
 
 export type DonationRoute = {
   id: string;
@@ -57,6 +57,7 @@ export type DonationRoute = {
   minimum: string;
   body: string;
   action: DonationRouteAction;
+  customActionLabel?: string;
 };
 
 export type DonationInfoId = "endowment" | "grant" | "smallGift";

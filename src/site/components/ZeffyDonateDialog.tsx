@@ -75,7 +75,7 @@ export function ZeffyDonateDialog({ open, onClose }: ZeffyDonateDialogProps) {
 
   return (
     <div className="zeffy-dialog" role="dialog" aria-modal="true" aria-labelledby="zeffy-dialog-title" onClick={onClose}>
-      <div className="zeffy-dialog-shell" onClick={(event) => event.stopPropagation()}>
+      <div className="zeffy-dialog-shell" onClick={(event) => event.stopPropagation()} tabIndex={-1} autoFocus>
         <header className="zeffy-dialog-header">
           <button className="zeffy-dialog-close" type="button" onClick={onClose} aria-label="Close donation form">
             ×

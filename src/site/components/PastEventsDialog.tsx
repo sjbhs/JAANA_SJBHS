@@ -39,7 +39,7 @@ export function PastEventsDialog({ folders, onClose, onOpenLightboxImage }: Past
 
   return (
     <div className="album-dialog" role="dialog" aria-modal="true" aria-labelledby="past-events-dialog-title" onClick={onClose}>
-      <div className="album-dialog-shell" onClick={(event) => event.stopPropagation()}>
+      <div className="album-dialog-shell" onClick={(event) => event.stopPropagation()} tabIndex={-1} autoFocus>
         <button
           className="lightbox-close album-dialog-close"
           type="button"

@@ -10,13 +10,17 @@ export type InquiryEntry = {
   phone?: string;
   notes: string;
   createdAt: string;
+  replyStatus: "pending" | "complete";
+  completedAt?: string;
 };
 
-type NewInquiryEntry = Omit<InquiryEntry, "id" | "createdAt">;
+type NewInquiryEntry = Pick<InquiryEntry, "name" | "email" | "organization" | "interest" | "phone" | "notes">;
 type InquiryListOptions = {
   limit?: number | null;
   from?: string;
   to?: string;
+  replyStatuses?: InquiryEntry["replyStatus"][];
+  interests?: string[];
 };
 
 const defaultStoragePath = path.resolve(process.cwd(), "server/data/inquiries.json");
@@ -59,8 +63,42 @@ async function readEntries() {
   const raw = await fs.readFile(storagePath, "utf8");
 
   try {
-    const parsed = JSON.parse(raw) as InquiryEntry[];
-    return Array.isArray(parsed) ? parsed : [];
+    const parsed = JSON.parse(raw) as Partial<InquiryEntry>[];
+
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    const entries: InquiryEntry[] = [];
+
+    for (const entry of parsed) {
+      if (
+        typeof entry?.id !== "string" ||
+        typeof entry.name !== "string" ||
+        typeof entry.email !== "string" ||
+        typeof entry.organization !== "string" ||
+        typeof entry.interest !== "string" ||
+        typeof entry.notes !== "string" ||
+        typeof entry.createdAt !== "string"
+      ) {
+        continue;
+      }
+
+      entries.push({
+        id: entry.id,
+        name: entry.name,
+        email: entry.email,
+        organization: entry.organization,
+        interest: entry.interest,
+        phone: typeof entry.phone === "string" ? entry.phone : undefined,
+        notes: entry.notes,
+        createdAt: entry.createdAt,
+        replyStatus: entry.replyStatus === "complete" ? "complete" : "pending",
+        completedAt: typeof entry.completedAt === "string" ? entry.completedAt : undefined
+      });
+    }
+
+    return entries;
   } catch {
     return [];
   }
@@ -96,6 +134,7 @@ export async function createInquiry(entry: NewInquiryEntry) {
   const nextEntry: InquiryEntry = {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
     createdAt: new Date().toISOString(),
+    replyStatus: "pending",
     ...entry
   };
 
@@ -124,6 +163,10 @@ export async function getInquiries(options: InquiryListOptions = {}) {
   const entries = await readEntries();
   const start = parseDateBoundary(options.from, "start");
   const endExclusive = parseDateBoundary(options.to, "end");
+  const replyStatuses = Array.isArray(options.replyStatuses) ? options.replyStatuses : [];
+  const interests = Array.isArray(options.interests)
+    ? options.interests.map((value) => value.trim()).filter(Boolean)
+    : [];
   const filteredEntries = entries.filter((entry) => {
     const createdAt = new Date(entry.createdAt);
 
@@ -139,6 +182,14 @@ export async function getInquiries(options: InquiryListOptions = {}) {
       return false;
     }
 
+    if (replyStatuses.length && !replyStatuses.includes(entry.replyStatus)) {
+      return false;
+    }
+
+    if (interests.length && !interests.includes(entry.interest)) {
+      return false;
+    }
+
     return true;
   });
   const normalizedLimit =
@@ -149,4 +200,37 @@ export async function getInquiries(options: InquiryListOptions = {}) {
     filteredTotal: filteredEntries.length,
     inquiries: normalizedLimit === null ? filteredEntries : filteredEntries.slice(0, normalizedLimit)
   };
+}
+
+export async function updateInquiryReplyStatus(id: string, replyStatus: InquiryEntry["replyStatus"]) {
+  const entries = await readEntries();
+  const entryIndex = entries.findIndex((entry) => entry.id === id);
+
+  if (entryIndex < 0) {
+    return null;
+  }
+
+  const currentEntry = entries[entryIndex];
+  const updatedEntry: InquiryEntry = {
+    ...currentEntry,
+    replyStatus,
+    completedAt: replyStatus === "complete" ? new Date().toISOString() : undefined
+  };
+
+  entries[entryIndex] = updatedEntry;
+  await writeEntries(entries);
+
+  return updatedEntry;
+}
+
+export async function deleteInquiry(id: string) {
+  const entries = await readEntries();
+  const nextEntries = entries.filter((entry) => entry.id !== id);
+
+  if (nextEntries.length === entries.length) {
+    return false;
+  }
+
+  await writeEntries(nextEntries);
+  return true;
 }

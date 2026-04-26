@@ -1,5 +1,5 @@
 import { createInquiry } from "../../server/lib/inquiryStore.js";
-import { isInquiryEmailDeliveryRequired, sendInquiryNotification } from "../../server/lib/inquiryNotifications.js";
+import { sendInquiryNotification } from "../../server/lib/inquiryNotifications.js";
 import { validateInquiryPayload } from "../../server/lib/inquiryValidation.js";
 import type { InquiryPayload } from "../../server/lib/inquiryValidation.js";
 import { buildRateLimitHeaders, checkRateLimit, getClientIpFromRequestHeaders } from "../../server/lib/rateLimit.js";
@@ -56,36 +56,18 @@ export async function POST(request: Request) {
   }
 
   try {
+    const result = await createInquiry(validation.data);
+    const total = result.total;
+
     const notification = await sendInquiryNotification(validation.data);
 
     if (!notification.ok) {
       console.warn(notification.error);
-
-      if (isInquiryEmailDeliveryRequired()) {
-        return Response.json(
-          {
-            error:
-              "The inquiry email service is not configured. Please email jaanagroup@gmail.com directly."
-          },
-          {
-            status: 503
-          }
-        );
-      }
-    }
-
-    let total: number | null = null;
-
-    try {
-      const result = await createInquiry(validation.data);
-      total = result.total;
-    } catch (error) {
-      console.warn(error);
     }
 
     return Response.json(
       {
-        message: notification.ok ? "Thanks. Your inquiry has been sent to JAANA." : "Thanks. Your inquiry has been received by JAANA.",
+        message: "Form submitted successfully.",
         total
       },
       {

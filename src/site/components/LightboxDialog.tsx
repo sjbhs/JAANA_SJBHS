@@ -79,7 +79,7 @@ export function LightboxDialog({
 }: LightboxDialogProps) {
   return (
     <div className="lightbox" role="dialog" aria-modal="true" aria-label={image.caption} onClick={onClose}>
-      <div className="lightbox-shell" onClick={onClose}>
+      <div className="lightbox-shell" onClick={onClose} tabIndex={-1} autoFocus>
         <div className="lightbox-topbar">
           <button
             className={`lightbox-zoom${zoomed ? " is-active" : ""}`}

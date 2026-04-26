@@ -127,6 +127,10 @@ function normalizeCause(cause: Partial<CauseCard> | undefined, fallback: CauseCa
 
 function normalizeDonationRoute(route: Partial<DonationRoute> | undefined, fallback: DonationRoute): DonationRoute {
   const action = route?.action;
+  const customActionLabel =
+    typeof route?.customActionLabel === "string" && route.customActionLabel.trim()
+      ? route.customActionLabel.trim()
+      : fallback.customActionLabel ?? "Donate Today";
 
   return {
     id: typeof route?.id === "string" && route.id.trim() ? route.id.trim() : fallback.id,
@@ -134,9 +138,10 @@ function normalizeDonationRoute(route: Partial<DonationRoute> | undefined, fallb
     minimum: typeof route?.minimum === "string" && route.minimum.trim() ? route.minimum.trim() : fallback.minimum,
     body: typeof route?.body === "string" && route.body.trim() ? route.body.trim() : fallback.body,
     action:
-      action === "endowment" || action === "grant" || action === "smallGift" || action === "matching"
+      action === "endowment" || action === "grant" || action === "smallGift" || action === "matching" || action === "custom"
         ? action
-        : fallback.action
+        : fallback.action,
+    customActionLabel
   };
 }
 

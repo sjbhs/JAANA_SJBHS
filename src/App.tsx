@@ -21,6 +21,7 @@ import {
   TabId
 } from "./site/types";
 import { defaultSiteContent, normalizeSiteContent } from "./site/siteContent";
+import { handleRovingTabKeyDown } from "./site/accessibility";
 
 function App() {
   const [activeTab, setActiveTab] = useState<TabId>("home");
@@ -587,6 +588,9 @@ function App() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!event.currentTarget.reportValidity()) {
+      return;
+    }
     setIsSubmitting(true);
     setStatusMessage("");
     setStatusTone("idle");
@@ -611,7 +615,7 @@ function App() {
 
       setForm(initialForm);
       setStatusTone("success");
-      setStatusMessage(payload.message ?? "Thanks for reaching out.");
+      setStatusMessage(payload.message ?? "Form submitted successfully.");
     } catch (error) {
       setStatusTone("error");
       setStatusMessage(error instanceof Error ? error.message : "Something went wrong.");
@@ -667,6 +671,9 @@ function App() {
 
   return (
     <div className="site-shell">
+      <a className="skip-link" href="#main-content">
+        Skip to main content
+      </a>
       <header className="site-header">
         <div className="site-header-inner">
           <div className="mobile-nav-shell">
@@ -686,7 +693,7 @@ function App() {
               <span className="mobile-nav-label">Menu</span>
             </button>
 
-            <div id="mobile-site-nav" className={mobileNavOpen ? "mobile-site-nav is-open" : "mobile-site-nav"}>
+            <div id="mobile-site-nav" className={mobileNavOpen ? "mobile-site-nav is-open" : "mobile-site-nav"} hidden={!mobileNavOpen}>
               <nav className="site-nav mobile-site-nav-list" aria-label="Site pages" role="tablist">
                 {tabs.map((tab) => (
                   <button
@@ -695,8 +702,10 @@ function App() {
                     role="tab"
                     aria-selected={activeTab === tab.id}
                     aria-controls={`${tab.id}-panel`}
+                    tabIndex={activeTab === tab.id ? 0 : -1}
                     className={activeTab === tab.id ? "site-tab is-active" : "site-tab"}
                     onClick={() => handleActivateTab(tab.id)}
+                    onKeyDown={handleRovingTabKeyDown}
                   >
                     {tab.label}
                   </button>
@@ -720,24 +729,26 @@ function App() {
           <div className="header-actions">
             <nav className="site-nav" aria-label="Site pages" role="tablist">
               {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={activeTab === tab.id}
-                  aria-controls={`${tab.id}-panel`}
-                  className={activeTab === tab.id ? "site-tab is-active" : "site-tab"}
-                  onClick={() => activateTab(tab.id)}
-                >
-                  {tab.label}
-                </button>
+                  <button
+                    key={tab.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={activeTab === tab.id}
+                    aria-controls={`${tab.id}-panel`}
+                    tabIndex={activeTab === tab.id ? 0 : -1}
+                    className={activeTab === tab.id ? "site-tab is-active" : "site-tab"}
+                    onClick={() => activateTab(tab.id)}
+                    onKeyDown={handleRovingTabKeyDown}
+                  >
+                    {tab.label}
+                  </button>
               ))}
             </nav>
           </div>
         </div>
       </header>
 
-      <main className={isOverviewTab ? "main-overview" : "main-subpage"}>
+      <main id="main-content" tabIndex={-1} className={isOverviewTab ? "main-overview" : "main-subpage"}>
         {isOverviewTab ? (
           <HomePage
             connectMoments={connectMoments}

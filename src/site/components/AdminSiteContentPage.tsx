@@ -20,6 +20,7 @@ import { DonatePage } from "./DonatePage";
 import { HomePage } from "./HomePage";
 import { initialForm } from "../content";
 import { ZeffyDonateDialog } from "./ZeffyDonateDialog";
+import { handleRovingTabKeyDown } from "../accessibility";
 
 type InquiryEntry = {
   id: string;
@@ -30,6 +31,8 @@ type InquiryEntry = {
   phone?: string;
   notes: string;
   createdAt: string;
+  replyStatus: "pending" | "complete";
+  completedAt?: string;
 };
 
 type InquiryResponse = {
@@ -38,6 +41,12 @@ type InquiryResponse = {
   inquiries?: InquiryEntry[];
   error?: string;
 };
+
+const inquiryStatusOptions = [
+  { value: "all", label: "All" },
+  { value: "pending", label: "Pending" },
+  { value: "complete", label: "Complete" }
+] as const;
 
 type AdminSiteContentPageProps = {
   details: TabConfig;
@@ -110,10 +119,12 @@ function formatInquiryTimestamp(value: string) {
 }
 
 function buildInquiryCsv(inquiries: InquiryEntry[]) {
-  const headers = ["Submitted At", "Name", "Email", "Phone", "Interest", "Batch / City / Organization", "Notes"];
+  const headers = ["Submitted At", "Status", "Completed At", "Name", "Email", "Phone", "Interest", "Batch / City / Organization", "Notes"];
   const rows = inquiries.map((inquiry) =>
     [
       formatInquiryTimestamp(inquiry.createdAt),
+      inquiry.replyStatus === "complete" ? "Complete" : "Pending",
+      inquiry.completedAt ? formatInquiryTimestamp(inquiry.completedAt) : "",
       inquiry.name,
       inquiry.email,
       inquiry.phone || "",
@@ -143,6 +154,8 @@ function buildInquiryExcelDocument(inquiries: InquiryEntry[]) {
       (inquiry) => `
         <tr>
           <td>${escapeHtml(formatInquiryTimestamp(inquiry.createdAt))}</td>
+          <td>${escapeHtml(inquiry.replyStatus === "complete" ? "Complete" : "Pending")}</td>
+          <td>${escapeHtml(inquiry.completedAt ? formatInquiryTimestamp(inquiry.completedAt) : "")}</td>
           <td>${escapeHtml(inquiry.name)}</td>
           <td>${escapeHtml(inquiry.email)}</td>
           <td>${escapeHtml(inquiry.phone || "")}</td>
@@ -168,6 +181,8 @@ function buildInquiryExcelDocument(inquiries: InquiryEntry[]) {
       <thead>
         <tr>
           <th>Submitted At</th>
+          <th>Status</th>
+          <th>Completed At</th>
           <th>Name</th>
           <th>Email</th>
           <th>Phone</th>
@@ -199,6 +214,29 @@ function buildInquiryExportFilename(extension: "csv" | "xls", from: string, to: 
     from && to ? `${from}_to_${to}` : from ? `from_${from}` : to ? `through_${to}` : "all_time";
 
   return `jaana_inquiries_${suffix}.${extension}`;
+}
+
+function toggleMultiFilter(current: string[], option: string) {
+  if (option === "all") {
+    return ["all"];
+  }
+
+  const withoutAll = current.filter((value) => value !== "all");
+
+  if (withoutAll.includes(option)) {
+    const next = withoutAll.filter((value) => value !== option);
+    return next.length ? next : ["all"];
+  }
+
+  return [...withoutAll, option];
+}
+
+function formatFilterSummary(values: string[], allLabel: string) {
+  if (!values.length || values.includes("all")) {
+    return allLabel;
+  }
+
+  return values.join(", ");
 }
 
 export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteContentPageProps) {
@@ -233,7 +271,15 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
   const [inquiriesStatus, setInquiriesStatus] = useState("Latest inquiries appear here once loaded.");
   const [inquiryDateFrom, setInquiryDateFrom] = useState("");
   const [inquiryDateTo, setInquiryDateTo] = useState("");
+  const [selectedInquiryStatuses, setSelectedInquiryStatuses] = useState<string[]>(["all"]);
+  const [selectedInquiryCategories, setSelectedInquiryCategories] = useState<string[]>(["all"]);
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
+  const [draftInquiryDateFrom, setDraftInquiryDateFrom] = useState("");
+  const [draftInquiryDateTo, setDraftInquiryDateTo] = useState("");
+  const [draftInquiryStatuses, setDraftInquiryStatuses] = useState<string[]>(["all"]);
+  const [draftInquiryCategories, setDraftInquiryCategories] = useState<string[]>(["all"]);
   const [inquiryExportingFormat, setInquiryExportingFormat] = useState<"idle" | "csv" | "excel">("idle");
+  const [activeInquiryActionId, setActiveInquiryActionId] = useState("");
   const [editorView, setEditorView] = useState<"content" | "media" | "inquiries">("content");
   const [mediaReturnView, setMediaReturnView] = useState<"content" | "inquiries">("content");
   const [jsonDraft, setJsonDraft] = useState(JSON.stringify(defaultSiteContent, null, 2));
@@ -254,6 +300,7 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
   const [donationRouteFormOpen, setDonationRouteFormOpen] = useState(false);
   const [newDonationRouteTitle, setNewDonationRouteTitle] = useState("");
   const [newDonationRouteAction, setNewDonationRouteAction] = useState<DonationRouteAction>("smallGift");
+  const [newDonationRouteCustomLabel, setNewDonationRouteCustomLabel] = useState("Donate Today");
 
   const currentFolders = editableContent.groupedEventAlbums;
   const selectedFolder = useMemo(
@@ -263,6 +310,19 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
   const selectedAlbum = useMemo(
     () => (selectedFolder && selectedAlbumId ? selectedFolder.albums.find((album) => album.id === selectedAlbumId) ?? null : null),
     [selectedAlbumId, selectedFolder]
+  );
+  const inquiryCategoryOptions = useMemo(() => ["all", ...editableContent.inquiryTopics], [editableContent.inquiryTopics]);
+  const appliedInquiryStatusLabel = useMemo(
+    () =>
+      formatFilterSummary(
+        selectedInquiryStatuses.map((value) => inquiryStatusOptions.find((option) => option.value === value)?.label ?? value),
+        "All"
+      ),
+    [selectedInquiryStatuses]
+  );
+  const appliedInquiryCategoryLabel = useMemo(
+    () => formatFilterSummary(selectedInquiryCategories.map((value) => (value === "all" ? "All" : value)), "All"),
+    [selectedInquiryCategories]
   );
   const mediaLevel = selectedAlbum ? "images" : selectedFolder ? "subfolders" : "folders";
 
@@ -315,11 +375,15 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
   const loadInquiryInbox = async ({
     from = inquiryDateFrom,
     to = inquiryDateTo,
+    statuses = selectedInquiryStatuses,
+    categories = selectedInquiryCategories,
     limit = 100,
     silent = false
   }: {
     from?: string;
     to?: string;
+    statuses?: string[];
+    categories?: string[];
     limit?: number | "all";
     silent?: boolean;
   } = {}) => {
@@ -336,6 +400,12 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
       }
       if (to) {
         searchParams.set("to", to);
+      }
+      if (statuses.length && !statuses.includes("all")) {
+        searchParams.set("statuses", statuses.join(","));
+      }
+      if (categories.length && !categories.includes("all")) {
+        searchParams.set("categories", categories.join(","));
       }
 
       const response = await fetch(`/api/admin/inquiries?${searchParams.toString()}`, {
@@ -472,6 +542,28 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
       return "";
     });
   }, [selectedFolder]);
+
+  useEffect(() => {
+    setSelectedInquiryCategories((current) => {
+      if (current.includes("all")) {
+        return ["all"];
+      }
+
+      const next = current.filter((value) => inquiryCategoryOptions.includes(value));
+      return next.length ? next : ["all"];
+    });
+  }, [inquiryCategoryOptions]);
+
+  useEffect(() => {
+    setDraftInquiryCategories((current) => {
+      if (current.includes("all")) {
+        return ["all"];
+      }
+
+      const next = current.filter((value) => inquiryCategoryOptions.includes(value));
+      return next.length ? next : ["all"];
+    });
+  }, [inquiryCategoryOptions]);
 
   useEffect(() => {
     setActiveTab((current) => {
@@ -649,14 +741,43 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
     await loadInquiryInbox({ limit: 100 });
   };
 
+  const openInquiryFilters = () => {
+    setDraftInquiryDateFrom(inquiryDateFrom);
+    setDraftInquiryDateTo(inquiryDateTo);
+    setDraftInquiryStatuses(selectedInquiryStatuses);
+    setDraftInquiryCategories(selectedInquiryCategories);
+    setFilterDialogOpen(true);
+  };
+
+  const closeInquiryFilters = () => {
+    setFilterDialogOpen(false);
+  };
+
   const handleApplyInquiryFilters = async () => {
-    await loadInquiryInbox({ limit: 100 });
+    setInquiryDateFrom(draftInquiryDateFrom);
+    setInquiryDateTo(draftInquiryDateTo);
+    setSelectedInquiryStatuses(draftInquiryStatuses);
+    setSelectedInquiryCategories(draftInquiryCategories);
+    setFilterDialogOpen(false);
+    await loadInquiryInbox({
+      from: draftInquiryDateFrom,
+      to: draftInquiryDateTo,
+      statuses: draftInquiryStatuses,
+      categories: draftInquiryCategories,
+      limit: 100
+    });
   };
 
   const handleClearInquiryFilters = async () => {
     setInquiryDateFrom("");
     setInquiryDateTo("");
-    await loadInquiryInbox({ from: "", to: "", limit: 100 });
+    setSelectedInquiryStatuses(["all"]);
+    setSelectedInquiryCategories(["all"]);
+    setDraftInquiryDateFrom("");
+    setDraftInquiryDateTo("");
+    setDraftInquiryStatuses(["all"]);
+    setDraftInquiryCategories(["all"]);
+    await loadInquiryInbox({ from: "", to: "", statuses: ["all"], categories: ["all"], limit: 100 });
   };
 
   const exportInquiries = async (format: "csv" | "excel") => {
@@ -671,6 +792,12 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
       }
       if (inquiryDateTo) {
         searchParams.set("to", inquiryDateTo);
+      }
+      if (!selectedInquiryStatuses.includes("all")) {
+        searchParams.set("statuses", selectedInquiryStatuses.join(","));
+      }
+      if (!selectedInquiryCategories.includes("all")) {
+        searchParams.set("categories", selectedInquiryCategories.join(","));
       }
 
       const response = await fetch(`/api/admin/inquiries?${searchParams.toString()}`, {
@@ -710,6 +837,98 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
     } finally {
       setInquiryExportingFormat("idle");
     }
+  };
+
+  const handleCompleteInquiry = async (id: string) => {
+    setActiveInquiryActionId(id);
+    setInquiriesStatus("Marking inquiry complete...");
+
+    try {
+      const response = await fetch(`/api/admin/inquiries/${id}`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          replyStatus: "complete"
+        })
+      });
+      const payload = (await readJson(response)) as { message?: string; error?: string };
+
+      if (response.status === 401) {
+        setAuthState("signedOut");
+        setLoginStatus("Sign in to edit the site content.");
+        throw new Error("Your admin session expired. Sign in again.");
+      }
+
+      if (!response.ok) {
+        throw new Error(payload.error ?? "Unable to update the inquiry.");
+      }
+
+      setRecentInquiries((current) =>
+        current.map((inquiry) =>
+          inquiry.id === id
+            ? {
+                ...inquiry,
+                replyStatus: "complete",
+                completedAt: new Date().toISOString()
+              }
+            : inquiry
+        )
+      );
+      setInquiriesStatus(payload.message ?? "Inquiry marked complete.");
+    } catch (error) {
+      setInquiriesStatus(error instanceof Error ? error.message : "Unable to update the inquiry.");
+    } finally {
+      setActiveInquiryActionId("");
+    }
+  };
+
+  const handleDeleteInquiry = async (id: string) => {
+    const target = recentInquiries.find((inquiry) => inquiry.id === id);
+
+    if (!target || !window.confirm(`Delete the inquiry from ${target.name}? This cannot be undone.`)) {
+      return;
+    }
+
+    setActiveInquiryActionId(id);
+    setInquiriesStatus("Deleting inquiry...");
+
+    try {
+      const response = await fetch(`/api/admin/inquiries/${id}`, {
+        method: "DELETE",
+        credentials: "include"
+      });
+      const payload = (await readJson(response)) as { message?: string; error?: string };
+
+      if (response.status === 401) {
+        setAuthState("signedOut");
+        setLoginStatus("Sign in to edit the site content.");
+        throw new Error("Your admin session expired. Sign in again.");
+      }
+
+      if (!response.ok) {
+        throw new Error(payload.error ?? "Unable to delete the inquiry.");
+      }
+
+      setRecentInquiries((current) => current.filter((inquiry) => inquiry.id !== id));
+      setInquiryTotal((current) => Math.max(0, current - 1));
+      setInquiryFilteredTotal((current) => Math.max(0, current - 1));
+      setInquiriesStatus(payload.message ?? "Inquiry deleted.");
+    } catch (error) {
+      setInquiriesStatus(error instanceof Error ? error.message : "Unable to delete the inquiry.");
+    } finally {
+      setActiveInquiryActionId("");
+    }
+  };
+
+  const handleToggleInquiryStatus = (option: string) => {
+    setDraftInquiryStatuses((current) => toggleMultiFilter(current, option));
+  };
+
+  const handleToggleInquiryCategory = (option: string) => {
+    setDraftInquiryCategories((current) => toggleMultiFilter(current, option));
   };
 
   const applyJsonDraft = () => {
@@ -1160,11 +1379,23 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
 
   const updateDonationRoute = (
     index: number,
-    key: "title" | "minimum" | "body" | "action",
+    key: "title" | "minimum" | "body" | "action" | "customActionLabel",
     value: string
   ) => {
     updateNestedContent("donationRoutes", (routes) =>
-      routes.map((route, routeIndex) => (routeIndex === index ? { ...route, [key]: value } : route))
+      routes.map((route, routeIndex) => {
+        if (routeIndex !== index) {
+          return route;
+        }
+
+        const updatedRoute = { ...route, [key]: value };
+
+        if (key === "action" && value === "custom" && !updatedRoute.customActionLabel?.trim()) {
+          updatedRoute.customActionLabel = "Donate Today";
+        }
+
+        return updatedRoute;
+      })
     );
   };
 
@@ -1183,12 +1414,15 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
         title,
         minimum: "Min: $1",
         body: "Describe this donation route.",
-        action: newDonationRouteAction
+        action: newDonationRouteAction,
+        customActionLabel:
+          newDonationRouteAction === "custom" ? newDonationRouteCustomLabel.trim() || "Donate Today" : undefined
       }
     ]);
 
     setNewDonationRouteTitle("");
     setNewDonationRouteAction("smallGift");
+    setNewDonationRouteCustomLabel("Donate Today");
     setDonationRouteFormOpen(false);
     setEditorStatus(`Added donation route ${title}. Save changes to publish.`);
   };
@@ -1511,6 +1745,9 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
   if (authState !== "signedIn") {
     return (
       <div className="site-shell admin-site-shell">
+        <a className="skip-link" href="#admin-main-content">
+          Skip to main content
+        </a>
         <header className="site-header">
           <div className="site-header-inner admin-header-inner">
             <a className="brand-lockup" href="/" aria-label="Go to public site">
@@ -1531,7 +1768,7 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
           </div>
         </header>
 
-        <main className="main-subpage">
+        <main id="admin-main-content" tabIndex={-1} className="main-subpage">
           <section id="admin-panel" className="subpage-shell donate-shell" aria-label="Admin site editor">
             <div className="donation-page-header">
               <div className="donation-page-copy">
@@ -1585,6 +1822,9 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
 
   return (
     <div className="site-shell admin-site-shell">
+      <a className="skip-link" href="#admin-main-content">
+        Skip to main content
+      </a>
       <header className="site-header">
         <div className="site-header-inner">
           <div className="mobile-nav-shell">
@@ -1604,20 +1844,22 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
               <span className="mobile-nav-label">Menu</span>
             </button>
 
-            <div id="admin-site-nav" className={mobileNavOpen ? "mobile-site-nav is-open" : "mobile-site-nav"}>
+            <div id="admin-site-nav" className={mobileNavOpen ? "mobile-site-nav is-open" : "mobile-site-nav"} hidden={!mobileNavOpen}>
               <nav className="site-nav mobile-site-nav-list" aria-label="Site pages" role="tablist">
                 {editableContent.tabs.map((tab) => (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    role="tab"
-                    aria-selected={activeTab === tab.id}
-                    aria-controls={`${tab.id}-panel`}
-                    className={activeTab === tab.id ? "site-tab is-active" : "site-tab"}
-                    onClick={() => handleActivateTab(tab.id)}
-                  >
-                    {tab.label}
-                  </button>
+                    <button
+                      key={tab.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={activeTab === tab.id}
+                      aria-controls={`${tab.id}-panel`}
+                      tabIndex={activeTab === tab.id ? 0 : -1}
+                      className={activeTab === tab.id ? "site-tab is-active" : "site-tab"}
+                      onClick={() => handleActivateTab(tab.id)}
+                      onKeyDown={handleRovingTabKeyDown}
+                    >
+                      {tab.label}
+                    </button>
                 ))}
               </nav>
             </div>
@@ -1643,17 +1885,19 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
           <div className="header-actions">
             <nav className="site-nav" aria-label="Site pages" role="tablist">
               {editableContent.tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={activeTab === tab.id}
-                  aria-controls={`${tab.id}-panel`}
-                  className={activeTab === tab.id ? "site-tab is-active" : "site-tab"}
-                  onClick={() => handleActivateTab(tab.id)}
-                >
-                  {tab.label}
-                </button>
+                  <button
+                    key={tab.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={activeTab === tab.id}
+                    aria-controls={`${tab.id}-panel`}
+                    tabIndex={activeTab === tab.id ? 0 : -1}
+                    className={activeTab === tab.id ? "site-tab is-active" : "site-tab"}
+                    onClick={() => handleActivateTab(tab.id)}
+                    onKeyDown={handleRovingTabKeyDown}
+                  >
+                    {tab.label}
+                  </button>
               ))}
             </nav>
           </div>
@@ -1674,6 +1918,7 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
             <button
               className={isMediaView ? "secondary-button is-active" : "secondary-button"}
               type="button"
+              aria-pressed={isMediaView}
               onClick={openMediaView}
             >
               Media
@@ -1681,6 +1926,7 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
             <button
               className={isInquiryView ? "secondary-button is-active" : "secondary-button"}
               type="button"
+              aria-pressed={isInquiryView}
               onClick={() => {
                 if (isInquiryView) {
                   openContentView();
@@ -1697,6 +1943,7 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
                 <button
                   className={isEditing ? "secondary-button is-active" : "secondary-button"}
                   type="button"
+                  aria-pressed={isEditing}
                   onClick={() => setIsEditing((current) => !current)}
                 >
                   {isEditing ? "Done editing" : "Edit texts"}
@@ -1713,7 +1960,7 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
         </div>
       </section>
 
-      <main className={!isInquiryView && isOverviewTab ? "main-overview" : "main-subpage"}>
+      <main id="admin-main-content" tabIndex={-1} className={!isInquiryView && isOverviewTab ? "main-overview" : "main-subpage"}>
         {isInquiryView ? (
           <section className="section-block admin-inquiry-section" aria-label="Inquiry inbox">
             <div className="featured-heading admin-inquiry-head">
@@ -1724,33 +1971,28 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
             </div>
 
             <div className="admin-inquiry-toolbar">
-              <div className="admin-inquiry-filters">
-                <label className="admin-auth-field">
-                  <span>From</span>
-                  <input
-                    className="connect-edit-input"
-                    type="date"
-                    value={inquiryDateFrom}
-                    onChange={(event) => setInquiryDateFrom(event.target.value)}
-                  />
-                </label>
-                <label className="admin-auth-field">
-                  <span>To</span>
-                  <input
-                    className="connect-edit-input"
-                    type="date"
-                    value={inquiryDateTo}
-                    onChange={(event) => setInquiryDateTo(event.target.value)}
-                  />
-                </label>
+              <div className="admin-inquiry-applied-filters">
+                <article className="admin-inquiry-filter-pill">
+                  <span>Status</span>
+                  <strong>{appliedInquiryStatusLabel}</strong>
+                </article>
+                <article className="admin-inquiry-filter-pill">
+                  <span>Category</span>
+                  <strong>{appliedInquiryCategoryLabel}</strong>
+                </article>
+                <article className="admin-inquiry-filter-pill">
+                  <span>Dates</span>
+                  <strong>
+                    {inquiryDateFrom || inquiryDateTo
+                      ? `${inquiryDateFrom || "Any time"} - ${inquiryDateTo || "Now"}`
+                      : "All time"}
+                  </strong>
+                </article>
               </div>
 
               <div className="admin-inquiry-actions">
-                <button className="secondary-button" type="button" onClick={openContentView}>
-                  Content
-                </button>
-                <button className="secondary-button" type="button" onClick={() => void handleApplyInquiryFilters()} disabled={inquiriesLoading}>
-                  {inquiriesLoading ? "Loading..." : "Apply filters"}
+                <button className="secondary-button" type="button" onClick={openInquiryFilters} disabled={inquiriesLoading}>
+                  Apply filters
                 </button>
                 <button className="secondary-button" type="button" onClick={() => void handleClearInquiryFilters()} disabled={inquiriesLoading}>
                   Clear
@@ -1801,13 +2043,18 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
             <div className="admin-inquiry-list">
               {recentInquiries.length ? (
                 recentInquiries.map((inquiry) => (
-                  <article key={inquiry.id} className="admin-inquiry-card">
+                  <article key={inquiry.id} className={`admin-inquiry-card ${inquiry.replyStatus === "complete" ? "is-complete" : ""}`}>
                     <div className="admin-inquiry-card-head">
                       <div>
                         <strong>{inquiry.name}</strong>
                         <span>{inquiry.interest}</span>
                       </div>
-                      <time dateTime={inquiry.createdAt}>{new Date(inquiry.createdAt).toLocaleString()}</time>
+                      <div className="admin-inquiry-card-head-side">
+                        <span className={`admin-inquiry-badge ${inquiry.replyStatus === "complete" ? "is-complete" : "is-pending"}`}>
+                          {inquiry.replyStatus === "complete" ? "Complete" : "Pending"}
+                        </span>
+                        <time dateTime={inquiry.createdAt}>{new Date(inquiry.createdAt).toLocaleString()}</time>
+                      </div>
                     </div>
                     <dl className="admin-inquiry-meta">
                       <div>
@@ -1825,7 +2072,32 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
                         <dd>{inquiry.organization || "Not provided"}</dd>
                       </div>
                     </dl>
+                    {inquiry.completedAt ? (
+                      <p className="admin-inquiry-completed-at">Completed on {formatInquiryTimestamp(inquiry.completedAt)}</p>
+                    ) : null}
                     <p>{inquiry.notes || "No notes provided."}</p>
+                    <div className="admin-inquiry-card-actions">
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={() => void handleCompleteInquiry(inquiry.id)}
+                        disabled={activeInquiryActionId === inquiry.id || inquiry.replyStatus === "complete"}
+                      >
+                        {activeInquiryActionId === inquiry.id && inquiry.replyStatus !== "complete"
+                          ? "Saving..."
+                          : inquiry.replyStatus === "complete"
+                            ? "Completed"
+                            : "Mark complete"}
+                      </button>
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={() => void handleDeleteInquiry(inquiry.id)}
+                        disabled={activeInquiryActionId === inquiry.id}
+                      >
+                        {activeInquiryActionId === inquiry.id ? "Working..." : "Delete"}
+                      </button>
+                    </div>
                   </article>
                 ))
               ) : (
@@ -1853,124 +2125,65 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
         ) : null}
 
         {!isInquiryView && activeTab === "causes" ? (
-          <>
-            <section className="admin-page-actions" aria-label="Cause controls">
-              <div>
-                <span className="section-kicker">Cause editor</span>
-                <p>Use the public cause cards below. Turn on edit mode to change card text, or open details to edit dialog text.</p>
-              </div>
-              <button className="secondary-button" type="button" onClick={() => setCauseFormOpen((current) => !current)}>
-                Add cause
-              </button>
-            </section>
-
-            {causeFormOpen ? (
-              <section className="admin-inline-form-card admin-page-inline-form" aria-label="Add cause form">
-                <label>
-                  <span>Cause title</span>
-                  <input className="connect-edit-input" value={newCauseTitle} onChange={(event) => setNewCauseTitle(event.target.value)} />
-                </label>
-                <div className="admin-media-form-actions">
-                  <button className="primary-button" type="button" onClick={addCause}>
-                    Create cause
-                  </button>
-                  <button className="secondary-button" type="button" onClick={() => setCauseFormOpen(false)}>
-                    Cancel
-                  </button>
-                </div>
-              </section>
-            ) : null}
-
-            <CausesPage
-              details={activeTabDetails}
-              causeCards={editableContent.causeCards}
-              causesCopy={editableContent.causesCopy}
-              editable={isEditing}
-              onChangeDetails={updateActiveTab}
-              onChangeCausesCopy={(key, value) =>
-                updateNestedContent("causesCopy", (causesCopy) => ({
-                  ...causesCopy,
-                  [key]: value
-                }))
-              }
-              onChangeCauseCard={updateCauseCard}
-              onDeleteCause={deleteCause}
-              onSelectCause={openCauseDetails}
-            />
-          </>
+          <CausesPage
+            details={activeTabDetails}
+            causeCards={editableContent.causeCards}
+            causesCopy={editableContent.causesCopy}
+            editable={isEditing}
+            onChangeDetails={updateActiveTab}
+            onChangeCausesCopy={(key, value) =>
+              updateNestedContent("causesCopy", (causesCopy) => ({
+                ...causesCopy,
+                [key]: value
+              }))
+            }
+            onChangeCauseCard={updateCauseCard}
+            onDeleteCause={deleteCause}
+            onSelectCause={openCauseDetails}
+            causeFormOpen={causeFormOpen}
+            newCauseTitle={newCauseTitle}
+            onToggleCauseForm={() => setCauseFormOpen((current) => !current)}
+            onChangeNewCauseTitle={setNewCauseTitle}
+            onAddCause={addCause}
+            onCancelCause={() => setCauseFormOpen(false)}
+          />
         ) : null}
 
         {!isInquiryView && activeTab === "donate" ? (
-          <>
-            <section className="admin-page-actions" aria-label="Donation route controls">
-              <div>
-                <span className="section-kicker">Donate editor</span>
-                <p>Edit the public donation cards below. Use rich text in descriptions for bullets, bold text, and line breaks.</p>
-              </div>
-              <button className="secondary-button" type="button" onClick={() => setDonationRouteFormOpen((current) => !current)}>
-                Add donation route
-              </button>
-            </section>
-
-            {donationRouteFormOpen ? (
-              <section className="admin-inline-form-card admin-page-inline-form admin-page-inline-form-grid" aria-label="New donation route">
-                <label>
-                  <span>Route title</span>
-                  <input
-                    className="connect-edit-input"
-                    value={newDonationRouteTitle}
-                    onChange={(event) => setNewDonationRouteTitle(event.target.value)}
-                  />
-                </label>
-                <label>
-                  <span>Button behavior</span>
-                  <select
-                    className="connect-edit-input"
-                    value={newDonationRouteAction}
-                    onChange={(event) => setNewDonationRouteAction(event.target.value as DonationRouteAction)}
-                  >
-                    <option value="endowment">Endowment request</option>
-                    <option value="grant">Grant donation</option>
-                    <option value="smallGift">Small gift donation</option>
-                    <option value="matching">Employer matching</option>
-                  </select>
-                </label>
-                <div className="admin-media-form-actions full-width">
-                  <button className="primary-button" type="button" onClick={addDonationRoute}>
-                    Create route
-                  </button>
-                  <button className="secondary-button" type="button" onClick={() => setDonationRouteFormOpen(false)}>
-                    Cancel
-                  </button>
-                </div>
-              </section>
-            ) : null}
-
-            <DonatePage
-              details={activeTabDetails}
-              donateCopy={editableContent.donateCopy}
-              donationRoutes={editableContent.donationRoutes}
-              donationInfo={editableContent.donationInfo}
-              editable={isEditing}
-              onDonateClick={() => setDonateDialogOpen(true)}
-              onChangeDetails={updateActiveTab}
-              onChangeDonateCopy={(key, value) =>
-                updateNestedContent("donateCopy", (donateCopy) => ({
-                  ...donateCopy,
-                  [key]: value
-                }))
-              }
-              onChangeDonationRoute={updateDonationRoute}
-              onDeleteDonationRoute={deleteDonationRoute}
-              onChangeDonationInfo={updateDonationInfo}
-              onChangeDonationInfoSection={updateDonationInfoSection}
-              onChangeDonationInfoItem={updateDonationInfoItem}
-              onAddDonationInfoSection={addDonationInfoSection}
-              onDeleteDonationInfoSection={deleteDonationInfoSection}
-              onAddDonationInfoItem={addDonationInfoItem}
-              onDeleteDonationInfoItem={deleteDonationInfoItem}
-            />
-          </>
+          <DonatePage
+            details={activeTabDetails}
+            donateCopy={editableContent.donateCopy}
+            donationRoutes={editableContent.donationRoutes}
+            donationInfo={editableContent.donationInfo}
+            editable={isEditing}
+            onDonateClick={() => setDonateDialogOpen(true)}
+            onChangeDetails={updateActiveTab}
+            onChangeDonateCopy={(key, value) =>
+              updateNestedContent("donateCopy", (donateCopy) => ({
+                ...donateCopy,
+                [key]: value
+              }))
+            }
+            onChangeDonationRoute={updateDonationRoute}
+            onDeleteDonationRoute={deleteDonationRoute}
+            donationRouteFormOpen={donationRouteFormOpen}
+            newDonationRouteTitle={newDonationRouteTitle}
+            newDonationRouteAction={newDonationRouteAction}
+            newDonationRouteCustomLabel={newDonationRouteCustomLabel}
+            onToggleDonationRouteForm={() => setDonationRouteFormOpen((current) => !current)}
+            onChangeNewDonationRouteTitle={setNewDonationRouteTitle}
+            onChangeNewDonationRouteAction={setNewDonationRouteAction}
+            onChangeNewDonationRouteCustomLabel={setNewDonationRouteCustomLabel}
+            onAddDonationRoute={addDonationRoute}
+            onCancelDonationRoute={() => setDonationRouteFormOpen(false)}
+            onChangeDonationInfo={updateDonationInfo}
+            onChangeDonationInfoSection={updateDonationInfoSection}
+            onChangeDonationInfoItem={updateDonationInfoItem}
+            onAddDonationInfoSection={addDonationInfoSection}
+            onDeleteDonationInfoSection={deleteDonationInfoSection}
+            onAddDonationInfoItem={addDonationInfoItem}
+            onDeleteDonationInfoItem={deleteDonationInfoItem}
+          />
         ) : null}
 
         {!isInquiryView && activeTab === "contact" ? (
@@ -2006,9 +2219,162 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
           />
         ) : null}
 
+        {filterDialogOpen ? (
+          <div className="admin-filter-dialog-overlay" onClick={closeInquiryFilters}>
+            <div
+              className="admin-filter-dialog-shell"
+              onClick={(event) => event.stopPropagation()}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  closeInquiryFilters();
+                }
+              }}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="inquiry-filter-dialog-title"
+              aria-describedby="inquiry-filter-dialog-description"
+              tabIndex={-1}
+              autoFocus
+            >
+              <div className="admin-filter-dialog-head">
+                <div className="admin-filter-dialog-copy">
+                  <span className="section-kicker">Inquiry filters</span>
+                  <h3 id="inquiry-filter-dialog-title">Refine the inbox</h3>
+                  <p id="inquiry-filter-dialog-description">Choose the status, category, and date range you want to review, then apply the filter set in one pass.</p>
+                </div>
+                <button className="secondary-button" type="button" onClick={closeInquiryFilters}>
+                  Cancel
+                </button>
+              </div>
+
+              <div className="admin-filter-dialog-grid">
+                <section className="admin-filter-dialog-panel admin-filter-dialog-panel--filters">
+                  <div className="admin-filter-dialog-section admin-filter-dialog-section--status">
+                    <div className="admin-filter-dialog-section-head">
+                      <span>Status</span>
+                      <strong>{formatFilterSummary(draftInquiryStatuses.map((value) => inquiryStatusOptions.find((option) => option.value === value)?.label ?? value), "All")}</strong>
+                    </div>
+                    <div className="admin-filter-chip-group">
+                      {inquiryStatusOptions.map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          className={draftInquiryStatuses.includes(option.value) ? "admin-filter-chip is-active" : "admin-filter-chip"}
+                          aria-pressed={draftInquiryStatuses.includes(option.value)}
+                          onClick={() => handleToggleInquiryStatus(option.value)}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="admin-filter-dialog-section">
+                    <div className="admin-filter-dialog-section-head">
+                      <span>Category</span>
+                      <strong>{formatFilterSummary(draftInquiryCategories.map((value) => (value === "all" ? "All" : value)), "All")}</strong>
+                    </div>
+                    <div className="admin-filter-chip-group">
+                      {inquiryCategoryOptions.map((option) => (
+                        <button
+                          key={option}
+                          type="button"
+                          className={draftInquiryCategories.includes(option) ? "admin-filter-chip is-active" : "admin-filter-chip"}
+                          aria-pressed={draftInquiryCategories.includes(option)}
+                          onClick={() => handleToggleInquiryCategory(option)}
+                        >
+                          {option === "all" ? "All" : option}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+
+                <aside className="admin-filter-dialog-panel admin-filter-dialog-panel--summary">
+                  <div className="admin-filter-dialog-section">
+                    <div className="admin-filter-dialog-section-head">
+                      <span>Date range</span>
+                      <strong>{draftInquiryDateFrom || draftInquiryDateTo ? "Custom" : "All time"}</strong>
+                    </div>
+                    <div className="admin-filter-date-grid">
+                      <label className="admin-auth-field">
+                        <span>From</span>
+                        <input
+                          className="connect-edit-input"
+                          type="date"
+                          value={draftInquiryDateFrom}
+                          onChange={(event) => setDraftInquiryDateFrom(event.target.value)}
+                        />
+                      </label>
+                      <label className="admin-auth-field">
+                        <span>To</span>
+                        <input
+                          className="connect-edit-input"
+                          type="date"
+                          value={draftInquiryDateTo}
+                          onChange={(event) => setDraftInquiryDateTo(event.target.value)}
+                        />
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="admin-filter-preview-card">
+                    <span className="section-kicker">Preview</span>
+                    <dl className="admin-filter-preview-list">
+                      <div>
+                        <dt>Status</dt>
+                        <dd>{formatFilterSummary(draftInquiryStatuses.map((value) => inquiryStatusOptions.find((option) => option.value === value)?.label ?? value), "All")}</dd>
+                      </div>
+                      <div>
+                        <dt>Category</dt>
+                        <dd>{formatFilterSummary(draftInquiryCategories.map((value) => (value === "all" ? "All" : value)), "All")}</dd>
+                      </div>
+                      <div>
+                        <dt>Dates</dt>
+                        <dd>{draftInquiryDateFrom || draftInquiryDateTo ? `${draftInquiryDateFrom || "Any time"} - ${draftInquiryDateTo || "Now"}` : "All time"}</dd>
+                      </div>
+                    </dl>
+                  </div>
+                </aside>
+              </div>
+
+              <div className="admin-filter-dialog-actions">
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() => {
+                    setDraftInquiryDateFrom("");
+                    setDraftInquiryDateTo("");
+                    setDraftInquiryStatuses(["all"]);
+                    setDraftInquiryCategories(["all"]);
+                  }}
+                >
+                  Reset draft
+                </button>
+                <button className="primary-button" type="button" onClick={() => void handleApplyInquiryFilters()} disabled={inquiriesLoading}>
+                  {inquiriesLoading ? "Applying..." : "Apply filters"}
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
         {editorView === "media" ? (
           <div className="admin-media-overlay" onClick={closeMediaManager}>
-            <div className="admin-media-drawer" onClick={(event) => event.stopPropagation()} role="dialog" aria-label="Media folders editor">
+            <div
+              className="admin-media-drawer"
+              onClick={(event) => event.stopPropagation()}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  closeMediaManager();
+                }
+              }}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Media folders editor"
+              tabIndex={-1}
+              autoFocus
+            >
               <div className="admin-media-drawer-head">
                 <div className="admin-media-drawer-copy">
                   <span className="section-kicker">Media folders</span>

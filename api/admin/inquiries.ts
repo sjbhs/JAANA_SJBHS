@@ -16,10 +16,20 @@ export async function GET(request: Request) {
         : Number.isFinite(Number(limitParam))
           ? Math.max(1, Math.min(500, Math.floor(Number(limitParam))))
           : 10;
+    const replyStatuses = (searchParams.get("statuses") ?? "")
+      .split(",")
+      .map((value) => value.trim())
+      .filter((value): value is "pending" | "complete" => value === "pending" || value === "complete");
+    const interests = (searchParams.get("categories") ?? "")
+      .split(",")
+      .map((value) => value.trim())
+      .filter(Boolean);
     const inquiries = await getInquiries({
       limit: parsedLimit,
       from: searchParams.get("from") ?? undefined,
-      to: searchParams.get("to") ?? undefined
+      to: searchParams.get("to") ?? undefined,
+      replyStatuses,
+      interests
     });
 
     return Response.json(inquiries, {

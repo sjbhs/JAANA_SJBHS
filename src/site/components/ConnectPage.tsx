@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ConnectPageContent, ConnectPageCopy, TabConfig } from "../types";
 import { InlineEditableText } from "./InlineEditableText";
+import { handleRovingTabKeyDown } from "../accessibility";
 
 type ConnectPageProps = {
   details: TabConfig;
@@ -31,7 +32,6 @@ export function ConnectPage({
     <section id="connect-panel" className="subpage-shell" role="tabpanel" aria-label="North America Connect 2026">
       <div className="subpage-hero">
         <div className="subpage-copy">
-          <span className="section-kicker">{details.kicker}</span>
           <h2>
             <InlineEditableText
               editable={editable}
@@ -87,7 +87,6 @@ export function ConnectPage({
       <div className="section-block">
         <div className="connect-sponsor-callout">
           <div>
-            <span className="section-kicker">Call to Sponsors</span>
             <h3>
               <InlineEditableText
                 editable={editable}
@@ -151,19 +150,29 @@ export function ConnectPage({
           <div className="connect-schedule-tabs" role="tablist" aria-label="Connect details tabs">
             {connectContent.placeholders.map((item, index) => (
               <button
-                key={`${item.title}-${index}`}
+                key={`connect-detail-${index}`}
                 type="button"
+                id={`connect-detail-tab-${index}`}
                 role="tab"
                 aria-selected={activeScheduleTab === index}
+                aria-controls={`connect-detail-panel-${index}`}
+                tabIndex={activeScheduleTab === index ? 0 : -1}
                 className={`connect-schedule-tab ${activeScheduleTab === index ? "is-active" : ""}`}
                 onClick={() => setActiveScheduleTab(index)}
+                onKeyDown={handleRovingTabKeyDown}
               >
                 {item.title}
               </button>
             ))}
           </div>
 
-          <div className="connect-schedule-panel" role="tabpanel">
+          <div
+            id={`connect-detail-panel-${activeScheduleTab}`}
+            className="connect-schedule-panel"
+            role="tabpanel"
+            aria-labelledby={`connect-detail-tab-${activeScheduleTab}`}
+            tabIndex={0}
+          >
             <h4>
               <InlineEditableText
                 editable={editable}

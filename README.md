@@ -210,7 +210,7 @@ What they control:
 - `INQUIRY_EMAIL_CC`
   Optional comma-separated CC recipients for inquiry notification emails.
 - Inquiry delivery behavior
-  All public inquiry submissions route through the shared `/api/inquiries` backend, including the main Contact Us inquiry form and the Donate-page endowment and employer-matching request forms. General inquiries go to `jaanagroup@gmail.com` and finance inquiries go to `jaanafinance@gmail.com`. Replies use the submitter as the `Reply-To` address.
+  All public inquiry submissions route through the shared `/api/inquiries` backend, including the main Contact Us inquiry form and the Donate-page endowment and employer-matching request forms. General inquiries go to `jaanagroup@gmail.com` and finance inquiries go to `jaanafinance@gmail.com`. The submitter also receives an automatic confirmation email, and replies to that confirmation go back to the configured JAANA recipient inbox.
 - `REQUIRE_INQUIRY_EMAIL`
   Set to `true` in deployment so inquiry submissions fail visibly if email delivery is not configured. Vercel deployments default to requiring email delivery unless this is explicitly set to `false`.
 - `RESEND_API_KEY`

@@ -54,7 +54,7 @@ export function CauseDialog({
       aria-describedby="cause-dialog-description"
       onClick={onClose}
     >
-      <div className="cause-dialog-shell" onClick={(event) => event.stopPropagation()}>
+      <div className="cause-dialog-shell" onClick={(event) => event.stopPropagation()} tabIndex={-1} autoFocus>
         <button className="cause-dialog-close" type="button" onClick={onClose} aria-label="Close dialog">
           ×
         </button>
@@ -129,7 +129,7 @@ export function CauseDialog({
               <h4>Where support can go</h4>
               <ul className="detail-list">
                 {cause.support.map((item, index) => (
-                  <li key={`${item}-${index}`} className={editable ? "detail-list-edit-item" : undefined}>
+                  <li key={`support-${index}`} className={editable ? "detail-list-edit-item" : undefined}>
                     <InlineEditableText
                       editable={editable}
                       value={item}

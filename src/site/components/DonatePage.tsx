@@ -16,7 +16,7 @@ import {
   sanitizeInquiryNameInput,
   sanitizePhoneNumberInput
 } from "../inquiryConstraints";
-import { DonatePageCopy, DonationInfoContent, DonationInfoId, DonationRoute, TabConfig } from "../types";
+import { DonatePageCopy, DonationInfoContent, DonationInfoId, DonationRoute, DonationRouteAction, TabConfig } from "../types";
 import { PlaceholderDonateButton } from "./PlaceholderDonateButton";
 import { InlineEditableText } from "./InlineEditableText";
 
@@ -29,8 +29,22 @@ type DonatePageProps = {
   onDonateClick: () => void;
   onChangeDetails?: <K extends keyof TabConfig>(key: K, value: TabConfig[K]) => void;
   onChangeDonateCopy?: <K extends keyof DonatePageCopy>(key: K, value: DonatePageCopy[K]) => void;
-  onChangeDonationRoute?: (index: number, key: "title" | "minimum" | "body" | "action", value: string) => void;
+  onChangeDonationRoute?: (
+    index: number,
+    key: "title" | "minimum" | "body" | "action" | "customActionLabel",
+    value: string
+  ) => void;
   onDeleteDonationRoute?: (index: number) => void;
+  donationRouteFormOpen?: boolean;
+  newDonationRouteTitle?: string;
+  newDonationRouteAction?: DonationRouteAction;
+  newDonationRouteCustomLabel?: string;
+  onToggleDonationRouteForm?: () => void;
+  onChangeNewDonationRouteTitle?: (value: string) => void;
+  onChangeNewDonationRouteAction?: (value: DonationRouteAction) => void;
+  onChangeNewDonationRouteCustomLabel?: (value: string) => void;
+  onAddDonationRoute?: () => void;
+  onCancelDonationRoute?: () => void;
   onChangeDonationInfo?: (id: DonationInfoId, key: "label" | "title" | "summary", value: string) => void;
   onChangeDonationInfoSection?: (id: DonationInfoId, sectionIndex: number, value: string) => void;
   onChangeDonationInfoItem?: (id: DonationInfoId, sectionIndex: number, itemIndex: number, value: string) => void;
@@ -55,6 +69,7 @@ type DonationRequestForm = {
 };
 
 const financeEmail = "jaanafinance@gmail.com";
+const defaultCustomDonationRouteLabel = "Donate Today";
 
 const requestDialogCopy: Record<
   DonationRequestKind,
@@ -114,6 +129,10 @@ function formatRequestNotes(kind: DonationRequestKind, form: DonationRequestForm
     .join("\n");
 }
 
+function getCustomDonationRouteLabel(route: DonationRoute) {
+  return route.customActionLabel?.trim() || defaultCustomDonationRouteLabel;
+}
+
 export function DonatePage({
   details,
   donateCopy,
@@ -125,6 +144,16 @@ export function DonatePage({
   onChangeDonateCopy,
   onChangeDonationRoute,
   onDeleteDonationRoute,
+  donationRouteFormOpen = false,
+  newDonationRouteTitle = "",
+  newDonationRouteAction = "smallGift",
+  newDonationRouteCustomLabel = defaultCustomDonationRouteLabel,
+  onToggleDonationRouteForm,
+  onChangeNewDonationRouteTitle,
+  onChangeNewDonationRouteAction,
+  onChangeNewDonationRouteCustomLabel,
+  onAddDonationRoute,
+  onCancelDonationRoute,
   onChangeDonationInfo,
   onChangeDonationInfoSection,
   onChangeDonationInfoItem,
@@ -221,7 +250,7 @@ export function DonatePage({
 
       setRequestForm({ ...emptyDonationRequestForm });
       setRequestStatusTone("success");
-      setRequestStatusMessage(payload.message ?? "Thanks. Your request has been sent to JAANA.");
+      setRequestStatusMessage(payload.message ?? "Form submitted successfully.");
     } catch (error) {
       setRequestStatusTone("error");
       setRequestStatusMessage(error instanceof Error ? error.message : "Something went wrong.");
@@ -399,6 +428,59 @@ export function DonatePage({
                 ) : null}
               </article>
             ))}
+            {onToggleDonationRouteForm ? (
+              donationRouteFormOpen ? (
+                <article className="support-card donation-route-card donation-route-create-card">
+                  <div className="donation-route-create-head">
+                    <span className="section-kicker">New route</span>
+                    <h3>Add donation route</h3>
+                    <p>Create a new public donation card, then switch to edit mode to refine the copy.</p>
+                  </div>
+                  <div className="donation-route-create-form">
+                    <label>
+                      <span>Route title</span>
+                      <input
+                        className="connect-edit-input"
+                        value={newDonationRouteTitle}
+                        onChange={(event) => onChangeNewDonationRouteTitle?.(event.target.value)}
+                        autoFocus
+                      />
+                    </label>
+                    <label>
+                      <span>Button behavior</span>
+                      <select
+                        className="connect-edit-input"
+                        value={newDonationRouteAction}
+                        onChange={(event) => onChangeNewDonationRouteAction?.(event.target.value as DonationRouteAction)}
+                      >
+                        <option value="endowment">Endowment request</option>
+                        <option value="grant">Grant donation</option>
+                        <option value="smallGift">Small gift donation</option>
+                        <option value="matching">Employer matching</option>
+                      </select>
+                    </label>
+                  </div>
+                  <div className="donation-route-create-actions">
+                    <button className="primary-button" type="button" onClick={onAddDonationRoute}>
+                      Create route
+                    </button>
+                    <button className="secondary-button" type="button" onClick={onCancelDonationRoute}>
+                      Cancel
+                    </button>
+                  </div>
+                </article>
+              ) : (
+                <button className="support-card donation-route-add-card" type="button" onClick={onToggleDonationRouteForm}>
+                  <span className="donation-route-add-icon" aria-hidden="true">
+                    +
+                  </span>
+                  <span className="donation-route-add-copy">
+                    <strong>Add donation route</strong>
+                    <small>Create another donation card in this section.</small>
+                  </span>
+                </button>
+              )
+            ) : null}
           </div>
         </section>
       </section>
@@ -439,7 +521,7 @@ function DonationInfoDialog({
 }: DonationInfoDialogProps) {
   return (
     <div className="donation-info-dialog" role="dialog" aria-modal="true" aria-labelledby={`donation-info-${info.id}`} onClick={onClose}>
-      <div className="donation-info-dialog-shell" onClick={(event) => event.stopPropagation()}>
+      <div className="donation-info-dialog-shell" onClick={(event) => event.stopPropagation()} tabIndex={-1} autoFocus>
         <button className="zeffy-dialog-close" type="button" onClick={onClose} aria-label="Close donation details">
           ×
         </button>
@@ -474,7 +556,7 @@ function DonationInfoDialog({
 
         <div className="donation-info-dialog-body">
           {info.sections.map((section, sectionIndex) => (
-            <section key={`${section.title}-${sectionIndex}`} className="donation-info-section">
+            <section key={`donation-info-section-${sectionIndex}`} className="donation-info-section">
               <div className="donation-info-section-head">
                 <h4>
                   <InlineEditableText
@@ -492,7 +574,7 @@ function DonationInfoDialog({
               </div>
               <ul className="detail-list">
                 {section.items.map((item, itemIndex) => (
-                  <li key={`${item}-${itemIndex}`} className={editable ? "detail-list-edit-item" : undefined}>
+                  <li key={`donation-info-item-${sectionIndex}-${itemIndex}`} className={editable ? "detail-list-edit-item" : undefined}>
                     <InlineEditableText
                       editable={editable}
                       value={item}
@@ -574,7 +656,7 @@ function DonationRequestDialog({
       aria-labelledby="donation-request-dialog-title"
       onClick={onClose}
     >
-      <div className="donation-request-dialog-shell" onClick={(event) => event.stopPropagation()}>
+      <div className="donation-request-dialog-shell" onClick={(event) => event.stopPropagation()} tabIndex={-1} autoFocus>
         <header className="zeffy-dialog-header donation-request-dialog-header">
           <button className="zeffy-dialog-close" type="button" onClick={onClose} aria-label="Close request form">
             ×
@@ -710,7 +792,11 @@ function DonationRequestDialog({
                 <button className="primary-button" type="submit" disabled={isSubmitting}>
                   {isSubmitting ? "Sending..." : content.submitLabel}
                 </button>
-                {statusMessage ? <p className={`status-note ${statusTone}`}>{statusMessage}</p> : null}
+                {statusMessage ? (
+                  <p className={`status-note ${statusTone}`} role={statusTone === "error" ? "alert" : "status"} aria-live={statusTone === "error" ? "assertive" : "polite"}>
+                    {statusMessage}
+                  </p>
+                ) : null}
               </div>
             </form>
           </div>

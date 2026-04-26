@@ -11,6 +11,12 @@ type CausesPageProps = {
   onChangeCausesCopy?: <K extends keyof CausesPageCopy>(key: K, value: CausesPageCopy[K]) => void;
   onChangeCauseCard?: (index: number, key: "title" | "summary" | "minimum", value: string) => void;
   onDeleteCause?: (index: number) => void;
+  causeFormOpen?: boolean;
+  newCauseTitle?: string;
+  onToggleCauseForm?: () => void;
+  onChangeNewCauseTitle?: (value: string) => void;
+  onAddCause?: () => void;
+  onCancelCause?: () => void;
 };
 
 export function CausesPage({
@@ -22,7 +28,13 @@ export function CausesPage({
   onChangeDetails,
   onChangeCausesCopy,
   onChangeCauseCard,
-  onDeleteCause
+  onDeleteCause,
+  causeFormOpen = false,
+  newCauseTitle = "",
+  onToggleCauseForm,
+  onChangeNewCauseTitle,
+  onAddCause,
+  onCancelCause
 }: CausesPageProps) {
   return (
     <section id="causes-panel" className="subpage-shell donate-shell" role="tabpanel" aria-label="Causes">
@@ -43,7 +55,7 @@ export function CausesPage({
         <div className="cause-list" aria-label="Cause list">
           {causeCards.map((cause, index) => (
             editable ? (
-              <article className="cause-list-item is-editing" key={`${cause.title}-${index}`}>
+              <article className="cause-list-item is-editing" key={`cause-${index}`}>
                 <div className="cause-list-copy">
                   <h3>
                     <InlineEditableText
@@ -86,7 +98,7 @@ export function CausesPage({
                 </div>
               </article>
             ) : (
-              <button className="cause-list-item" key={`${cause.title}-${index}`} type="button" onClick={() => onSelectCause(cause, index)}>
+              <button className="cause-list-item" key={`cause-${index}`} type="button" onClick={() => onSelectCause(cause, index)}>
                 <div className="cause-list-copy">
                   <h3>{cause.title}</h3>
                   <div className="body-copy">
@@ -101,6 +113,44 @@ export function CausesPage({
               </button>
             )
           ))}
+          {onToggleCauseForm ? (
+            causeFormOpen ? (
+              <article className="cause-list-item cause-create-card">
+                <div className="cause-list-copy cause-create-copy">
+                  <span className="section-kicker">New cause</span>
+                  <h3>Add cause</h3>
+                  <p>Create a new cause row, then edit its card text and details after it is added.</p>
+                  <label className="cause-create-field">
+                    <span>Cause title</span>
+                    <input
+                      className="connect-edit-input"
+                      value={newCauseTitle}
+                      onChange={(event) => onChangeNewCauseTitle?.(event.target.value)}
+                      autoFocus
+                    />
+                  </label>
+                </div>
+                <div className="cause-list-meta cause-create-actions">
+                  <button className="primary-button" type="button" onClick={onAddCause}>
+                    Create cause
+                  </button>
+                  <button className="secondary-button" type="button" onClick={onCancelCause}>
+                    Cancel
+                  </button>
+                </div>
+              </article>
+            ) : (
+              <button className="cause-list-item cause-list-add-item" type="button" onClick={onToggleCauseForm}>
+                <span className="cause-add-icon" aria-hidden="true">
+                  +
+                </span>
+                <span className="cause-list-copy cause-add-copy">
+                  <strong>Add cause</strong>
+                  <small>Create another public cause row in this section.</small>
+                </span>
+              </button>
+            )
+          ) : null}
         </div>
       </section>
     </section>
