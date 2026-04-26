@@ -12,7 +12,7 @@ export type InquiryNotificationResult =
 const defaultGeneralRecipients = ["jaanagroup@gmail.com"];
 const defaultFinanceRecipients = ["jaanafinance@gmail.com"];
 const resendApiKey = process.env.RESEND_API_KEY?.trim();
-const inquiryEmailFrom = process.env.INQUIRY_EMAIL_FROM?.trim() || process.env.ADMIN_EMAIL_FROM?.trim() || "";
+const inquiryEmailFrom = process.env.INQUIRY_EMAIL_FROM?.trim() || "";
 
 function parseRecipients(value: string | undefined) {
   return (value ?? "")
@@ -323,7 +323,7 @@ export async function sendInquiryNotification(inquiry: NormalizedInquiry): Promi
   if (!inquiryEmailFrom) {
     return {
       ok: false,
-      error: "Inquiry email sender is not configured. Set INQUIRY_EMAIL_FROM or ADMIN_EMAIL_FROM."
+      error: "Inquiry email sender is not configured. Set INQUIRY_EMAIL_FROM."
     };
   }
 

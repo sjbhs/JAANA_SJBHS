@@ -30,95 +30,95 @@ export function ConnectPage({
 
   return (
     <section id="connect-panel" className="subpage-shell" role="tabpanel" aria-label="North America Connect 2026">
-      <div className="subpage-hero">
-        <div className="subpage-copy">
-          <h2>
-            <InlineEditableText
-              editable={editable}
-              value={details.title}
-              onChange={(value) => onChangeDetails?.("title", value)}
-              className="section-title-edit"
-            />
-          </h2>
-          <div className="body-copy">
-            <InlineEditableText
-              editable={editable}
-              value={details.copy}
-              onChange={(value) => onChangeDetails?.("copy", value)}
-              multiline
-              className="body-copy-edit"
-            />
-          </div>
-        </div>
-
-        <aside className="event-poster">
-          <img src="/assets/oba-connect-mark.png" alt="SJBHS OBA Connect mark" />
-          <strong>
-            <InlineEditableText
-              editable={editable}
-              value={connectCopy.posterLabel}
-              onChange={(value) => onChangeConnectCopy?.("posterLabel", value)}
-              className="section-title-edit"
-            />
-          </strong>
-          <p>
-            <InlineEditableText
-              editable={editable}
-              value={connectCopy.posterTitle}
-              onChange={(value) => onChangeConnectCopy?.("posterTitle", value)}
-              className="section-title-edit"
-            />
-          </p>
-          <div className="event-poster-meta">
-            {editable ? (
+      <div className="subpage-hero connect-hero">
+        <div className="subpage-copy connect-hero-card">
+          <div className="connect-hero-main">
+            <h2>
               <InlineEditableText
-                editable
-                value={connectCopy.posterBody}
-                onChange={(value) => onChangeConnectCopy?.("posterBody", value)}
+                editable={editable}
+                value={details.title}
+                onChange={(value) => onChangeDetails?.("title", value)}
+                className="section-title-edit"
+              />
+            </h2>
+            <div className="body-copy">
+              <InlineEditableText
+                editable={editable}
+                value={details.copy}
+                onChange={(value) => onChangeDetails?.("copy", value)}
+                multiline
                 className="body-copy-edit"
               />
-            ) : (
-              connectCopy.posterBody.split("|").map((item) => <span key={item.trim()}>{item.trim()}</span>)
-            )}
+            </div>
           </div>
-        </aside>
+
+          <aside className="connect-date-panel">
+            <img src="/assets/oba-connect-mark.png" alt="SJBHS OBA Connect mark" />
+            <strong>
+              <InlineEditableText
+                editable={editable}
+                value={connectCopy.posterLabel}
+                onChange={(value) => onChangeConnectCopy?.("posterLabel", value)}
+                className="section-title-edit"
+              />
+            </strong>
+            <p>
+              <InlineEditableText
+                editable={editable}
+                value={connectCopy.posterTitle}
+                onChange={(value) => onChangeConnectCopy?.("posterTitle", value)}
+                className="section-title-edit"
+              />
+            </p>
+            <div className="connect-date-meta">
+              {editable ? (
+                <InlineEditableText
+                  editable
+                  value={connectCopy.posterBody}
+                  onChange={(value) => onChangeConnectCopy?.("posterBody", value)}
+                  className="body-copy-edit"
+                />
+              ) : (
+                connectCopy.posterBody.split("|").map((item) => <span key={item.trim()}>{item.trim()}</span>)
+              )}
+            </div>
+          </aside>
+        </div>
       </div>
 
       <div className="section-block">
         <div className="connect-sponsor-callout">
-          <div>
-            <h3>
+          <h3>
+            <InlineEditableText
+              editable={editable}
+              value={connectCopy.sponsorHeading}
+              onChange={(value) => onChangeConnectCopy?.("sponsorHeading", value)}
+              className="section-title-edit"
+            />
+          </h3>
+          <div className="body-copy">
+            {editable ? (
               <InlineEditableText
-                editable={editable}
-                value={connectCopy.sponsorHeading}
-                onChange={(value) => onChangeConnectCopy?.("sponsorHeading", value)}
-                className="section-title-edit"
+                editable
+                value={connectContent.sponsorMessage || connectCopy.sponsorBody}
+                onChange={(value) => onChangeConnectContent?.("sponsorMessage", value)}
+                multiline
+                className="body-copy-edit"
               />
-            </h3>
-            <div className="body-copy">
-              {editable ? (
-                <InlineEditableText
-                  editable
-                  value={connectContent.sponsorMessage || connectCopy.sponsorBody}
-                  onChange={(value) => onChangeConnectContent?.("sponsorMessage", value)}
-                  multiline
-                  className="body-copy-edit"
-                />
-              ) : (
-                <>
-                  {(connectContent.sponsorMessage || connectCopy.sponsorBody).trim()} More info in the document{" "}
-                  <a
-                    className="inline-link"
-                    href="/docs/north-america-connect-2026-call-for-sponsors.pdf"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Download Call to Sponsors PDF
-                  </a>
-                  .
-                </>
-              )}
-            </div>
+            ) : (
+              <>
+                {(connectContent.sponsorMessage || connectCopy.sponsorBody).trim()} More info in the document{" "}
+                <a
+                  className="inline-link"
+                  href="/docs/north-america-connect-2026-call-for-sponsors.pdf"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Download Call to Sponsors PDF
+                </a>
+                .
+              </>
+            )}
           </div>
         </div>
       </div>

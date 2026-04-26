@@ -147,14 +147,6 @@ export async function createInquiry(entry: NewInquiryEntry) {
   };
 }
 
-export async function getInquiryStats() {
-  const entries = await readEntries();
-
-  return {
-    total: entries.length
-  };
-}
-
 export async function getRecentInquiries(limit = 10) {
   return getInquiries({ limit });
 }

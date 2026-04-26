@@ -246,9 +246,6 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
   const [loginStatus, setLoginStatus] = useState("Sign in to edit the site content.");
   const [configuredAdminEmail, setConfiguredAdminEmail] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
-  const [isSendingReset, setIsSendingReset] = useState(false);
-  const [resetStatus, setResetStatus] = useState("");
   const [editableContent, setEditableContent] = useState<SiteContent>(defaultSiteContent);
   const [savedContent, setSavedContent] = useState<SiteContent>(defaultSiteContent);
   const [isSaving, setIsSaving] = useState(false);
@@ -344,7 +341,7 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
   };
 
   const loadEditorContent = async () => {
-    const response = await fetch("/api/admin/site-content", {
+    const response = await fetch("/api/site-content", {
       credentials: "include"
     });
 
@@ -628,41 +625,6 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
       setLoginStatus(error instanceof Error ? error.message : "Unable to sign in.");
     } finally {
       setIsLoggingIn(false);
-    }
-  };
-
-  const handleResetPassword = async () => {
-    setIsSendingReset(true);
-    setResetStatus("Sending sign-in reminder...");
-    const resetEmail = loginEmail.trim();
-
-    try {
-      if (!resetEmail) {
-        throw new Error("Enter the admin email first.");
-      }
-
-      const response = await fetch("/api/admin/password-reset", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          email: resetEmail
-        })
-      });
-
-      const payload = (await readJson(response)) as { message?: string; error?: string };
-
-      if (!response.ok) {
-        throw new Error(payload.error ?? "Unable to send the sign-in reminder.");
-      }
-
-      setResetStatus(payload.message ?? "Sign-in reminder sent.");
-      setForgotPasswordOpen(false);
-    } catch (error) {
-      setResetStatus(error instanceof Error ? error.message : "Unable to send the sign-in reminder.");
-    } finally {
-      setIsSendingReset(false);
     }
   };
 
@@ -957,7 +919,7 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
     setEditorStatus("Saving changes...");
 
     try {
-      const response = await fetch("/api/admin/site-content", {
+      const response = await fetch("/api/site-content", {
         method: "PUT",
         credentials: "include",
         headers: {
@@ -1699,14 +1661,6 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
             <button className="primary-button" type="submit" disabled={isLoggingIn}>
               {isLoggingIn ? "Signing in..." : "Sign in"}
             </button>
-            <button
-              className="secondary-button"
-              type="button"
-              onClick={() => setForgotPasswordOpen((current) => !current)}
-              disabled={isLoggingIn}
-            >
-              Need sign-in help?
-            </button>
           </div>
         </form>
 
@@ -1714,30 +1668,6 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
           <p className="admin-auth-status" aria-live="polite">
             {loginStatus}
           </p>
-        ) : null}
-
-        {forgotPasswordOpen ? (
-          <div className="admin-reset-panel">
-            <p>Send a sign-in reminder to the email you typed above.</p>
-            <div className="admin-auth-actions">
-              <button className="secondary-button" type="button" onClick={handleResetPassword} disabled={isSendingReset}>
-                {isSendingReset ? "Sending..." : "Email sign-in reminder"}
-              </button>
-              <button
-                className="secondary-button"
-                type="button"
-                onClick={() => setForgotPasswordOpen(false)}
-                disabled={isSendingReset}
-              >
-                Close
-              </button>
-            </div>
-            {resetStatus ? (
-              <p className="admin-auth-status" aria-live="polite">
-                {resetStatus}
-              </p>
-            ) : null}
-          </div>
         ) : null}
       </div>
     );

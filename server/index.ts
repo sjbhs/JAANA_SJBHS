@@ -11,20 +11,14 @@ import {
   getAdminSessionFromCookie,
   isAdminAuthConfigured,
   isAdminSessionValid,
-  sendAdminPasswordResetEmail,
   verifyAdminCredentials
 } from "./lib/adminAuth";
-import {
-  readConnectContent,
-  validateConnectContent,
-  writeConnectContent
-} from "./lib/connectContentStore";
 import {
   readSiteContent,
   validateSiteContent,
   writeSiteContent
 } from "./lib/siteContentStore";
-import { createInquiry, deleteInquiry, getInquiryStats, getInquiries, updateInquiryReplyStatus } from "./lib/inquiryStore";
+import { createInquiry, deleteInquiry, getInquiries, updateInquiryReplyStatus } from "./lib/inquiryStore";
 import { sendInquiryNotification } from "./lib/inquiryNotifications";
 import { InquiryPayload, validateInquiryPayload } from "./lib/inquiryValidation";
 import { buildRateLimitHeaders, checkRateLimit, getClientIpFromNodeHeaders } from "./lib/rateLimit";
@@ -35,7 +29,6 @@ const port = Number(process.env.PORT ?? 3001);
 const clientDistPath = path.resolve(process.cwd(), "dist/client");
 const devCorsOrigins = ["http://127.0.0.1:5173", "http://localhost:5173"];
 const loginRateLimit = { limit: 5, windowMs: 10 * 60 * 1000 };
-const passwordHelpRateLimit = { limit: 3, windowMs: 30 * 60 * 1000 };
 const inquirySubmitRateLimit = { limit: 10, windowMs: 15 * 60 * 1000 };
 
 function resolveCorsOrigins() {
@@ -104,19 +97,30 @@ app.get("/api/health", (_request, response) => {
   response.json({ status: "ok" });
 });
 
-app.get("/api/connect-content", async (_request, response, next) => {
+app.get("/api/site-content", async (_request, response, next) => {
   try {
-    const content = await readConnectContent();
+    const content = await readSiteContent();
     response.json(content);
   } catch (error) {
     next(error);
   }
 });
 
-app.get("/api/site-content", async (_request, response, next) => {
+app.put("/api/site-content", requireAdminSession, async (request, response, next) => {
   try {
-    const content = await readSiteContent();
-    response.json(content);
+    const validation = validateSiteContent(request.body as Parameters<typeof validateSiteContent>[0]);
+
+    if (!validation.ok) {
+      return response.status(400).json({
+        error: "Unable to validate the site content."
+      });
+    }
+
+    const content = await writeSiteContent(validation.data);
+
+    response.json({
+      content
+    });
   } catch (error) {
     next(error);
   }
@@ -174,89 +178,6 @@ app.post("/api/admin/logout", async (_request, response) => {
   });
 });
 
-app.post("/api/admin/password-reset", async (request, response, next) => {
-  try {
-    if (!isAdminAuthConfigured()) {
-      response.status(503).json({
-        error: getAdminAuthConfigurationError()
-      });
-      return;
-    }
-
-    const rateLimit = applyRateLimit(request, response, "admin-sign-in-help", passwordHelpRateLimit);
-
-    if (!rateLimit.allowed) {
-      response.status(429).json({
-        error: "Too many sign-in reminder requests. Please try again later."
-      });
-      return;
-    }
-
-    const payload = request.body as { email?: string } | null;
-    const email = typeof payload?.email === "string" ? payload.email.trim().toLowerCase() : "";
-
-    if (email !== adminEmailAddress.toLowerCase()) {
-      response.status(400).json({
-        error: "That email address is not configured for the admin account."
-      });
-      return;
-    }
-
-    const result = await sendAdminPasswordResetEmail();
-
-    if (!result.ok) {
-      response.status(503).json({
-        error: result.error
-      });
-      return;
-    }
-
-    response.json({
-      message: "Sign-in reminder sent to the admin email."
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
-app.get("/api/admin/connect-content", requireAdminSession, async (_request, response, next) => {
-  try {
-    const content = await readConnectContent();
-    response.json(content);
-  } catch (error) {
-    next(error);
-  }
-});
-
-app.put("/api/admin/connect-content", requireAdminSession, async (request, response, next) => {
-  try {
-    const validation = validateConnectContent(request.body as Parameters<typeof validateConnectContent>[0]);
-
-    if (!validation.ok) {
-      return response.status(400).json({
-        error: validation.error
-      });
-    }
-
-    const content = await writeConnectContent(validation.data);
-
-    response.json({
-      content
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
-app.get("/api/admin/site-content", requireAdminSession, async (_request, response, next) => {
-  try {
-    const content = await readSiteContent();
-    response.json(content);
-  } catch (error) {
-    next(error);
-  }
-});
-
 app.get("/api/admin/inquiries", requireAdminSession, async (request, response, next) => {
   try {
     const rawLimit = readSingleQueryValue(request.query.limit);
@@ -279,26 +200,6 @@ app.get("/api/admin/inquiries", requireAdminSession, async (request, response, n
     const inquiries = await getInquiries({ limit, from, to, replyStatuses, interests });
 
     response.json(inquiries);
-  } catch (error) {
-    next(error);
-  }
-});
-
-app.put("/api/admin/site-content", requireAdminSession, async (request, response, next) => {
-  try {
-    const validation = validateSiteContent(request.body as Parameters<typeof validateSiteContent>[0]);
-
-    if (!validation.ok) {
-      return response.status(400).json({
-        error: "Unable to validate the site content."
-      });
-    }
-
-    const content = await writeSiteContent(validation.data);
-
-    response.json({
-      content
-    });
   } catch (error) {
     next(error);
   }
@@ -359,15 +260,6 @@ app.delete("/api/admin/inquiries/:id", requireAdminSession, async (request, resp
     response.json({
       message: "Inquiry deleted."
     });
-  } catch (error) {
-    next(error);
-  }
-});
-
-app.get("/api/inquiries/stats", requireAdminSession, async (_request, response, next) => {
-  try {
-    const stats = await getInquiryStats();
-    response.json(stats);
   } catch (error) {
     next(error);
   }

@@ -5,21 +5,10 @@ export type AdminSession = {
   exp: number;
 };
 
-export type PasswordResetResult =
-  | {
-      ok: true;
-    }
-  | {
-      ok: false;
-      error: string;
-    };
-
 export const adminEmailAddress = process.env.ADMIN_EMAIL?.trim() || "";
 export const adminPasswordValue = process.env.ADMIN_PASSWORD?.trim() || "";
 
 const adminSessionSecret = process.env.ADMIN_SESSION_SECRET?.trim() || "";
-const adminEmailFrom = process.env.ADMIN_EMAIL_FROM?.trim() || process.env.INQUIRY_EMAIL_FROM?.trim() || "";
-const resendApiKey = process.env.RESEND_API_KEY?.trim();
 const sessionCookieName = "jaana_admin_session";
 const sessionDurationSeconds = 60 * 60 * 24 * 7;
 const useSecureCookies = process.env.NODE_ENV === "production" || Boolean(process.env.VERCEL);
@@ -188,74 +177,4 @@ export function getAdminSessionFromCookie(cookieHeader: string | null | undefine
 
 export function isAdminSessionValid(cookieHeader: string | null | undefined) {
   return Boolean(getAdminSessionFromCookie(cookieHeader));
-}
-
-export async function sendAdminPasswordResetEmail(): Promise<PasswordResetResult> {
-  if (!isAdminAuthConfigured()) {
-    return {
-      ok: false,
-      error: getAdminAuthConfigurationError()
-    };
-  }
-
-  if (!resendApiKey) {
-    return {
-      ok: false,
-      error: "Email sign-in help is not configured. Set RESEND_API_KEY."
-    };
-  }
-
-  if (!adminEmailFrom) {
-    return {
-      ok: false,
-      error: "Email sign-in help is not configured. Set ADMIN_EMAIL_FROM or INQUIRY_EMAIL_FROM."
-    };
-  }
-
-  const subject = "JAANA admin sign-in reminder";
-  const text = [
-    "A sign-in reminder was requested for the JAANA admin panel.",
-    "",
-    `Login email: ${adminEmailAddress}`,
-    "Admin path: /admin",
-    "",
-    "For security, JAANA does not send passwords by email.",
-    "If the password needs to be changed, update ADMIN_PASSWORD in the deployment environment and redeploy.",
-    "",
-    "Open /admin to sign in."
-  ].join("\n");
-
-  try {
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${resendApiKey}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        from: adminEmailFrom,
-        to: [adminEmailAddress],
-        subject,
-        text
-      })
-    });
-
-    if (!response.ok) {
-      const body = await response.text().catch(() => "");
-
-      return {
-        ok: false,
-        error: body ? `Unable to send sign-in reminder: ${body}` : "Unable to send sign-in reminder."
-      };
-    }
-
-    return {
-      ok: true
-    };
-  } catch {
-    return {
-      ok: false,
-      error: "Unable to send sign-in reminder."
-    };
-  }
 }

@@ -23,6 +23,8 @@ import {
 import { defaultSiteContent, normalizeSiteContent } from "./site/siteContent";
 import { handleRovingTabKeyDown } from "./site/accessibility";
 
+const siteContentUpdatedStorageKey = "jaana-site-content-updated-at";
+
 function App() {
   const [activeTab, setActiveTab] = useState<TabId>("home");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -171,33 +173,46 @@ function App() {
     return () => window.removeEventListener("keydown", handleEscape);
   }, [mobileNavOpen]);
 
-  useEffect(() => {
-    let cancelled = false;
+  const loadSiteContent = async () => {
+    try {
+      const response = await fetch("/api/site-content");
 
-    const loadSiteContent = async () => {
-      try {
-        const response = await fetch("/api/site-content");
-
-        if (!response.ok) {
-          throw new Error("Unable to load the site content.");
-        }
-
-        const payload = (await response.json()) as Partial<SiteContent>;
-
-        if (!cancelled && payload && typeof payload === "object") {
-          setSiteContent(normalizeSiteContent(payload));
-        }
-      } catch {
-        if (!cancelled) {
-          setSiteContent(defaultSiteContent);
-        }
+      if (!response.ok) {
+        throw new Error("Unable to load the site content.");
       }
+
+      const payload = (await response.json()) as Partial<SiteContent>;
+
+      if (payload && typeof payload === "object") {
+        setSiteContent(normalizeSiteContent(payload));
+      }
+    } catch {
+      setSiteContent(defaultSiteContent);
+    }
+  };
+
+  useEffect(() => {
+    void loadSiteContent();
+  }, []);
+
+  useEffect(() => {
+    const refreshSiteContentFromStorage = (event: StorageEvent) => {
+      if (event.key !== siteContentUpdatedStorageKey) {
+        return;
+      }
+
+      void loadSiteContent();
+    };
+    const refreshSiteContentOnFocus = () => {
+      void loadSiteContent();
     };
 
-    void loadSiteContent();
+    window.addEventListener("storage", refreshSiteContentFromStorage);
+    window.addEventListener("focus", refreshSiteContentOnFocus);
 
     return () => {
-      cancelled = true;
+      window.removeEventListener("storage", refreshSiteContentFromStorage);
+      window.removeEventListener("focus", refreshSiteContentOnFocus);
     };
   }, []);
 
@@ -663,7 +678,8 @@ function App() {
         <AdminSiteContentPage
           details={connectTabDetails}
           onContentSaved={(content) => {
-          setSiteContent(normalizeSiteContent(content));
+            setSiteContent(normalizeSiteContent(content));
+            window.localStorage.setItem(siteContentUpdatedStorageKey, String(Date.now()));
           }}
         />
     );
