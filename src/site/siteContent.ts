@@ -59,7 +59,7 @@ export const defaultHomeCopy: HomePageCopy = {
   donateCardBody: "Review giving routes on the Donate page, then use Contact Us if you need help with a gift.",
   connectCardTitle: "North America Connect 2026",
   connectCardBody: "Register, sponsor, or review the full September 2026 reunion weekend details.",
-  eventsTitle: "Upcoming JAANA events | Past JAANA events",
+  eventsTitle: "JAANA Events",
   upcomingEventsTitle: "Upcoming JAANA events",
   upcomingEventsBody: "North America Connect 2026 | September 19-20, 2026 | Northern Virginia and the Washington, D.C. metro area.",
   pastEventsTitle: "Past JAANA events",
