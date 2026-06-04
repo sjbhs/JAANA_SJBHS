@@ -3,3 +3,5 @@ dist
 .env
 server/data/inquiries.json
 SECURITY.md
+tmp
+outputs

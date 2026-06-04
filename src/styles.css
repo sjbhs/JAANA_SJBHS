@@ -1078,8 +1078,7 @@ img {
 .connect-info-panel h3,
 .connect-pricing-card h4,
 .connect-schedule-card h4,
-.connect-tier-detail h4,
-.connect-sponsor-list h4 {
+.connect-tier-detail h4 {
   margin: 0;
   color: var(--navy-deep);
   font-family: Georgia, "Baskerville", "Times New Roman", serif;
@@ -3457,31 +3456,6 @@ img {
 .connect-date-meta .inline-edit-field {
   width: 100%;
   min-width: 0;
-}
-
-.connect-sponsor-callout {
-  display: block;
-  padding: 1.25rem;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  background:
-    linear-gradient(180deg, rgba(255, 253, 248, 0.98), rgba(250, 245, 236, 0.98));
-  box-shadow: var(--shadow-md);
-}
-
-.connect-sponsor-callout h3 {
-  margin: 0;
-  color: var(--navy-deep);
-  font-size: clamp(1.25rem, 2vw, 1.55rem);
-  line-height: 1.15;
-  font-family: Georgia, "Baskerville", "Times New Roman", serif;
-}
-
-.connect-sponsor-callout .body-copy {
-  margin-top: 0.55rem;
-  color: var(--muted);
-  font-size: 0.96rem;
-  line-height: 1.66;
 }
 
 @media (max-width: 900px) {
