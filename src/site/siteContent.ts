@@ -85,7 +85,7 @@ export const defaultConnectCopy: ConnectPageCopy = {
   posterBody: "Washington, D.C. metro area | Saturday Dinner | Sunday Picnic Lunch | September 19-20, 2026",
   sponsorHeading: "Sponsor North America Connect 2026",
   sponsorBody:
-    "We are seeking sponsors for our North America Connect reunion. Your brand or business will have the opportunity to reach hundreds of successful Josephites and their families. Proceeds from the event will fund the OBA Teachers Insurance Program. Individual and batch benefactors are also warmly welcome.",
+    "North America Connect 2026 is made possible by alumni, families, batches, and businesses who want this reunion to do more than bring us together. Sponsorship proceeds support the SJBHS OBA Teachers Insurance Program while giving sponsors visible, polished recognition across the reunion weekend and JAANA communications.",
   scheduleHeading: "Register Today for the North America Connect 2026 Reunion",
   scheduleBody: "Find pricing, schedule, travel, stay, Josephite merchandise, and local attraction details below."
 };
@@ -425,7 +425,10 @@ function normalizeSponsorEntry(
     name: typeof sponsor?.name === "string" && sponsor.name.trim() ? sponsor.name.trim() : fallback.name,
     website: typeof sponsor?.website === "string" ? sponsor.website.trim() : fallback.website,
     logoSrc: typeof sponsor?.logoSrc === "string" && sponsor.logoSrc.trim() ? sponsor.logoSrc.trim() : fallback.logoSrc,
-    logoAlt: typeof sponsor?.logoAlt === "string" && sponsor.logoAlt.trim() ? sponsor.logoAlt.trim() : fallback.logoAlt
+    logoAlt: typeof sponsor?.logoAlt === "string" && sponsor.logoAlt.trim() ? sponsor.logoAlt.trim() : fallback.logoAlt,
+    tier: typeof sponsor?.tier === "string" && sponsor.tier.trim() ? sponsor.tier.trim() : fallback.tier,
+    alumni: typeof sponsor?.alumni === "string" ? sponsor.alumni.trim() : fallback.alumni,
+    batch: typeof sponsor?.batch === "string" ? sponsor.batch.trim() : fallback.batch
   };
 }
 

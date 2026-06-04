@@ -177,6 +177,9 @@ export type ConnectSponsorEntry = {
   website: string;
   logoSrc: string;
   logoAlt: string;
+  tier?: string;
+  alumni?: string;
+  batch?: string;
 };
 
 export type ConnectPageContent = {

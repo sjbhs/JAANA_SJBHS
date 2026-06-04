@@ -98,6 +98,43 @@ function resolveHref(value: string) {
   return `https://${trimmedValue}`;
 }
 
+function sponsorTierName(value: string | undefined) {
+  return (value ?? "Sponsor").replace(/\s+sponsors?$/i, "").trim() || "Sponsor";
+}
+
+function sponsorTierSlug(value: string | undefined) {
+  return slugify(sponsorTierName(value));
+}
+
+function sponsorBatchShort(value: string | undefined) {
+  const digits = (value ?? "").replace(/\D/g, "");
+
+  return digits.length >= 2 ? digits.slice(-2) : (value ?? "").trim();
+}
+
+function sponsorRecognition(sponsor: ConnectSponsorEntry) {
+  const alumni = sponsor.alumni?.trim();
+  const batch = sponsor.batch?.trim();
+
+  if (!alumni && !batch) {
+    return "";
+  }
+
+  if (alumni && /^(batch|class)\b/i.test(alumni)) {
+    return alumni;
+  }
+
+  if (alumni && batch) {
+    return `${alumni} '${sponsorBatchShort(batch)}`;
+  }
+
+  if (alumni) {
+    return alumni;
+  }
+
+  return `Batch of ${batch}`;
+}
+
 function airportWebsiteHref(airportCode: string) {
   return airportWebsiteLinks[airportCode.trim().toUpperCase()] ?? "";
 }
@@ -357,6 +394,11 @@ function SponsorCard({
   onChange: (value: ConnectSponsorEntry) => void;
 }) {
   const sponsorHref = resolveHref(sponsor.website);
+  const tierName = sponsorTierName(sponsor.tier);
+  const tierSlug = sponsorTierSlug(sponsor.tier);
+  const recognition = sponsorRecognition(sponsor);
+  const displayHref = sponsorHref.replace(/^https?:\/\//i, "").replace(/\/$/, "");
+  const cardClassName = `connect-sponsor-card is-${tierSlug}${sponsorHref && !editable ? " is-linked" : ""}`;
   const sponsorName = (
     <InlineEditableText
       editable={editable}
@@ -366,14 +408,34 @@ function SponsorCard({
       ariaLabel="Sponsor name"
     />
   );
-
-  return (
-    <article className="connect-sponsor-card">
+  const cardContent = (
+    <>
       <div className="connect-sponsor-logo">
         <img src={sponsor.logoSrc} alt={sponsor.logoAlt} />
       </div>
-      <div>
-        <h5>{sponsorHref && !editable ? <a href={sponsorHref} target="_blank" rel="noreferrer">{sponsorName}</a> : sponsorName}</h5>
+      <div className="connect-sponsor-card-body">
+        <span className={`connect-sponsor-badge is-${tierSlug}`}>{tierName}</span>
+        <h5>{sponsorName}</h5>
+        {recognition ? (
+          <p className="connect-sponsor-recognition">
+            <span className="connect-sponsor-field-label">Donor</span>
+            {recognition}
+          </p>
+        ) : null}
+        {sponsorHref ? (
+          <p className="connect-sponsor-url-line">
+            <span className="connect-sponsor-field-label">Website</span>
+            {editable ? (
+              <a href={sponsorHref} target="_blank" rel="noreferrer">
+                {displayHref}
+              </a>
+            ) : (
+              <span className="connect-sponsor-url-value" aria-hidden="true">
+                {displayHref}
+              </span>
+            )}
+          </p>
+        ) : null}
         {editable ? (
           <div className="connect-admin-field-stack">
             <InlineEditableText
@@ -400,13 +462,47 @@ function SponsorCard({
               placeholder="Sponsor logo alt text"
               ariaLabel="Sponsor logo alt text"
             />
+            <InlineEditableText
+              editable
+              value={sponsor.tier ?? ""}
+              onChange={(value) => onChange({ ...sponsor, tier: value })}
+              className="body-copy-edit"
+              placeholder="Sponsor tier"
+              ariaLabel="Sponsor tier"
+            />
+            <InlineEditableText
+              editable
+              value={sponsor.alumni ?? ""}
+              onChange={(value) => onChange({ ...sponsor, alumni: value })}
+              className="body-copy-edit"
+              placeholder="Sponsor alumni name"
+              ariaLabel="Sponsor alumni name"
+            />
+            <InlineEditableText
+              editable
+              value={sponsor.batch ?? ""}
+              onChange={(value) => onChange({ ...sponsor, batch: value })}
+              className="body-copy-edit"
+              placeholder="Sponsor batch year"
+              ariaLabel="Sponsor batch year"
+            />
           </div>
-        ) : sponsorHref ? (
-          <a className="inline-link" href={sponsorHref} target="_blank" rel="noreferrer">
-            Website
-          </a>
         ) : null}
       </div>
+    </>
+  );
+
+  if (sponsorHref && !editable) {
+    return (
+      <a className={cardClassName} href={sponsorHref} target="_blank" rel="noreferrer" aria-label={`Open ${sponsor.name} website`}>
+        {cardContent}
+      </a>
+    );
+  }
+
+  return (
+    <article className={cardClassName}>
+      {cardContent}
     </article>
   );
 }
@@ -445,7 +541,9 @@ export function ConnectPage({
 
     const updateFloatingRegister = () => {
       const heroButtonRect = heroRegisterButtonRef.current?.getBoundingClientRect();
-      setShowFloatingRegister(heroButtonRect ? heroButtonRect.bottom < 0 : true);
+      const heroButtonPast = heroButtonRect ? heroButtonRect.bottom < 0 : true;
+
+      setShowFloatingRegister(heroButtonPast);
     };
 
     updateFloatingRegister();
@@ -929,7 +1027,11 @@ export function ConnectPage({
         </article>
       </section>
 
-      <section id="connect-sponsors" className="connect-section connect-sponsor-section" aria-labelledby="connect-sponsors-title">
+      <section
+        id="connect-sponsors"
+        className="connect-section connect-sponsor-section"
+        aria-labelledby="connect-sponsors-title"
+      >
         <div className="connect-sponsor-copy">
           <h3 id="connect-sponsors-title">
             <InlineEditableText
@@ -960,6 +1062,10 @@ export function ConnectPage({
         </div>
 
         <div className="connect-tier-panel">
+          <div className="connect-tier-panel-head">
+            <span>Sponsor levels</span>
+            <p>Recognition is available for corporate sponsors, individual benefactors, and class batches.</p>
+          </div>
           <div className="connect-tier-tabs" role="tablist" aria-label="Sponsor tiers">
             {connectContent.sponsorTiers.map((tier, index) => (
               <button
@@ -970,7 +1076,7 @@ export function ConnectPage({
                 aria-selected={activeSponsorTier === index}
                 aria-controls={`connect-sponsor-tier-panel-${index}`}
                 tabIndex={activeSponsorTier === index ? 0 : -1}
-                className={`connect-schedule-tab ${activeSponsorTier === index ? "is-active" : ""}`}
+                className={`connect-schedule-tab is-tier-${sponsorTierSlug(tier.title)} ${activeSponsorTier === index ? "is-active" : ""}`}
                 onClick={() => setActiveSponsorTier(index)}
                 onKeyDown={handleRovingTabKeyDown}
               >
@@ -982,7 +1088,7 @@ export function ConnectPage({
           {activeTier ? (
             <div
               id={`connect-sponsor-tier-panel-${activeSponsorTier}`}
-              className="connect-tier-detail"
+              className={`connect-tier-detail is-tier-${sponsorTierSlug(activeTier.title)}`}
               role="tabpanel"
               aria-labelledby={`connect-sponsor-tier-tab-${activeSponsorTier}`}
               tabIndex={0}
@@ -1017,9 +1123,14 @@ export function ConnectPage({
               </p>
             </div>
           ) : null}
+        </div>
 
-          <div className="connect-sponsor-list" aria-label={activeTier?.title ?? "Sponsors"}>
-            <h4>Our {activeTier?.title ?? "Sponsors"}</h4>
+        <div className="connect-sponsor-directory" aria-label="Confirmed sponsor list">
+          <div className="connect-sponsor-directory-head">
+            <span>With deepest gratitude</span>
+            <h4>Thank you to our generous sponsors</h4>
+          </div>
+          <div className="connect-sponsor-grid connect-sponsor-directory-grid">
             {connectContent.sponsors.map((sponsor, sponsorIndex) => (
               <SponsorCard
                 key={`${sponsor.name}-${sponsorIndex}`}

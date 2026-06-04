@@ -18,7 +18,7 @@ import type {
 
 const albumAssetVersion = "2026-04-15-1";
 const defaultConnectSponsorMessage =
-  "We are seeking sponsors for our North America Connect reunion. Your brand or business will have the opportunity to reach hundreds of successful Josephites and their families. Proceeds from the event will fund the OBA Teachers Insurance Program. Individual and batch benefactors are also warmly welcome.";
+  "North America Connect 2026 is made possible by alumni, families, batches, and businesses who want this reunion to do more than bring us together. Sponsorship proceeds support the SJBHS OBA Teachers Insurance Program while giving sponsors visible, polished recognition across the reunion weekend and JAANA communications.";
 
 const withAlbumAssetVersion = (image: GalleryImage): GalleryImage =>
   image.src.startsWith("/assets/albums/")
@@ -945,10 +945,49 @@ export const defaultConnectPageContent: ConnectPageContent = {
   ],
   sponsors: [
     {
-      name: "Sponsor name coming soon",
+      name: "Alpha Omega",
+      website: "https://alphaomega.com/",
+      logoSrc: "/assets/sponsors/alpha-omega-logo.png",
+      logoAlt: "Alpha Omega logo",
+      tier: "Gold",
+      alumni: "Gautam Ijoor",
+      batch: "1989"
+    },
+    {
+      name: "AIMDRIVE-AI",
+      website: "https://aimdrive.com/",
+      logoSrc: "/assets/sponsors/aimdrive-ai-logo.png",
+      logoAlt: "AIMDRIVE-AI powered by Anklesaria logo",
+      tier: "Gold",
+      alumni: "Jimmy Anklesaria",
+      batch: "1972"
+    },
+    {
+      name: "Meta Mind Global Corporation",
+      website: "https://www.mmgc.us/",
+      logoSrc: "/assets/sponsors/meta-mind-global-corporation-logo.png",
+      logoAlt: "Meta Mind Global Corporation logo",
+      tier: "Gold",
+      alumni: "Vishal Currie",
+      batch: "1988"
+    },
+    {
+      name: "Learn For Life Foundation",
+      website: "https://learnforlifefoundation.org/",
+      logoSrc: "/assets/sponsors/learn-for-life-foundation-logo.png",
+      logoAlt: "Learn For Life Foundation logo",
+      tier: "Gold",
+      alumni: "Thomas Thekkethala",
+      batch: "1977"
+    },
+    {
+      name: "Batch of 1997",
       website: "",
-      logoSrc: "/assets/oba-connect-mark.png",
-      logoAlt: "North America Connect sponsor placeholder"
+      logoSrc: "/assets/sponsors/class-of-1997.svg",
+      logoAlt: "Class of 1997 sponsor mark",
+      tier: "Bronze",
+      alumni: "Class of 1997",
+      batch: "1997"
     }
   ],
   placeholders: connectPlaceholders
