@@ -30,6 +30,7 @@ const sponsorIframeUrl = "https://www.zeffy.com/embed/donation-form/north-americ
 const sponsorThermometerUrl = "https://www.zeffy.com/embed/thermometer/north-america-connect-sponsorship";
 const connectPosterPdfUrl = "/docs/north-america-connect-2026-poster.pdf";
 const connectPosterImageUrl = "/assets/north-america-connect-2026-poster.png";
+const merchandiseStoreUrl = "/#josephite-store";
 
 const attractionPreviewLinks: Record<string, string> = {
   "Monuments & Memorials": "https://www.washington.org/visit-dc/monuments-memorials",
@@ -521,6 +522,7 @@ export function ConnectPage({
   const [activeSponsorTier, setActiveSponsorTier] = useState(0);
   const [showFloatingRegister, setShowFloatingRegister] = useState(false);
   const [posterDialogOpen, setPosterDialogOpen] = useState(false);
+  const [storeRedirectDialogOpen, setStoreRedirectDialogOpen] = useState(false);
   const heroRegisterButtonRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
@@ -972,25 +974,46 @@ export function ConnectPage({
 
       <section className="connect-section connect-merchandise-section" aria-labelledby="connect-merchandise-title">
         <article id="connect-merchandise" className="connect-info-panel connect-merchandise-panel">
-          <h3 id="connect-merchandise-title">Josephite Merchandise</h3>
-          <p>
-            <InlineEditableText
-              editable={editable}
-              value={connectContent.merchandise.body}
-              onChange={(value) => onChangeConnectContent?.("merchandise", { ...connectContent.merchandise, body: value })}
-              className="body-copy-edit"
-              ariaLabel="Merchandise body"
-            />
-          </p>
-          <p>
-            <InlineEditableText
-              editable={editable}
-              value={connectContent.merchandise.preorder}
-              onChange={(value) => onChangeConnectContent?.("merchandise", { ...connectContent.merchandise, preorder: value })}
-              className="body-copy-edit"
-              ariaLabel="Merchandise preorder details"
-            />
-          </p>
+          <div className="connect-merchandise-copy">
+            <p className="connect-merchandise-kicker">Storefront</p>
+            <h3 id="connect-merchandise-title">Josephite Merchandise</h3>
+            <p>
+              <InlineEditableText
+                editable={editable}
+                value={connectContent.merchandise.body}
+                onChange={(value) => onChangeConnectContent?.("merchandise", { ...connectContent.merchandise, body: value })}
+                className="body-copy-edit"
+                ariaLabel="Merchandise body"
+              />
+            </p>
+            <p>
+              <InlineEditableText
+                editable={editable}
+                value={connectContent.merchandise.preorder}
+                onChange={(value) => onChangeConnectContent?.("merchandise", { ...connectContent.merchandise, preorder: value })}
+                className="body-copy-edit"
+                ariaLabel="Merchandise preorder details"
+              />
+            </p>
+            {!editable ? (
+              <button
+                className="primary-button connect-store-button"
+                type="button"
+                onClick={() => setStoreRedirectDialogOpen(true)}
+              >
+                Open Josephite Store
+              </button>
+            ) : null}
+          </div>
+          <div className="connect-merchandise-preview" aria-hidden="true">
+            <img src="/assets/merchandise/alumni-essentials-bundle.png" alt="" />
+            <div>
+              <img src="/assets/merchandise/cap.png" alt="" />
+              <img src="/assets/merchandise/metal-water-bottle.png" alt="" />
+              <img src="/assets/merchandise/luggage-tag.png" alt="" />
+              <img src="/assets/merchandise/scarf.png" alt="" />
+            </div>
+          </div>
         </article>
       </section>
 
@@ -1149,6 +1172,34 @@ export function ConnectPage({
 
       <ConnectZeffyDialog type={dialogType} connectContent={connectContent} onClose={() => setDialogType(null)} />
       {posterDialogOpen ? <ConnectPosterDialog onClose={() => setPosterDialogOpen(false)} /> : null}
+      {storeRedirectDialogOpen
+        ? createPortal(
+        <div className="store-confirm-overlay" role="dialog" aria-modal="true" aria-labelledby="connect-store-confirm-title">
+          <div className="store-confirm-dialog">
+            <p className="store-kicker">Opening store</p>
+            <h2 id="connect-store-confirm-title">Open JAANA Store?</h2>
+            <p>This will redirect you to the Josephite Store.</p>
+            <div className="store-confirm-actions">
+              <button className="secondary-button" type="button" onClick={() => setStoreRedirectDialogOpen(false)}>
+                Cancel
+              </button>
+              <button
+                className="primary-button"
+                type="button"
+                onClick={() => {
+                  setStoreRedirectDialogOpen(false);
+                  window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+                  window.location.href = merchandiseStoreUrl;
+                }}
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>,
+            document.body
+          )
+        : null}
     </section>
   );
 }

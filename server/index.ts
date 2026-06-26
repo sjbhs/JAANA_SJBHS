@@ -21,6 +21,12 @@ import {
 import { createInquiry, deleteInquiry, getInquiries, updateInquiryReplyStatus } from "./lib/inquiryStore";
 import { sendInquiryNotification } from "./lib/inquiryNotifications";
 import { InquiryPayload, validateInquiryPayload } from "./lib/inquiryValidation";
+import {
+  createMerchandiseReservation,
+  MerchandiseReservationError,
+  MerchandiseReservationPayload,
+  readMerchandiseInventory
+} from "./lib/merchandiseReservationStore";
 import { buildRateLimitHeaders, checkRateLimit, getClientIpFromNodeHeaders } from "./lib/rateLimit";
 
 const app = express();
@@ -30,6 +36,7 @@ const clientDistPath = path.resolve(process.cwd(), "dist/client");
 const devCorsOrigins = ["http://127.0.0.1:5173", "http://localhost:5173"];
 const loginRateLimit = { limit: 5, windowMs: 10 * 60 * 1000 };
 const inquirySubmitRateLimit = { limit: 10, windowMs: 15 * 60 * 1000 };
+const merchandiseReservationRateLimit = { limit: 8, windowMs: 15 * 60 * 1000 };
 
 function resolveCorsOrigins() {
   if (process.env.CORS_ORIGIN?.trim()) {
@@ -296,6 +303,45 @@ app.post("/api/inquiries", async (request, response, next) => {
       total
     });
   } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/merchandise/inventory", async (_request, response, next) => {
+  try {
+    const inventory = await readMerchandiseInventory();
+
+    response.setHeader("Cache-Control", "no-store");
+    response.json(inventory);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/api/merchandise/orders", async (request, response, next) => {
+  try {
+    const rateLimit = applyRateLimit(request, response, "merchandise-reservation", merchandiseReservationRateLimit);
+
+    if (!rateLimit.allowed) {
+      return response.status(429).json({
+        error: "Too many merchandise reservations. Please try again later."
+      });
+    }
+
+    const result = await createMerchandiseReservation(request.body as MerchandiseReservationPayload);
+
+    response.status(201).json({
+      message: "Order reserved for event pickup.",
+      ...result
+    });
+  } catch (error) {
+    if (error instanceof MerchandiseReservationError) {
+      return response.status(error.statusCode).json({
+        error: error.message,
+        ...(error.inventory ? { inventory: error.inventory } : {})
+      });
+    }
+
     next(error);
   }
 });

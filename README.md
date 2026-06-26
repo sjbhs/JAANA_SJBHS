@@ -374,6 +374,30 @@ Notes:
 
 If this project moves beyond prototype/light production use, replace JSON storage with a database or hosted store.
 
+## Merchandise reservation storage
+
+Merchandise preorders use two API routes:
+
+- `GET /api/merchandise/inventory`
+- `POST /api/merchandise/orders`
+
+Local development stores reservations in:
+
+```text
+server/data/merchandise-reservations.json
+```
+
+For deployment, configure a persistent database before accepting real preorders. The Vercel API will not fake durable reservations without one. The Supabase/Postgres setup script is:
+
+```text
+server/sql/merchandise_reservations_supabase.sql
+```
+
+Required deployment variables:
+
+- `MERCHANDISE_SUPABASE_URL`
+- `MERCHANDISE_SUPABASE_SERVICE_ROLE_KEY`
+
 ## Deployment
 
 This repo is configured for Vercel with:
@@ -386,7 +410,7 @@ Deploy flow:
 
 1. Import the repo into Vercel.
 2. Use the existing project settings from `vercel.json`.
-3. Add production environment variables for `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET`, `RESEND_API_KEY`, `INQUIRY_EMAIL_FROM`, `INQUIRY_EMAIL_TO_GENERAL`, `INQUIRY_EMAIL_TO_FINANCE`, and `REQUIRE_INQUIRY_EMAIL=true`.
+3. Add production environment variables for `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET`, `RESEND_API_KEY`, `INQUIRY_EMAIL_FROM`, `INQUIRY_EMAIL_TO_GENERAL`, `INQUIRY_EMAIL_TO_FINANCE`, `REQUIRE_INQUIRY_EMAIL=true`, `MERCHANDISE_SUPABASE_URL`, and `MERCHANDISE_SUPABASE_SERVICE_ROLE_KEY`.
 4. Deploy.
 
 The inquiry form depends on Resend in deployment. If `RESEND_API_KEY` or a verified `INQUIRY_EMAIL_FROM` sender is missing, deployed submissions return an error instead of pretending the message reached JAANA.

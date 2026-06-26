@@ -9,6 +9,7 @@ import { ConnectPage } from "./site/components/ConnectPage";
 import { DonatePage } from "./site/components/DonatePage";
 import { HomePage } from "./site/components/HomePage";
 import { LightboxDialog } from "./site/components/LightboxDialog";
+import { MerchandiseStorePage } from "./site/components/MerchandiseStorePage";
 import { PastEventsDialog } from "./site/components/PastEventsDialog";
 import { ZeffyDonateDialog } from "./site/components/ZeffyDonateDialog";
 import {
@@ -25,6 +26,7 @@ import { handleRovingTabKeyDown } from "./site/accessibility";
 
 const siteContentUpdatedStorageKey = "jaana-site-content-updated-at";
 const connectRegistrationHashes = new Set(["register", "connect-register"]);
+const storeHashes = new Set(["store", "josephite-store"]);
 
 function App() {
   const [activeTab, setActiveTab] = useState<TabId>("home");
@@ -89,6 +91,16 @@ function App() {
       }
 
       const hashTab = window.location.hash.replace("#", "");
+
+      if (storeHashes.has(hashTab)) {
+        forceLocationRender((current) => current + 1);
+        window.scrollTo({
+          top: 0,
+          left: 0,
+          behavior: "auto"
+        });
+        return;
+      }
 
       if (connectRegistrationHashes.has(hashTab)) {
         startTransition(() => {
@@ -684,9 +696,14 @@ function App() {
     connectCopy
   } = siteContent;
   const isAdminRoute = window.location.pathname.startsWith("/admin");
+  const isStoreRoute = /^\/josephite-store\/?$/.test(window.location.pathname) || storeHashes.has(window.location.hash.replace("#", ""));
   const connectTabDetails = tabs.find((tab) => tab.id === "connect") ?? tabs[0];
   const activeTabDetails = tabs.find((tab) => tab.id === activeTab) ?? tabs[0];
   const isOverviewTab = activeTab === "home";
+
+  if (isStoreRoute) {
+    return <MerchandiseStorePage />;
+  }
 
   if (isAdminRoute) {
     return (
