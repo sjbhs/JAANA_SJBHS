@@ -30,6 +30,8 @@ const sponsorIframeUrl = "https://www.zeffy.com/embed/donation-form/north-americ
 const sponsorThermometerUrl = "https://www.zeffy.com/embed/thermometer/north-america-connect-sponsorship";
 const connectPosterPdfUrl = "/docs/north-america-connect-2026-poster.pdf";
 const connectPosterImageUrl = "/assets/north-america-connect-2026-poster.png";
+const connectPosterImageWebpSmallUrl = "/assets/north-america-connect-2026-poster-360.webp";
+const connectPosterImageWebpLargeUrl = "/assets/north-america-connect-2026-poster-612.webp";
 const merchandiseStoreUrl = "/#josephite-store";
 
 const attractionPreviewLinks: Record<string, string> = {
@@ -266,6 +268,34 @@ function ConnectFloatingRegisterButton({ onClick }: { onClick: () => void }) {
   );
 }
 
+function ConnectPosterPicture({
+  className,
+  sizes,
+  priority = false
+}: {
+  className: string;
+  sizes: string;
+  priority?: boolean;
+}) {
+  return (
+    <picture className={className}>
+      <source
+        type="image/webp"
+        srcSet={`${connectPosterImageWebpSmallUrl} 360w, ${connectPosterImageWebpLargeUrl} 612w`}
+        sizes={sizes}
+      />
+      <img
+        src={connectPosterImageUrl}
+        alt="North America Connect 2026 event poster"
+        width="612"
+        height="792"
+        loading={priority ? "eager" : "lazy"}
+        decoding="async"
+      />
+    </picture>
+  );
+}
+
 function ConnectPosterDialog({ onClose }: { onClose: () => void }) {
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
@@ -285,11 +315,10 @@ function ConnectPosterDialog({ onClose }: { onClose: () => void }) {
         <button className="zeffy-dialog-close connect-poster-dialog-close" type="button" onClick={onClose} aria-label="Close poster">
           ×
         </button>
-        <iframe
-          className="connect-poster-dialog-frame"
-          title="North America Connect 2026 poster with clickable event links"
-          src={`${connectPosterPdfUrl}#toolbar=0&navpanes=0&scrollbar=0&view=Fit`}
-        />
+        <a className="connect-poster-dialog-pdf-link" href={connectPosterPdfUrl} target="_blank" rel="noreferrer">
+          Open PDF
+        </a>
+        <ConnectPosterPicture className="connect-poster-dialog-picture" sizes="min(100vw, 612px)" priority />
       </div>
     </div>,
     document.body
@@ -605,7 +634,11 @@ export function ConnectPage({
             onClick={() => setPosterDialogOpen(true)}
             aria-label="Open North America Connect 2026 poster full screen"
           >
-            <img src={connectPosterImageUrl} alt="North America Connect 2026 event poster" />
+            <ConnectPosterPicture
+              className="connect-poster-picture"
+              sizes="(max-width: 720px) 88vw, (max-width: 1100px) 39vw, 430px"
+              priority
+            />
           </button>
         </aside>
       </div>

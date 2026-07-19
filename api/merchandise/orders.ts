@@ -3,6 +3,12 @@ import {
   MerchandiseReservationError,
   type MerchandiseReservationPayload
 } from "../../server/lib/merchandiseReservationStore.js";
+import {
+  getMerchandiseReceiptEmailConfigurationError,
+  isMerchandiseReceiptEmailConfigured,
+  isMerchandiseReceiptEmailDeliveryRequired,
+  sendMerchandiseReceiptNotification
+} from "../../server/lib/merchandiseReceiptNotifications.js";
 import { buildRateLimitHeaders, checkRateLimit, getClientIpFromRequestHeaders } from "../../server/lib/rateLimit.js";
 
 const merchandiseReservationRateLimit = { limit: 8, windowMs: 15 * 60 * 1000 };
@@ -53,11 +59,33 @@ export async function POST(request: Request) {
   }
 
   try {
+    if (isMerchandiseReceiptEmailDeliveryRequired() && !isMerchandiseReceiptEmailConfigured()) {
+      return Response.json(
+        {
+          error: getMerchandiseReceiptEmailConfigurationError()
+        },
+        {
+          status: 503,
+          headers: {
+            "Cache-Control": "no-store"
+          }
+        }
+      );
+    }
+
     const result = await createMerchandiseReservation(payload);
+    const receiptNotification = await sendMerchandiseReceiptNotification(result);
+
+    if (!receiptNotification.ok) {
+      console.warn(receiptNotification.error);
+    }
 
     return Response.json(
       {
         message: "Order reserved for event pickup.",
+        receiptEmail: {
+          sent: receiptNotification.ok
+        },
         ...result
       },
       {

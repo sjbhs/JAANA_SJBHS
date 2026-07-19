@@ -5,48 +5,24 @@ export const merchandiseInventoryDatabase = {
     name: "Circular Josephite Magnet",
     description: "A classic Josephite keepsake for your fridge, office board, locker, or workspace.",
     quantity: 40,
-    price: 5
+    price: 10
   },
   "MERCH-002": {
     name: "Sticker Set",
     description: "Josephite-themed stickers for laptops, notebooks, water bottles, luggage, and everyday use.",
     quantity: 50,
-    price: 5
+    price: 10
   },
   "MERCH-003": {
     name: "Luggage Tag",
     description: "A practical travel accessory that lets you carry your Josephite identity wherever you go.",
     quantity: 50,
-    price: 5
+    price: 10
   },
   "MERCH-004": {
     name: "School Crest Lapel Pin",
     description: "A refined school crest pin for blazers, jackets, bags, reunions, and formal alumni occasions.",
     quantity: 40,
-    price: 10
-  },
-  "MERCH-005": {
-    name: "Davids Cufflinks",
-    description: "A polished formal accessory for Davids House alumni and a thoughtful reunion gift.",
-    quantity: 20,
-    price: 10
-  },
-  "MERCH-006": {
-    name: "Georges Cufflinks",
-    description: "A classic formal accessory for Georges House alumni to carry their house pride.",
-    quantity: 20,
-    price: 10
-  },
-  "MERCH-007": {
-    name: "Andrews Cufflinks",
-    description: "A classic formal accessory for Andrews House alumni to carry their house pride.",
-    quantity: 20,
-    price: 10
-  },
-  "MERCH-008": {
-    name: "Patricks Cufflinks",
-    description: "A distinguished keepsake for Patricks House alumni and special occasions.",
-    quantity: 20,
     price: 10
   },
   "MERCH-009": {
@@ -99,21 +75,21 @@ export const merchandiseInventoryDatabase = {
   },
   "MERCH-017": {
     name: "Coffee Table Book - 100 Years",
-    description: "A commemorative book celebrating 100 years of St. Joseph's Boys' High School history and memories.",
+    description: "A commemorative book celebrating 100 years of St. Joseph’s Boys’ High School history and memories.",
     quantity: 20,
-    price: 40
+    price: 50
   },
   "MERCH-018": {
     name: "Faith & Toil Book - 150 Years",
     description: "A heritage book honoring 150 years of Josephite faith, toil, tradition, and legacy.",
     quantity: 20,
-    price: 40
+    price: 50
   },
   "MERCH-019": {
-    name: "Paul Fernandes Framed Print (without glass)",
-    description: "A nostalgic framed (without glass) Paul Fernandes print capturing the charm and memories of school life.",
+    name: "Paul Fernandes Unframed Mounted Print",
+    description: "A nostalgic unframed Paul Fernandes print capturing the charm and memories of school life.",
     quantity: 20,
-    price: 40
+    price: 50
   },
   "MERCH-020": {
     name: "Laptop Bag",
@@ -130,13 +106,13 @@ export const merchandiseInventoryDatabase = {
   "MERCH-022": {
     name: "Metal Water Bottle",
     description: "A durable everyday water bottle for work, workouts, travel, and school events.",
-    quantity: 30,
+    quantity: 25,
     price: 20
   },
   "MERCH-023": {
     name: "Bamboo Water Sipper",
     description: "A premium-feeling bamboo water sipper with a clean, natural look for home, office, or travel.",
-    quantity: 30,
+    quantity: 35,
     price: 40
   },
   "MERCH-024": {
@@ -164,7 +140,7 @@ export const merchandiseBundleDatabase = {
   "BUNDLE-001": {
     name: "Josephite Starter Bundle",
     description: "Curated starter bundle featuring a magnet, sticker set, luggage tag, and school crest lapel pin.",
-    price: 20,
+    price: 35,
     components: [
       { sku: "MERCH-001", quantity: 1 },
       { sku: "MERCH-002", quantity: 1 },
@@ -175,7 +151,7 @@ export const merchandiseBundleDatabase = {
   "BUNDLE-002": {
     name: "Alumni Essentials Bundle",
     description: "Everyday Josephite essentials featuring a cap, metal water bottle, magnet, sticker set, and luggage tag.",
-    price: 45,
+    price: 60,
     components: [
       { sku: "MERCH-025", quantity: 1 },
       { sku: "MERCH-022", quantity: 1 },
@@ -187,7 +163,7 @@ export const merchandiseBundleDatabase = {
   "BUNDLE-003": {
     name: "Work & Travel Bundle",
     description: "A practical work and travel set featuring a laptop sleeve, metal water bottle, luggage tag, and school crest lapel pin.",
-    price: 55,
+    price: 60,
     components: [
       { sku: "MERCH-021", quantity: 1 },
       { sku: "MERCH-022", quantity: 1 },
@@ -198,7 +174,7 @@ export const merchandiseBundleDatabase = {
   "BUNDLE-004": {
     name: "Heritage Bundle",
     description: "A commemorative book bundle featuring the Coffee Table Book and Faith & Toil Book.",
-    price: 70,
+    price: 90,
     components: [
       { sku: "MERCH-017", quantity: 1 },
       { sku: "MERCH-018", quantity: 1 }
@@ -206,8 +182,8 @@ export const merchandiseBundleDatabase = {
   },
   "BUNDLE-005": {
     name: "Art & Memory Bundle",
-    description: "A nostalgic keepsake bundle featuring the Paul Fernandes framed print, magnet, sticker set, and luggage tag.",
-    price: 45,
+    description: "A nostalgic keepsake bundle featuring the Paul Fernandes unframed mounted print, magnet, sticker set, and luggage tag.",
+    price: 70,
     components: [
       { sku: "MERCH-019", quantity: 1 },
       { sku: "MERCH-001", quantity: 1 },
@@ -217,20 +193,21 @@ export const merchandiseBundleDatabase = {
   },
   "BUNDLE-006": {
     name: "Premium Josephite Gift Bundle",
-    description: "A premium alumni gift bundle featuring both books, school crest lapel pin, Paul Fernandes framed print, and magnet.",
-    price: 110,
+    description: "A premium alumni gift bundle featuring both books, school crest lapel pin, Paul Fernandes unframed print, bamboo water sipper and magnet.",
+    price: 180,
     components: [
       { sku: "MERCH-017", quantity: 1 },
       { sku: "MERCH-018", quantity: 1 },
       { sku: "MERCH-004", quantity: 1 },
       { sku: "MERCH-019", quantity: 1 },
+      { sku: "MERCH-023", quantity: 1 },
       { sku: "MERCH-001", quantity: 1 }
     ]
   },
   "BUNDLE-007": {
     name: "Andrews House Pride Bundle",
     description: "Andrews House bundle featuring badge, blue tie pin, magnet, and sticker set.",
-    price: 25,
+    price: 35,
     components: [
       { sku: "MERCH-009", quantity: 1 },
       { sku: "MERCH-013", quantity: 1 },
@@ -241,7 +218,7 @@ export const merchandiseBundleDatabase = {
   "BUNDLE-008": {
     name: "Davids House Pride Bundle",
     description: "Davids House bundle featuring badge, yellow tie pin, magnet, and sticker set.",
-    price: 25,
+    price: 35,
     components: [
       { sku: "MERCH-010", quantity: 1 },
       { sku: "MERCH-014", quantity: 1 },
@@ -252,7 +229,7 @@ export const merchandiseBundleDatabase = {
   "BUNDLE-009": {
     name: "Georges House Pride Bundle",
     description: "Georges House bundle featuring badge, red tie pin, magnet, and sticker set.",
-    price: 25,
+    price: 35,
     components: [
       { sku: "MERCH-011", quantity: 1 },
       { sku: "MERCH-015", quantity: 1 },
@@ -263,7 +240,7 @@ export const merchandiseBundleDatabase = {
   "BUNDLE-010": {
     name: "Patricks House Pride Bundle",
     description: "Patricks House bundle featuring badge, green tie pin, magnet, and sticker set.",
-    price: 25,
+    price: 35,
     components: [
       { sku: "MERCH-012", quantity: 1 },
       { sku: "MERCH-016", quantity: 1 },
@@ -273,36 +250,36 @@ export const merchandiseBundleDatabase = {
   },
   "BUNDLE-011": {
     name: "Davids Premium House Bundle",
-    description: "Premium Davids House bundle featuring badge, yellow tie pin, cufflinks, magnet, and sticker set.",
-    price: 35,
+    description: "Premium Davids House bundle featuring badge, yellow tie pin, school crest lapel pin, magnet, and sticker set.",
+    price: 45,
     components: [
       { sku: "MERCH-010", quantity: 1 },
       { sku: "MERCH-014", quantity: 1 },
-      { sku: "MERCH-005", quantity: 1 },
+      { sku: "MERCH-004", quantity: 1 },
       { sku: "MERCH-001", quantity: 1 },
       { sku: "MERCH-002", quantity: 1 }
     ]
   },
   "BUNDLE-012": {
     name: "Georges Premium House Bundle",
-    description: "Premium Georges House bundle featuring badge, red tie pin, cufflinks, magnet, and sticker set.",
-    price: 35,
+    description: "Premium Georges House bundle featuring badge, red tie pin, school crest lapel pin, magnet, and sticker set.",
+    price: 45,
     components: [
       { sku: "MERCH-011", quantity: 1 },
       { sku: "MERCH-015", quantity: 1 },
-      { sku: "MERCH-006", quantity: 1 },
+      { sku: "MERCH-004", quantity: 1 },
       { sku: "MERCH-001", quantity: 1 },
       { sku: "MERCH-002", quantity: 1 }
     ]
   },
   "BUNDLE-013": {
     name: "Patricks Premium House Bundle",
-    description: "Premium Patricks House bundle featuring badge, green tie pin, cufflinks, magnet, and sticker set.",
-    price: 35,
+    description: "Premium Patricks House bundle featuring badge, green tie pin, school crest lapel pin, magnet, and sticker set.",
+    price: 45,
     components: [
       { sku: "MERCH-012", quantity: 1 },
       { sku: "MERCH-016", quantity: 1 },
-      { sku: "MERCH-008", quantity: 1 },
+      { sku: "MERCH-004", quantity: 1 },
       { sku: "MERCH-001", quantity: 1 },
       { sku: "MERCH-002", quantity: 1 }
     ]
@@ -310,7 +287,7 @@ export const merchandiseBundleDatabase = {
   "BUNDLE-014": {
     name: "Andrews Premium House Bundle",
     description: "Premium Andrews House bundle featuring badge, blue tie pin, school crest lapel pin, magnet, and sticker set.",
-    price: 35,
+    price: 45,
     components: [
       { sku: "MERCH-009", quantity: 1 },
       { sku: "MERCH-013", quantity: 1 },

@@ -1,4 +1,4 @@
-import { adminEmailAddress, getAdminSessionFromCookie } from "./_auth.js";
+import { getAdminSessionFromCookie } from "./_auth.js";
 
 export async function GET(request: Request) {
   const session = getAdminSessionFromCookie(request.headers.get("cookie"));
@@ -6,8 +6,7 @@ export async function GET(request: Request) {
   return Response.json(
     {
       authenticated: Boolean(session),
-      email: session?.email ?? null,
-      adminEmail: adminEmailAddress
+      email: session?.email ?? null
     },
     {
       headers: {

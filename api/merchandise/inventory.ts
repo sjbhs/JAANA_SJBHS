@@ -1,4 +1,7 @@
-import { readMerchandiseInventory } from "../../server/lib/merchandiseReservationStore.js";
+import {
+  MerchandiseReservationError,
+  readMerchandiseInventory
+} from "../../server/lib/merchandiseReservationStore.js";
 
 export async function GET() {
   try {
@@ -14,10 +17,10 @@ export async function GET() {
 
     return Response.json(
       {
-        error: "Unable to load merchandise inventory."
+        error: error instanceof MerchandiseReservationError ? error.message : "Unable to load merchandise inventory."
       },
       {
-        status: 500,
+        status: error instanceof MerchandiseReservationError ? error.statusCode : 500,
         headers: {
           "Cache-Control": "no-store"
         }

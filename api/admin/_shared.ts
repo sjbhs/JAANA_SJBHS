@@ -1,5 +1,8 @@
-import { buildRateLimitHeaders } from "../../server/lib/rateLimit.js";
+import { buildRateLimitHeaders, checkRateLimit, getClientIpFromRequestHeaders } from "../../server/lib/rateLimit.js";
 import type { RateLimitResult } from "../../server/lib/rateLimit.js";
+import { isAdminSessionValid } from "./_auth.js";
+
+const adminApiRateLimit = { limit: 120, windowMs: 15 * 60 * 1000 };
 
 export async function readJsonBody(request: Request) {
   try {
@@ -36,4 +39,21 @@ export function tooManyRequestsResponse(result: RateLimitResult, error: string) 
       }
     }
   );
+}
+
+export function requireAdminRequest(request: Request, scope: string) {
+  const rateLimit = checkRateLimit(
+    `admin-api:${scope}:${getClientIpFromRequestHeaders(request.headers)}`,
+    adminApiRateLimit
+  );
+
+  if (!rateLimit.allowed) {
+    return tooManyRequestsResponse(rateLimit, "Too many admin requests. Please try again later.");
+  }
+
+  if (!isAdminSessionValid(request.headers.get("cookie"))) {
+    return unauthorizedResponse();
+  }
+
+  return null;
 }

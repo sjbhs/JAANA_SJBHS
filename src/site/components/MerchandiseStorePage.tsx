@@ -44,6 +44,12 @@ type CartItem = ProductOption & {
 type MerchandiseInventoryApiRow = {
   sku: string;
   availableQuantity: number;
+  price?: number;
+};
+
+type MerchandiseImageApiRow = {
+  sku: string;
+  imageSrc: string | null;
 };
 
 type MerchandiseReservationResponse = {
@@ -51,6 +57,19 @@ type MerchandiseReservationResponse = {
     id: string;
   };
   inventory?: MerchandiseInventoryApiRow[];
+  paymentSummary?: {
+    currency?: string;
+    subtotal?: number;
+    total?: number;
+  };
+  receiptEmail?: {
+    sent?: boolean;
+  };
+  error?: string;
+};
+
+type MerchandiseHealthResponse = {
+  ok?: boolean;
   error?: string;
 };
 
@@ -64,7 +83,7 @@ const storeProductCatalog: Array<Omit<Product, "price" | "components">> = [
     imageSrc: "/assets/merchandise/circular-josephite-magnet-clean.png",
     imageAlt: "Circular Josephite magnet preview",
     badge: "Magnet",
-    description: "Round Josephite magnet with blue-and-white striping for fridges, lockers, and office boards.",
+    description: "A classic Josephite keepsake for your fridge, office board, locker, or workspace.",
     sizeLabel: "Size",
     sizes: ["Standard"],
     colorLabel: "Design",
@@ -76,10 +95,9 @@ const storeProductCatalog: Array<Omit<Product, "price" | "components">> = [
     name: "Sticker Set",
     category: "Stickers & Magnets",
     inventoryQuantity: inventoryQuantityFor("MERCH-002"),
-    imageSrc: "/assets/merchandise/sticker-set.png",
-    imageAlt: "Josephite sticker set preview with house-color decals",
+    imageAlt: "Sticker set preview unavailable",
     badge: "Sticker set",
-    description: "Josephite sticker assortment for notebooks, laptops, luggage inserts, and keepsake packs.",
+    description: "Josephite-themed stickers for laptops, notebooks, water bottles, luggage, and everyday use.",
     sizeLabel: "Pack",
     sizes: ["Set"],
     colorLabel: "Design",
@@ -94,7 +112,7 @@ const storeProductCatalog: Array<Omit<Product, "price" | "components">> = [
     imageSrc: "/assets/merchandise/luggage-tag.png",
     imageAlt: "SJBHS OBA 100 luggage tag preview",
     badge: "Travel",
-    description: "Navy luggage tag with crest detail and house-color accents for reunion travel.",
+    description: "A practical travel accessory that lets you carry your Josephite identity wherever you go.",
     sizeLabel: "Size",
     sizes: ["One size"],
     colorLabel: "Color",
@@ -109,67 +127,11 @@ const storeProductCatalog: Array<Omit<Product, "price" | "components">> = [
     imageSrc: "/assets/merchandise/school-crest-lapel-pin.png",
     imageAlt: "School crest lapel pin preview",
     badge: "Crest pin",
-    description: "Centenary-style school crest lapel pin with gold edging and enamel detail.",
+    description: "A refined school crest pin for blazers, jackets, bags, reunions, and formal alumni occasions.",
     sizeLabel: "Size",
     sizes: ["One size"],
     colorLabel: "Finish",
     colors: ["Gold enamel"]
-  },
-  {
-    id: "davids-cufflinks",
-    sku: "MERCH-005",
-    name: "Davids Cufflinks",
-    category: "Cufflinks",
-    inventoryQuantity: inventoryQuantityFor("MERCH-005"),
-    imageAlt: "Davids cufflinks preview unavailable",
-    badge: "Davids",
-    description: "Davids house accessory in yellow and white with a polished gold-tone finish.",
-    sizeLabel: "Size",
-    sizes: ["One size"],
-    colorLabel: "House",
-    colors: ["Davids yellow"]
-  },
-  {
-    id: "georges-cufflinks",
-    sku: "MERCH-006",
-    name: "Georges Cufflinks",
-    category: "Cufflinks",
-    inventoryQuantity: inventoryQuantityFor("MERCH-006"),
-    imageAlt: "Georges cufflinks preview unavailable",
-    badge: "Georges",
-    description: "Georges house accessory in red and white with a polished gold-tone finish.",
-    sizeLabel: "Size",
-    sizes: ["One size"],
-    colorLabel: "House",
-    colors: ["Georges red"]
-  },
-  {
-    id: "andrews-cufflinks",
-    sku: "MERCH-007",
-    name: "Andrews Cufflinks",
-    category: "Cufflinks",
-    inventoryQuantity: inventoryQuantityFor("MERCH-007"),
-    imageAlt: "Andrews cufflinks preview unavailable",
-    badge: "Andrews",
-    description: "Andrews house accessory in blue and white with a polished gold-tone finish.",
-    sizeLabel: "Size",
-    sizes: ["One size"],
-    colorLabel: "House",
-    colors: ["Andrews blue"]
-  },
-  {
-    id: "patricks-cufflinks",
-    sku: "MERCH-008",
-    name: "Patricks Cufflinks",
-    category: "Cufflinks",
-    inventoryQuantity: inventoryQuantityFor("MERCH-008"),
-    imageAlt: "Patricks cufflinks preview unavailable",
-    badge: "Patricks",
-    description: "Patricks house accessory in green and white with a polished gold-tone finish.",
-    sizeLabel: "Size",
-    sizes: ["One size"],
-    colorLabel: "House",
-    colors: ["Patricks green"]
   },
   {
     id: "andrews-badge",
@@ -180,7 +142,7 @@ const storeProductCatalog: Array<Omit<Product, "price" | "components">> = [
     imageSrc: "/assets/merchandise/andrews-badge.png",
     imageAlt: "Andrews blue house badge preview",
     badge: "Andrews",
-    description: "Blue Andrews house badge with enamel color and gold edging.",
+    description: "A collectible badge for Andrews House alumni, ideal for events, display, or gifting.",
     sizeLabel: "Size",
     sizes: ["One size"],
     colorLabel: "House",
@@ -195,7 +157,7 @@ const storeProductCatalog: Array<Omit<Product, "price" | "components">> = [
     imageSrc: "/assets/merchandise/davids-badge.png",
     imageAlt: "Davids yellow house badge preview",
     badge: "Davids",
-    description: "Yellow Davids house badge with enamel color and gold edging.",
+    description: "A collectible badge for Davids House alumni and house-pride keepsakes.",
     sizeLabel: "Size",
     sizes: ["One size"],
     colorLabel: "House",
@@ -210,7 +172,7 @@ const storeProductCatalog: Array<Omit<Product, "price" | "components">> = [
     imageSrc: "/assets/merchandise/georges-badge.png",
     imageAlt: "Georges red house badge preview",
     badge: "Georges",
-    description: "Red Georges house badge with enamel color and gold edging.",
+    description: "A collectible badge for Georges House alumni, perfect for reunions and display collections.",
     sizeLabel: "Size",
     sizes: ["One size"],
     colorLabel: "House",
@@ -225,7 +187,7 @@ const storeProductCatalog: Array<Omit<Product, "price" | "components">> = [
     imageSrc: "/assets/merchandise/patricks-badge.png",
     imageAlt: "Patricks green house badge preview",
     badge: "Patricks",
-    description: "Green Patricks house badge with enamel color and gold edging.",
+    description: "A classic badge for Patricks House alumni and Josephite collectors.",
     sizeLabel: "Size",
     sizes: ["One size"],
     colorLabel: "House",
@@ -240,7 +202,7 @@ const storeProductCatalog: Array<Omit<Product, "price" | "components">> = [
     imageSrc: "/assets/merchandise/andrews-tie-pin.png",
     imageAlt: "Andrews blue tie pin preview",
     badge: "Tie pin",
-    description: "Blue Andrews house tie pin with shield face and gold-tone bar.",
+    description: "A smart blue house tie pin for Andrews House alumni and formal events.",
     sizeLabel: "Size",
     sizes: ["One size"],
     colorLabel: "House",
@@ -255,7 +217,7 @@ const storeProductCatalog: Array<Omit<Product, "price" | "components">> = [
     imageSrc: "/assets/merchandise/davids-tie-pin.png",
     imageAlt: "Davids yellow tie pin preview",
     badge: "Tie pin",
-    description: "Yellow Davids house tie pin with shield face and gold-tone bar.",
+    description: "A polished yellow house tie pin for Davids House alumni.",
     sizeLabel: "Size",
     sizes: ["One size"],
     colorLabel: "House",
@@ -270,7 +232,7 @@ const storeProductCatalog: Array<Omit<Product, "price" | "components">> = [
     imageSrc: "/assets/merchandise/georges-tie-pin.png",
     imageAlt: "Georges red tie pin preview",
     badge: "Tie pin",
-    description: "Red Georges house tie pin with shield face and gold-tone bar.",
+    description: "A refined red house tie pin for Georges House alumni.",
     sizeLabel: "Size",
     sizes: ["One size"],
     colorLabel: "House",
@@ -285,7 +247,7 @@ const storeProductCatalog: Array<Omit<Product, "price" | "components">> = [
     imageSrc: "/assets/merchandise/patricks-tie-pin.png",
     imageAlt: "Patricks green tie pin preview",
     badge: "Tie pin",
-    description: "Green Patricks house tie pin with shield face and gold-tone bar.",
+    description: "A classic green house tie pin for Patricks House alumni.",
     sizeLabel: "Size",
     sizes: ["One size"],
     colorLabel: "House",
@@ -300,7 +262,7 @@ const storeProductCatalog: Array<Omit<Product, "price" | "components">> = [
     imageSrc: "/assets/merchandise/coffee-table-book-100-years.png",
     imageAlt: "Coffee table book 100 years preview",
     badge: "Book",
-    description: "Centenary coffee table book keepsake with SJBHS OBA artwork and heritage imagery.",
+    description: "A commemorative book celebrating 100 years of St. Joseph’s Boys’ High School history and memories.",
     sizeLabel: "Format",
     sizes: ["Hardcover"],
     colorLabel: "Edition",
@@ -315,7 +277,7 @@ const storeProductCatalog: Array<Omit<Product, "price" | "components">> = [
     imageSrc: "/assets/merchandise/faith-toil-book-150-years.png",
     imageAlt: "Faith and Toil book 150 years preview",
     badge: "Book",
-    description: "Faith & Toil history volume commemorating the school legacy.",
+    description: "A heritage book honoring 150 years of Josephite faith, toil, tradition, and legacy.",
     sizeLabel: "Format",
     sizes: ["Hardcover"],
     colorLabel: "Edition",
@@ -330,7 +292,7 @@ const storeProductCatalog: Array<Omit<Product, "price" | "components">> = [
     imageSrc: "/assets/merchandise/paul-fernandes-print.png",
     imageAlt: "Paul Fernandes unframed mounted print preview",
     badge: "Art print",
-    description: "Unframed mounted Josephite Forever print featuring Paul Fernandes artwork.",
+    description: "A nostalgic unframed Paul Fernandes print capturing the charm and memories of school life.",
     sizeLabel: "Format",
     sizes: ["Mounted print"],
     colorLabel: "Frame",
@@ -342,9 +304,10 @@ const storeProductCatalog: Array<Omit<Product, "price" | "components">> = [
     name: "Laptop Bag",
     category: "Travel",
     inventoryQuantity: inventoryQuantityFor("MERCH-020"),
-    imageAlt: "Laptop bag preview unavailable",
+    imageSrc: "/assets/merchandise/laptop-bag.png",
+    imageAlt: "Black Josephite laptop bag preview",
     badge: "Bag",
-    description: "Josephite laptop bag inventory item. Product preview unavailable for now.",
+    description: "A practical laptop bag for work, travel, and everyday Josephite pride.",
     sizeLabel: "Size",
     sizes: ["Laptop"],
     colorLabel: "Color",
@@ -356,9 +319,10 @@ const storeProductCatalog: Array<Omit<Product, "price" | "components">> = [
     name: "Laptop Sleeve",
     category: "Travel",
     inventoryQuantity: inventoryQuantityFor("MERCH-021"),
-    imageAlt: "Laptop sleeve preview unavailable",
+    imageSrc: "/assets/merchandise/laptop-sleeve.jpeg",
+    imageAlt: "Black Josephite laptop sleeve preview",
     badge: "Sleeve",
-    description: "Josephite laptop sleeve inventory item. Product preview unavailable for now.",
+    description: "A sleek laptop sleeve that protects your device while carrying a touch of Josephite pride.",
     sizeLabel: "Size",
     sizes: ["Laptop"],
     colorLabel: "Color",
@@ -373,7 +337,7 @@ const storeProductCatalog: Array<Omit<Product, "price" | "components">> = [
     imageSrc: "/assets/merchandise/metal-water-bottle.png",
     imageAlt: "Black Josephite metal water bottle preview",
     badge: "Bottle",
-    description: "Black metal water bottle with SJBHS-inspired artwork and Fide et Labore script.",
+    description: "A durable everyday water bottle for work, workouts, travel, and school events.",
     sizeLabel: "Size",
     sizes: ["Standard"],
     colorLabel: "Color",
@@ -388,7 +352,7 @@ const storeProductCatalog: Array<Omit<Product, "price" | "components">> = [
     imageSrc: "/assets/merchandise/wooden-bottle.png",
     imageAlt: "Bamboo Josephite water sipper preview",
     badge: "Bamboo",
-    description: "Bamboo-finish water sipper with SJBHS OBA crest marking and insulated interior.",
+    description: "A premium-feeling bamboo water sipper with a clean, natural look for home, office, or travel.",
     sizeLabel: "Size",
     sizes: ["Standard"],
     colorLabel: "Finish",
@@ -403,7 +367,7 @@ const storeProductCatalog: Array<Omit<Product, "price" | "components">> = [
     imageSrc: "/assets/merchandise/scarf.png",
     imageAlt: "Black Josephite scarf preview",
     badge: "Scarf",
-    description: "Black Josephite scarf with embroidered crest, Fide et Labore detail, and light trim.",
+    description: "A classic Josephite scarf for alumni events, reunions, cooler days, and school-spirit occasions.",
     sizeLabel: "Size",
     sizes: ["One size"],
     colorLabel: "Color",
@@ -418,7 +382,7 @@ const storeProductCatalog: Array<Omit<Product, "price" | "components">> = [
     imageSrc: "/assets/merchandise/cap.png",
     imageAlt: "Navy Josephite cap preview",
     badge: "Cap",
-    description: "Navy cap with embroidered SJBHS OBA crest and house-shield side detail.",
+    description: "A comfortable alumni cap for casual wear, outdoor events, reunions, and everyday pride.",
     sizeLabel: "Size",
     sizes: ["One size"],
     colorLabel: "Color",
@@ -492,7 +456,7 @@ const storeProductCatalog: Array<Omit<Product, "price" | "components">> = [
     imageSrc: "/assets/merchandise/art-memory-bundle.png",
     imageAlt: "Art & Memory Bundle preview",
     badge: "Bundle",
-    description: "A nostalgic keepsake bundle featuring the Paul Fernandes framed print, magnet, sticker set, and luggage tag.",
+    description: "A nostalgic keepsake bundle featuring the Paul Fernandes unframed mounted print, magnet, sticker set, and luggage tag.",
     sizeLabel: "Bundle",
     sizes: ["Bundle"],
     colorLabel: "Selection",
@@ -507,7 +471,7 @@ const storeProductCatalog: Array<Omit<Product, "price" | "components">> = [
     imageSrc: "/assets/merchandise/premium-josephite-bundle.png",
     imageAlt: "Premium Josephite Gift Bundle preview",
     badge: "Bundle",
-    description: "A premium alumni gift bundle featuring both books, school crest lapel pin, Paul Fernandes framed print, and magnet.",
+    description: "A premium alumni gift bundle featuring both books, school crest lapel pin, Paul Fernandes unframed print, bamboo water sipper and magnet.",
     sizeLabel: "Bundle",
     sizes: ["Bundle"],
     colorLabel: "Selection",
@@ -578,7 +542,7 @@ const storeProductCatalog: Array<Omit<Product, "price" | "components">> = [
     imageSrc: "/assets/merchandise/davids-premium-house-bundle.png",
     imageAlt: "Davids Premium House Bundle preview",
     badge: "Bundle",
-    description: "Premium Davids House bundle featuring badge, yellow tie pin, cufflinks, magnet, and sticker set.",
+    description: "Premium Davids House bundle featuring badge, yellow tie pin, school crest lapel pin, magnet, and sticker set.",
     sizeLabel: "Bundle",
     sizes: ["Bundle"],
     colorLabel: "Selection",
@@ -593,7 +557,7 @@ const storeProductCatalog: Array<Omit<Product, "price" | "components">> = [
     imageSrc: "/assets/merchandise/georges-premium-house-bundle.png",
     imageAlt: "Georges Premium House Bundle preview",
     badge: "Bundle",
-    description: "Premium Georges House bundle featuring badge, red tie pin, cufflinks, magnet, and sticker set.",
+    description: "Premium Georges House bundle featuring badge, red tie pin, school crest lapel pin, magnet, and sticker set.",
     sizeLabel: "Bundle",
     sizes: ["Bundle"],
     colorLabel: "Selection",
@@ -608,7 +572,7 @@ const storeProductCatalog: Array<Omit<Product, "price" | "components">> = [
     imageSrc: "/assets/merchandise/patricks-premium-house-bundle.png",
     imageAlt: "Patricks Premium House Bundle preview",
     badge: "Bundle",
-    description: "Premium Patricks House bundle featuring badge, green tie pin, cufflinks, magnet, and sticker set.",
+    description: "Premium Patricks House bundle featuring badge, green tie pin, school crest lapel pin, magnet, and sticker set.",
     sizeLabel: "Bundle",
     sizes: ["Bundle"],
     colorLabel: "Selection",
@@ -639,7 +603,7 @@ const storeProducts: Product[] = storeProductCatalog.map((product) => ({
   components: componentsForMerchandiseSku(product.sku)
 }));
 
-const categories = ["All", "Bundles", "Stickers & Magnets", "Travel", "Pins & Badges", "Cufflinks", "Books & Art", "Drinkware", "Apparel"];
+const categories = ["All", "Bundles", "Stickers & Magnets", "Travel", "Pins & Badges", "Books & Art", "Drinkware", "Apparel"];
 const initialInventoryBySku = Object.fromEntries(
   storeProducts.map((product) => [product.sku, product.inventoryQuantity])
 ) as Record<string, number>;
@@ -686,6 +650,16 @@ function inventoryMapFromRows(rows: MerchandiseInventoryApiRow[]) {
   }, {});
 }
 
+function priceMapFromRows(rows: MerchandiseInventoryApiRow[]) {
+  return rows.reduce<Record<string, number>>((prices, row) => {
+    if (typeof row.sku === "string" && Number.isFinite(row.price)) {
+      prices[row.sku] = Math.max(0, Number(row.price));
+    }
+
+    return prices;
+  }, {});
+}
+
 function availableQuantityForComponents(
   components: MerchandiseBundleComponent[] | undefined,
   inventoryBySku: Record<string, number>
@@ -709,6 +683,8 @@ export function MerchandiseStorePage() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [query, setQuery] = useState("");
   const [inventoryBySku, setInventoryBySku] = useState<Record<string, number>>(initialInventoryBySku);
+  const [priceBySku, setPriceBySku] = useState<Record<string, number>>({});
+  const [imageBySku, setImageBySku] = useState<Record<string, string | null>>({});
   const [optionsByProduct, setOptionsByProduct] = useState<Record<string, ProductOption>>({});
   const [quantitiesByProduct, setQuantitiesByProduct] = useState<Record<string, number>>({});
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -720,13 +696,17 @@ export function MerchandiseStorePage() {
   const [cartOpen, setCartOpen] = useState(false);
   const [redirectDialogOpen, setRedirectDialogOpen] = useState(false);
 
-  const productsWithInventory = useMemo(
+  const productsWithInventory = useMemo<Product[]>(
     () =>
       storeProducts.map((product) => ({
         ...product,
-        inventoryQuantity: availableQuantityForComponents(product.components, inventoryBySku)
+        inventoryQuantity: availableQuantityForComponents(product.components, inventoryBySku),
+        price: priceBySku[product.sku] ?? product.price,
+        imageSrc: Object.prototype.hasOwnProperty.call(imageBySku, product.sku)
+          ? imageBySku[product.sku] ?? undefined
+          : product.imageSrc
       })),
-    [inventoryBySku]
+    [imageBySku, inventoryBySku, priceBySku]
   );
 
   const filteredProducts = useMemo(() => {
@@ -790,6 +770,10 @@ export function MerchandiseStorePage() {
             ...current,
             ...inventoryMapFromRows(payload.inventory ?? [])
           }));
+          setPriceBySku((current) => ({
+            ...current,
+            ...priceMapFromRows(payload.inventory ?? [])
+          }));
         }
       } catch {
         // Static inventory remains usable if the API is unavailable during local front-end previews.
@@ -797,6 +781,39 @@ export function MerchandiseStorePage() {
     }
 
     void loadInventory();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadImages = async () => {
+      try {
+        const response = await fetch("/api/merchandise/images", {
+          credentials: "include"
+        });
+        const payload = (await response.json()) as { images?: MerchandiseImageApiRow[] };
+
+        if (!cancelled && response.ok && Array.isArray(payload.images)) {
+          setImageBySku(
+            payload.images.reduce<Record<string, string | null>>((images, image) => {
+              if (typeof image.sku === "string") {
+                images[image.sku] = typeof image.imageSrc === "string" ? image.imageSrc : null;
+              }
+
+              return images;
+            }, {})
+          );
+        }
+      } catch {
+        // Keep built-in image paths during local previews if the image API is unavailable.
+      }
+    };
+
+    void loadImages();
 
     return () => {
       cancelled = true;
@@ -949,6 +966,18 @@ export function MerchandiseStorePage() {
     setCheckoutError("");
 
     try {
+      const healthResponse = await fetch("/api/merchandise/health", {
+        headers: {
+          Accept: "application/json"
+        }
+      });
+      const healthPayload = (await healthResponse.json()) as MerchandiseHealthResponse;
+
+      if (!healthResponse.ok || healthPayload.ok === false) {
+        setCheckoutError(healthPayload.error ?? "Unable to reach the merchandise database. Please try again.");
+        return;
+      }
+
       const response = await fetch("/api/merchandise/orders", {
         method: "POST",
         headers: {
@@ -976,6 +1005,10 @@ export function MerchandiseStorePage() {
           ...current,
           ...inventoryMapFromRows(payload.inventory ?? [])
         }));
+        setPriceBySku((current) => ({
+          ...current,
+          ...priceMapFromRows(payload.inventory ?? [])
+        }));
       }
 
       if (!response.ok) {
@@ -986,8 +1019,17 @@ export function MerchandiseStorePage() {
       setCartItems([]);
       setQuantitiesByProduct({});
       setCheckoutComplete(true);
+      const receiptStatus =
+        payload.receiptEmail?.sent === false
+          ? " Receipt email could not be sent, so please keep this reservation ID."
+          : " A PDF receipt has been emailed to you.";
+      const serverTotal =
+        typeof payload.paymentSummary?.total === "number"
+          ? ` Total due at pickup: ${formatMoney(payload.paymentSummary.total)}.`
+          : "";
+
       setCheckoutStatus(
-        `Reservation ${payload.reservation?.id ?? "saved"} is confirmed for event pickup. No payment is collected now.`
+        `Reservation ${payload.reservation?.id ?? "saved"} is confirmed for event pickup.${serverTotal} No payment is collected now.${receiptStatus}`
       );
     } catch {
       setCheckoutError("Unable to reach the reservation service. Please try again.");
@@ -1097,7 +1139,7 @@ export function MerchandiseStorePage() {
                       </button>
                     ) : (
                       <div className="store-product-media store-product-media-placeholder" aria-label={product.imageAlt}>
-                        <span>Preview unavailable for now</span>
+                        <span>Picture Coming Soon</span>
                       </div>
                     )}
                     <div className="store-product-copy">
@@ -1174,6 +1216,8 @@ export function MerchandiseStorePage() {
                 );
               })}
             </section>
+
+            <p className="store-product-disclaimer">Photos may differ from actual product.</p>
           </>
         ) : (
           <section className="store-cart-view" aria-label="Shopping cart and checkout">
@@ -1203,7 +1247,7 @@ export function MerchandiseStorePage() {
                         <img src={item.product.imageSrc} alt="" aria-hidden="true" />
                       ) : (
                         <span className="store-cart-line-placeholder" aria-hidden="true">
-                          Preview unavailable for now
+                          Picture Coming Soon
                         </span>
                       )}
                       <div>
@@ -1249,7 +1293,7 @@ export function MerchandiseStorePage() {
                 <dd>Due at pickup</dd>
               </div>
               <div className="store-total-row">
-                <dt>Total</dt>
+                <dt>Estimated total</dt>
                 <dd>{typeof total === "number" ? formatMoney(total) : cartLines.length ? "TBD" : "$0.00"}</dd>
               </div>
             </dl>
@@ -1265,10 +1309,12 @@ export function MerchandiseStorePage() {
                 <input required type="email" name="email" autoComplete="email" />
               </label>
               <label>
-                Phone
+                Phone (receipt contact only)
                 <input type="tel" name="phone" autoComplete="tel" />
               </label>
-              <p className="store-checkout-note">Event pickup only. No payment is collected now.</p>
+              <p className="store-checkout-note">
+                Event pickup only. No payment is collected now. A copy of the receipt will be sent to your email.
+              </p>
               <button className="primary-button store-checkout-button" type="submit" disabled={!cartItems.length || isCheckoutSubmitting}>
                 {isCheckoutSubmitting ? "Reserving..." : "Reserve for pickup"}
               </button>

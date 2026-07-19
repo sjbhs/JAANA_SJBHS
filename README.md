@@ -161,14 +161,23 @@ PORT=3001
 CORS_ORIGIN=http://127.0.0.1:5173
 INQUIRY_STORAGE_PATH=./server/data/inquiries.json
 ADMIN_EMAIL=jaanamedia@gmail.com
-ADMIN_PASSWORD=CommonPassJAANA1858$
-ADMIN_SESSION_SECRET=change-this-to-a-long-random-string
+ADMIN_PASSWORD=replace-with-a-long-unique-password
+ADMIN_SESSION_SECRET=replace-with-at-least-32-random-characters
 INQUIRY_EMAIL_FROM=JAANA Website <no-reply@jaana.app>
 INQUIRY_EMAIL_TO_GENERAL=jaanagroup@gmail.com
 INQUIRY_EMAIL_TO_FINANCE=jaanafinance@gmail.com
 INQUIRY_EMAIL_CC=
 REQUIRE_INQUIRY_EMAIL=true
 RESEND_API_KEY=
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=465
+SMTP_SECURE=true
+SMTP_USER=jaanamedia@gmail.com
+SMTP_PASS=
+SMTP_FROM=
+MERCHANDISE_EMAIL_FROM=
+MERCHANDISE_RECEIPT_EMAIL_TO=jaanamedia@gmail.com
+REQUIRE_MERCHANDISE_RECEIPT_EMAIL=true
 VITE_API_PROXY_TARGET=http://127.0.0.1:3001
 VITE_HOST=127.0.0.1
 VITE_PORT=5173
@@ -187,9 +196,9 @@ What they control:
 - `ADMIN_EMAIL`
   Locked admin email used to sign in to the hidden editor.
 - `ADMIN_PASSWORD`
-  Locked admin password used to sign in to the hidden editor.
+  Locked admin password used to sign in to the hidden editor. Use a unique production value and do not commit it.
 - `ADMIN_SESSION_SECRET`
-  Secret used to sign the admin session cookie.
+  Secret used to sign the HTTP-only admin session cookie. Use at least 32 random characters.
 - `INQUIRY_EMAIL_FROM`
   Verified sender address or identity used by inquiry notification emails.
 - `INQUIRY_EMAIL_TO_GENERAL`
@@ -204,6 +213,22 @@ What they control:
   Set to `true` in deployment so inquiry submissions fail visibly if email delivery is not configured. Vercel deployments default to requiring email delivery unless this is explicitly set to `false`.
 - `RESEND_API_KEY`
   API key used to send inquiry notification emails through Resend.
+- `SMTP_HOST`
+  SMTP server hostname used for merchandise receipt emails.
+- `SMTP_PORT`
+  SMTP server port. Defaults to `587`.
+- `SMTP_SECURE`
+  Set to `true` for implicit TLS, commonly port `465`; otherwise STARTTLS is used when supported.
+- `SMTP_USER` / `SMTP_PASS`
+  Optional SMTP credentials. Set both values when the SMTP provider requires authentication.
+- `SMTP_FROM`
+  Optional shared SMTP sender fallback. Leave blank to send as `JAANA Merchandise <SMTP_USER>`.
+- `MERCHANDISE_EMAIL_FROM`
+  Sender used for merchandise receipt emails. Leave blank to fall back to `SMTP_FROM`, `INQUIRY_EMAIL_FROM`, or `JAANA Merchandise <SMTP_USER>`.
+- `MERCHANDISE_RECEIPT_EMAIL_TO`
+  Comma-separated internal recipients for merchandise receipt copies. Defaults to `jaanamedia@gmail.com`.
+- `REQUIRE_MERCHANDISE_RECEIPT_EMAIL`
+  Set to `true` in deployment so merchandise orders fail before inventory is reserved when SMTP is not configured. Vercel deployments default to requiring receipt email configuration unless this is explicitly set to `false`.
 - `VITE_API_PROXY_TARGET`
   Backend target for Vite's `/api` proxy.
 - `VITE_HOST`
@@ -351,6 +376,12 @@ Required fields:
 
 When `RESEND_API_KEY` is configured, the API also emails inquiry details to `INQUIRY_EMAIL_TO` and optional
 `INQUIRY_EMAIL_CC` recipients. Submissions are still written to JSON storage if email is not configured.
+
+### `POST /api/merchandise/orders`
+
+Creates a merchandise reservation, generates a PDF receipt, emails the receipt to the customer with a thank-you message,
+and emails a receipt copy plus remaining purchased-item quantities to `MERCHANDISE_RECEIPT_EMAIL_TO`
+(`jaanamedia@gmail.com` by default). In deployment, configure SMTP before enabling merchandise checkout.
 
 ### `GET /api/admin/inquiries`
 
