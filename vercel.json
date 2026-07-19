@@ -11,6 +11,14 @@
     {
       "source": "/admin/:path*",
       "destination": "/index.html"
+    },
+    {
+      "source": "/josephite-store",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/josephite-store/:path*",
+      "destination": "/index.html"
     }
   ]
 }

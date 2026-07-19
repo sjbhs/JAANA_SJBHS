@@ -42,6 +42,59 @@ type InquiryResponse = {
   error?: string;
 };
 
+type AdminMerchandiseInventoryRow = {
+  sku: string;
+  name: string;
+  totalQuantity: number;
+  reservedQuantity: number;
+  availableQuantity: number;
+  price?: number;
+  imageSrc?: string | null;
+};
+
+type AdminMerchandiseInventoryResponse = {
+  inventory?: AdminMerchandiseInventoryRow[];
+  storage?: string;
+  error?: string;
+};
+
+type AdminMerchandiseOrderItem = {
+  id?: string;
+  sku: string;
+  name: string;
+  size: string;
+  color: string;
+  quantity: number;
+  unitPrice?: number;
+  lineTotal?: number;
+};
+
+type AdminMerchandisePaymentSummary = {
+  currency?: string;
+  subtotal?: number;
+  total?: number;
+};
+
+type AdminMerchandiseOrder = {
+  id: string;
+  createdAt: string;
+  status: "reserved" | "cancelled" | "fulfilled";
+  customer: {
+    name: string;
+    email: string;
+    phone?: string;
+  };
+  items: AdminMerchandiseOrderItem[];
+  paymentSummary?: AdminMerchandisePaymentSummary;
+};
+
+type AdminMerchandiseOrdersResponse = {
+  orders?: AdminMerchandiseOrder[];
+  inventory?: AdminMerchandiseInventoryRow[];
+  storage?: string;
+  error?: string;
+};
+
 const inquiryStatusOptions = [
   { value: "all", label: "All" },
   { value: "pending", label: "Pending" },
@@ -59,6 +112,27 @@ async function readJson(response: Response) {
   } catch {
     return {};
   }
+}
+
+const adminMoneyFormatter = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD"
+});
+
+function formatAdminMoney(value: number | undefined) {
+  return typeof value === "number" && Number.isFinite(value) ? adminMoneyFormatter.format(value) : "Not available";
+}
+
+function quantityDraftsFromInventory(rows: AdminMerchandiseInventoryRow[]) {
+  return rows.reduce<Record<string, string>>((drafts, row) => {
+    drafts[row.sku] = String(row.totalQuantity);
+
+    return drafts;
+  }, {});
+}
+
+function isBundleInventoryRow(row: AdminMerchandiseInventoryRow) {
+  return row.sku.startsWith("BUNDLE-");
 }
 
 function slugify(value: string) {
@@ -244,7 +318,6 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [loginStatus, setLoginStatus] = useState("Sign in to edit the site content.");
-  const [configuredAdminEmail, setConfiguredAdminEmail] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [editableContent, setEditableContent] = useState<SiteContent>(defaultSiteContent);
   const [savedContent, setSavedContent] = useState<SiteContent>(defaultSiteContent);
@@ -277,8 +350,26 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
   const [draftInquiryCategories, setDraftInquiryCategories] = useState<string[]>(["all"]);
   const [inquiryExportingFormat, setInquiryExportingFormat] = useState<"idle" | "csv" | "excel">("idle");
   const [activeInquiryActionId, setActiveInquiryActionId] = useState("");
-  const [editorView, setEditorView] = useState<"content" | "media" | "inquiries">("content");
-  const [mediaReturnView, setMediaReturnView] = useState<"content" | "inquiries">("content");
+  const [editorView, setEditorView] = useState<"content" | "media" | "inquiries" | "merchandise">("content");
+  const [mediaReturnView, setMediaReturnView] = useState<"content" | "inquiries" | "merchandise">("content");
+  const [merchandiseInventory, setMerchandiseInventory] = useState<AdminMerchandiseInventoryRow[]>([]);
+  const [merchandiseStorage, setMerchandiseStorage] = useState("");
+  const [merchandiseLoading, setMerchandiseLoading] = useState(false);
+  const [merchandiseStatus, setMerchandiseStatus] = useState("Open merchandise to check live inventory.");
+  const [merchandiseAdminTab, setMerchandiseAdminTab] = useState<"inventory" | "orders">("inventory");
+  const [merchandiseOrders, setMerchandiseOrders] = useState<AdminMerchandiseOrder[]>([]);
+  const [merchandiseOrdersLoading, setMerchandiseOrdersLoading] = useState(false);
+  const [merchandiseOrdersStatus, setMerchandiseOrdersStatus] = useState("Open orders to review merchandise reservations.");
+  const [activeMerchandiseCancellationKey, setActiveMerchandiseCancellationKey] = useState("");
+  const [merchandiseCancelQuantities, setMerchandiseCancelQuantities] = useState<Record<string, string>>({});
+  const [activeMerchandiseQuantitySku, setActiveMerchandiseQuantitySku] = useState("");
+  const [merchandiseQuantityDrafts, setMerchandiseQuantityDrafts] = useState<Record<string, string>>({});
+  const [activeMerchandiseImageSku, setActiveMerchandiseImageSku] = useState("");
+  const [merchandiseImagePreview, setMerchandiseImagePreview] = useState<{
+    src: string;
+    name: string;
+    sku: string;
+  } | null>(null);
   const [jsonDraft, setJsonDraft] = useState(JSON.stringify(defaultSiteContent, null, 2));
   const [jsonError, setJsonError] = useState("");
   const [jsonDirty, setJsonDirty] = useState(false);
@@ -322,6 +413,47 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
     [selectedInquiryCategories]
   );
   const mediaLevel = selectedAlbum ? "images" : selectedFolder ? "subfolders" : "folders";
+  const merchandiseTotals = useMemo(
+    () =>
+      merchandiseInventory.reduce(
+        (totals, row) => ({
+          totalQuantity: totals.totalQuantity + row.totalQuantity,
+          reservedQuantity: totals.reservedQuantity + row.reservedQuantity,
+          availableQuantity: totals.availableQuantity + row.availableQuantity
+        }),
+        {
+          totalQuantity: 0,
+          reservedQuantity: 0,
+          availableQuantity: 0
+        }
+      ),
+    [merchandiseInventory]
+  );
+  const merchandiseOrderTotals = useMemo(
+    () =>
+      merchandiseOrders.reduce(
+        (totals, order) => ({
+          all: totals.all + 1,
+          active: totals.active + (order.status === "reserved" ? 1 : 0),
+          cancelled: totals.cancelled + (order.status === "cancelled" ? 1 : 0),
+          units: totals.units + order.items.reduce((total, item) => total + item.quantity, 0),
+          amount: totals.amount + (order.paymentSummary?.total ?? 0)
+        }),
+        {
+          all: 0,
+          active: 0,
+          cancelled: 0,
+          units: 0,
+          amount: 0
+        }
+      ),
+    [merchandiseOrders]
+  );
+
+  const applyMerchandiseInventory = (rows: AdminMerchandiseInventoryRow[]) => {
+    setMerchandiseInventory(rows);
+    setMerchandiseQuantityDrafts(quantityDraftsFromInventory(rows));
+  };
 
   const syncJsonDraft = (content: SiteContent) => {
     setJsonDraft(JSON.stringify(content, null, 2));
@@ -436,6 +568,321 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
     }
   };
 
+  const loadMerchandiseInventory = async ({ silent = false }: { silent?: boolean } = {}) => {
+    setMerchandiseLoading(true);
+    if (!silent) {
+      setMerchandiseStatus("Loading merchandise inventory...");
+    }
+
+    try {
+      const response = await fetch("/api/admin/merchandise/inventory", {
+        credentials: "include"
+      });
+
+      if (response.status === 401) {
+        setAuthState("signedOut");
+        setLoginStatus("Sign in to edit the site content.");
+        setMerchandiseStatus("Sign in to view merchandise inventory.");
+        return false;
+      }
+
+      const payload = (await readJson(response)) as AdminMerchandiseInventoryResponse;
+
+      if (!response.ok) {
+        setMerchandiseStatus(payload.error ?? "Unable to load merchandise inventory.");
+        return false;
+      }
+
+      const rows = Array.isArray(payload.inventory) ? payload.inventory : [];
+
+      applyMerchandiseInventory(rows);
+      setMerchandiseStorage(typeof payload.storage === "string" ? payload.storage : "");
+      setMerchandiseStatus("Loaded live merchandise quantities.");
+      return true;
+    } catch {
+      setMerchandiseStatus("Unable to load merchandise inventory.");
+      return false;
+    } finally {
+      setMerchandiseLoading(false);
+    }
+  };
+
+  const loadMerchandiseOrders = async ({ silent = false }: { silent?: boolean } = {}) => {
+    setMerchandiseOrdersLoading(true);
+    if (!silent) {
+      setMerchandiseOrdersStatus("Loading merchandise orders...");
+    }
+
+    try {
+      const response = await fetch("/api/admin/merchandise/orders", {
+        credentials: "include"
+      });
+
+      if (response.status === 401) {
+        setAuthState("signedOut");
+        setLoginStatus("Sign in to edit the site content.");
+        setMerchandiseOrdersStatus("Sign in to view merchandise orders.");
+        return false;
+      }
+
+      const payload = (await readJson(response)) as AdminMerchandiseOrdersResponse;
+
+      if (!response.ok) {
+        setMerchandiseOrdersStatus(payload.error ?? "Unable to load merchandise orders.");
+        return false;
+      }
+
+      setMerchandiseOrders(Array.isArray(payload.orders) ? payload.orders : []);
+      setMerchandiseStorage(typeof payload.storage === "string" ? payload.storage : merchandiseStorage);
+      setMerchandiseOrdersStatus("Loaded merchandise orders.");
+      return true;
+    } catch {
+      setMerchandiseOrdersStatus("Unable to load merchandise orders.");
+      return false;
+    } finally {
+      setMerchandiseOrdersLoading(false);
+    }
+  };
+
+  const handleMerchandiseCancellation = async ({
+    reservationId,
+    itemId,
+    quantity
+  }: {
+    reservationId: string;
+    itemId?: string;
+    quantity?: number;
+  }) => {
+    const actionKey = itemId ? `${reservationId}:${itemId}` : reservationId;
+    setActiveMerchandiseCancellationKey(actionKey);
+    setMerchandiseOrdersStatus(itemId ? "Cancelling selected quantity..." : "Cancelling full order...");
+
+    try {
+      const response = await fetch("/api/admin/merchandise/orders", {
+        method: "PATCH",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          reservationId,
+          ...(itemId ? { itemId, quantity } : {})
+        })
+      });
+      const payload = (await readJson(response)) as AdminMerchandiseOrdersResponse;
+
+      if (response.status === 401) {
+        setAuthState("signedOut");
+        setLoginStatus("Sign in to edit the site content.");
+        setMerchandiseOrdersStatus("Sign in to cancel merchandise orders.");
+        return;
+      }
+
+      if (!response.ok) {
+        setMerchandiseOrdersStatus(payload.error ?? "Unable to cancel merchandise order.");
+        return;
+      }
+
+      if (Array.isArray(payload.orders)) {
+        setMerchandiseOrders(payload.orders);
+      }
+
+      if (typeof payload.storage === "string") {
+        setMerchandiseStorage(payload.storage);
+      }
+
+      if (Array.isArray(payload.inventory)) {
+        const imageBySku = new Map(merchandiseInventory.map((row) => [row.sku, row.imageSrc]));
+        const nextInventory = payload.inventory.map((row) => ({
+          ...row,
+          imageSrc: imageBySku.get(row.sku) ?? row.imageSrc ?? null
+        }));
+
+        applyMerchandiseInventory(nextInventory);
+      }
+
+      setMerchandiseCancelQuantities((current) => {
+        const next = { ...current };
+        delete next[actionKey];
+        return next;
+      });
+      setMerchandiseOrdersStatus(itemId ? "Cancelled selected quantity and restored stock." : "Cancelled order and restored stock.");
+      setMerchandiseStatus("Inventory updated after cancellation.");
+    } catch {
+      setMerchandiseOrdersStatus("Unable to cancel merchandise order.");
+    } finally {
+      setActiveMerchandiseCancellationKey("");
+    }
+  };
+
+  const handleMerchandiseQuantityUpdate = async (row: AdminMerchandiseInventoryRow) => {
+    const draft = merchandiseQuantityDrafts[row.sku] ?? String(row.totalQuantity);
+    const totalQuantity = Number(draft);
+
+    if (isBundleInventoryRow(row)) {
+      setMerchandiseStatus("Bundle quantity is derived from component stock.");
+      return;
+    }
+
+    if (!Number.isInteger(totalQuantity) || totalQuantity < 0) {
+      setMerchandiseStatus("Enter a whole number quantity of zero or more.");
+      return;
+    }
+
+    if (totalQuantity < row.reservedQuantity) {
+      setMerchandiseStatus(`Quantity cannot be lower than ${row.reservedQuantity}; those units are already reserved.`);
+      return;
+    }
+
+    setActiveMerchandiseQuantitySku(row.sku);
+    setMerchandiseStatus(`Updating quantity for ${row.sku}...`);
+
+    try {
+      const response = await fetch("/api/admin/merchandise/inventory", {
+        method: "PATCH",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          sku: row.sku,
+          totalQuantity
+        })
+      });
+      const payload = (await readJson(response)) as AdminMerchandiseInventoryResponse;
+
+      if (response.status === 401) {
+        setAuthState("signedOut");
+        setLoginStatus("Sign in to edit the site content.");
+        setMerchandiseStatus("Sign in to update merchandise quantities.");
+        return;
+      }
+
+      if (!response.ok) {
+        setMerchandiseQuantityDrafts((current) => ({
+          ...current,
+          [row.sku]: String(row.totalQuantity)
+        }));
+        setMerchandiseStatus(payload.error ?? "Unable to update merchandise quantity.");
+        return;
+      }
+
+      if (Array.isArray(payload.inventory)) {
+        applyMerchandiseInventory(payload.inventory);
+      }
+
+      if (typeof payload.storage === "string") {
+        setMerchandiseStorage(payload.storage);
+      }
+
+      setMerchandiseStatus(`Updated quantity for ${row.sku}.`);
+    } catch {
+      setMerchandiseQuantityDrafts((current) => ({
+        ...current,
+        [row.sku]: String(row.totalQuantity)
+      }));
+      setMerchandiseStatus("Unable to update merchandise quantity.");
+    } finally {
+      setActiveMerchandiseQuantitySku("");
+    }
+  };
+
+  const handleMerchandiseImageUpload = async (sku: string, file: File | null) => {
+    if (!file) {
+      return;
+    }
+
+    setActiveMerchandiseImageSku(sku);
+    setMerchandiseStatus(`Uploading image for ${sku}...`);
+
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      const response = await fetch("/api/admin/merchandise/images", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          sku,
+          fileName: file.name,
+          mimeType: file.type,
+          dataUrl
+        })
+      });
+      const payload = (await readJson(response)) as { image?: { sku?: string; imageSrc?: string | null }; error?: string };
+
+      if (response.status === 401) {
+        setAuthState("signedOut");
+        setLoginStatus("Sign in to edit the site content.");
+        setMerchandiseStatus("Sign in to update merchandise images.");
+        return;
+      }
+
+      if (!response.ok || !payload.image?.sku) {
+        setMerchandiseStatus(payload.error ?? "Unable to update merchandise image.");
+        return;
+      }
+
+      setMerchandiseInventory((current) =>
+        current.map((row) =>
+          row.sku === payload.image?.sku
+            ? {
+                ...row,
+                imageSrc: payload.image.imageSrc ?? null
+              }
+            : row
+        )
+      );
+      setMerchandiseStatus(`Updated image for ${sku}.`);
+    } catch {
+      setMerchandiseStatus("Unable to update merchandise image.");
+    } finally {
+      setActiveMerchandiseImageSku("");
+    }
+  };
+
+  const handleMerchandiseImageDelete = async (sku: string) => {
+    setActiveMerchandiseImageSku(sku);
+    setMerchandiseStatus(`Removing image for ${sku}...`);
+
+    try {
+      const response = await fetch(`/api/admin/merchandise/images/${encodeURIComponent(sku)}`, {
+        method: "DELETE",
+        credentials: "include"
+      });
+      const payload = (await readJson(response)) as { image?: { sku?: string; imageSrc?: string | null }; error?: string };
+
+      if (response.status === 401) {
+        setAuthState("signedOut");
+        setLoginStatus("Sign in to edit the site content.");
+        setMerchandiseStatus("Sign in to update merchandise images.");
+        return;
+      }
+
+      if (!response.ok || !payload.image?.sku) {
+        setMerchandiseStatus(payload.error ?? "Unable to remove merchandise image.");
+        return;
+      }
+
+      setMerchandiseInventory((current) =>
+        current.map((row) =>
+          row.sku === payload.image?.sku
+            ? {
+                ...row,
+                imageSrc: null
+              }
+            : row
+        )
+      );
+      setMerchandiseStatus(`Removed image for ${sku}.`);
+    } catch {
+      setMerchandiseStatus("Unable to remove merchandise image.");
+    } finally {
+      setActiveMerchandiseImageSku("");
+    }
+  };
+
   useEffect(() => {
     let cancelled = false;
 
@@ -445,14 +892,10 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
           credentials: "include"
         });
 
-        const payload = (await readJson(response)) as { authenticated?: boolean; adminEmail?: string; error?: string };
+        const payload = (await readJson(response)) as { authenticated?: boolean; error?: string };
 
         if (cancelled) {
           return;
-        }
-
-        if (typeof payload.adminEmail === "string") {
-          setConfiguredAdminEmail(payload.adminEmail);
         }
 
         if (!response.ok || !payload.authenticated) {
@@ -610,10 +1053,6 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
         throw new Error(payload.error ?? "Unable to sign in.");
       }
 
-      if (typeof payload.email === "string") {
-        setConfiguredAdminEmail(payload.email);
-      }
-
       setAuthState("signedIn");
       setIsEditing(false);
       setLoginEmail("");
@@ -684,6 +1123,12 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
       setInquiryFilteredTotal(0);
       setRecentInquiries([]);
       setInquiriesStatus("Sign in to view inquiries.");
+      setMerchandiseInventory([]);
+      setMerchandiseQuantityDrafts({});
+      setMerchandiseOrders([]);
+      setMerchandiseStorage("");
+      setMerchandiseStatus("Sign in to view merchandise inventory.");
+      setMerchandiseOrdersStatus("Sign in to view merchandise orders.");
     }
   };
 
@@ -693,7 +1138,7 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
   };
 
   const openMediaView = () => {
-    setMediaReturnView(editorView === "inquiries" ? "inquiries" : "content");
+    setMediaReturnView(editorView === "inquiries" || editorView === "merchandise" ? editorView : "content");
     openMediaRoot();
   };
 
@@ -701,6 +1146,12 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
     setEditorView("inquiries");
     setEditorStatus("Review and export incoming inquiries.");
     await loadInquiryInbox({ limit: 100 });
+  };
+
+  const openMerchandiseView = async () => {
+    setEditorView("merchandise");
+    setEditorStatus("Check merchandise stock and reservation counts.");
+    await Promise.all([loadMerchandiseInventory(), loadMerchandiseOrders()]);
   };
 
   const openInquiryFilters = () => {
@@ -1517,7 +1968,13 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
 
   const closeMediaManager = () => {
     setEditorView(mediaReturnView);
-    setEditorStatus(mediaReturnView === "inquiries" ? "Review and export incoming inquiries." : "Open edit mode to change visible copy.");
+    setEditorStatus(
+      mediaReturnView === "inquiries"
+        ? "Review and export incoming inquiries."
+        : mediaReturnView === "merchandise"
+          ? "Check merchandise stock and reservation counts."
+          : "Open edit mode to change visible copy."
+    );
     setSelectedFolderId("");
     setSelectedAlbumId("");
     setFolderFormOpen(false);
@@ -1590,14 +2047,6 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
     closeMediaManager();
   };
 
-  const adminPanelTitle =
-    editorView === "media"
-      ? "Media manager"
-      : editorView === "inquiries"
-        ? "Inquiry inbox"
-        : isEditing
-          ? "Editing mode"
-          : "Preview mode";
   const mediaTitle =
     mediaLevel === "folders" ? "Folders" : mediaLevel === "subfolders" ? selectedFolder?.title ?? "Subfolders" : selectedAlbum?.title ?? "Images";
   const mediaDescription =
@@ -1745,6 +2194,8 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
   const isContentView = editorView === "content";
   const isMediaView = editorView === "media";
   const isInquiryView = editorView === "inquiries";
+  const isMerchandiseView = editorView === "merchandise";
+  const isAdminToolView = isInquiryView || isMerchandiseView;
 
   const isOverviewTab = activeTab === "home";
   const activeSelectedCause =
@@ -1839,11 +2290,6 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
 
       <section className="admin-controls-section" aria-label="Admin controls">
         <div className="admin-controls-bar">
-          <div className="admin-controls-copy">
-            <span className="section-kicker">Admin tools</span>
-            <h3>{adminPanelTitle}</h3>
-          </div>
-
           <div className="admin-controls-actions">
             <button
               className={isMediaView ? "secondary-button is-active" : "secondary-button"}
@@ -1868,6 +2314,21 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
             >
               {isInquiryView ? "Content" : "Inquiries"}
             </button>
+            <button
+              className={isMerchandiseView ? "secondary-button is-active" : "secondary-button"}
+              type="button"
+              aria-pressed={isMerchandiseView}
+              onClick={() => {
+                if (isMerchandiseView) {
+                  openContentView();
+                  return;
+                }
+
+                void openMerchandiseView();
+              }}
+            >
+              {isMerchandiseView ? "Content" : "Merchandise"}
+            </button>
             {isContentView ? (
               <>
                 <button
@@ -1890,7 +2351,7 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
         </div>
       </section>
 
-      <main id="admin-main-content" tabIndex={-1} className={!isInquiryView && isOverviewTab ? "main-overview" : "main-subpage"}>
+      <main id="admin-main-content" tabIndex={-1} className={!isAdminToolView && isOverviewTab ? "main-overview" : "main-subpage"}>
         {isInquiryView ? (
           <section className="section-block admin-inquiry-section" aria-label="Inquiry inbox">
             <div className="featured-heading admin-inquiry-head">
@@ -2037,7 +2498,337 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
           </section>
         ) : null}
 
-        {!isInquiryView && activeTab === "home" ? (
+        {isMerchandiseView ? (
+          <section className="section-block admin-merchandise-section" aria-label="Merchandise admin">
+            <div className="featured-heading admin-inquiry-head">
+              <div>
+                <h3>Merchandise admin</h3>
+                <p>Review live stock, uploaded previews, and event pickup reservations from one place.</p>
+              </div>
+              <div className="admin-merchandise-head-actions">
+                <div className="admin-merchandise-view-toggle" aria-label="Merchandise admin view">
+                  <button
+                    className={merchandiseAdminTab === "inventory" ? "secondary-button is-active" : "secondary-button"}
+                    type="button"
+                    onClick={() => setMerchandiseAdminTab("inventory")}
+                  >
+                    Inventory
+                  </button>
+                  <button
+                    className={merchandiseAdminTab === "orders" ? "secondary-button is-active" : "secondary-button"}
+                    type="button"
+                    onClick={() => setMerchandiseAdminTab("orders")}
+                  >
+                    Orders
+                  </button>
+                </div>
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() =>
+                    merchandiseAdminTab === "orders" ? void loadMerchandiseOrders() : void loadMerchandiseInventory()
+                  }
+                  disabled={merchandiseAdminTab === "orders" ? merchandiseOrdersLoading : merchandiseLoading}
+                >
+                  {merchandiseAdminTab === "orders"
+                    ? merchandiseOrdersLoading
+                      ? "Refreshing..."
+                      : "Refresh orders"
+                    : merchandiseLoading
+                      ? "Refreshing..."
+                      : "Refresh inventory"}
+                </button>
+              </div>
+            </div>
+
+            {merchandiseAdminTab === "inventory" ? (
+              <>
+                <div className="admin-inquiry-summary admin-merchandise-summary">
+                  <article>
+                    <span>Storage</span>
+                    <strong>{merchandiseStorage || "Unknown"}</strong>
+                  </article>
+                  <article>
+                    <span>Rows</span>
+                    <strong>{merchandiseInventory.length}</strong>
+                  </article>
+                  <article>
+                    <span>Total units</span>
+                    <strong>{merchandiseTotals.totalQuantity}</strong>
+                  </article>
+                  <article>
+                    <span>Reserved</span>
+                    <strong>{merchandiseTotals.reservedQuantity}</strong>
+                  </article>
+                  <article>
+                    <span>Available</span>
+                    <strong>{merchandiseTotals.availableQuantity}</strong>
+                  </article>
+                </div>
+
+                {merchandiseStatus ? (
+                  <p className="admin-auth-status" aria-live="polite">
+                    {merchandiseStatus}
+                  </p>
+                ) : null}
+
+                <div className="admin-merchandise-table-wrap">
+                  <table className="admin-merchandise-table">
+                    <thead>
+                      <tr>
+                        <th>Image</th>
+                        <th>SKU</th>
+                        <th>Item</th>
+                        <th>Total</th>
+                        <th>Reserved</th>
+                        <th>Available</th>
+                        <th>Manage</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {merchandiseInventory.length ? (
+                        merchandiseInventory.map((row) => {
+                          const isBundleRow = isBundleInventoryRow(row);
+                          const quantityDraft = merchandiseQuantityDrafts[row.sku] ?? String(row.totalQuantity);
+                          const draftQuantity = Number(quantityDraft);
+                          const quantityIsValid =
+                            Number.isInteger(draftQuantity) && draftQuantity >= row.reservedQuantity && draftQuantity >= 0;
+                          const quantityIsDirty = quantityDraft !== String(row.totalQuantity);
+                          const quantityIsWorking = activeMerchandiseQuantitySku === row.sku;
+
+                          return (
+                            <tr key={row.sku} className={row.availableQuantity <= 10 ? "is-low-stock" : ""}>
+                              <td>
+                                {row.imageSrc ? (
+                                  <button
+                                    className="admin-merchandise-thumb-button"
+                                    type="button"
+                                    onClick={() =>
+                                      setMerchandiseImagePreview({
+                                        src: row.imageSrc ?? "",
+                                        name: row.name,
+                                        sku: row.sku
+                                      })
+                                    }
+                                  >
+                                    <img className="admin-merchandise-thumb" src={row.imageSrc} alt={`${row.name} preview`} />
+                                  </button>
+                                ) : (
+                                  <span className="admin-merchandise-preview-empty">Picture Coming Soon</span>
+                                )}
+                              </td>
+                              <td>{row.sku}</td>
+                              <td>{row.name}</td>
+                              <td>
+                                {isBundleRow ? (
+                                  <div className="admin-merchandise-quantity-readonly">
+                                    <strong>{row.totalQuantity}</strong>
+                                    <span>Derived</span>
+                                  </div>
+                                ) : (
+                                  <div className="admin-merchandise-quantity-control">
+                                    <input
+                                      className="connect-edit-input"
+                                      type="number"
+                                      min={row.reservedQuantity}
+                                      value={quantityDraft}
+                                      aria-label={`Total quantity for ${row.name}`}
+                                      disabled={quantityIsWorking}
+                                      onChange={(event) =>
+                                        setMerchandiseQuantityDrafts((current) => ({
+                                          ...current,
+                                          [row.sku]: event.target.value
+                                        }))
+                                      }
+                                    />
+                                    <button
+                                      className="secondary-button"
+                                      type="button"
+                                      onClick={() => void handleMerchandiseQuantityUpdate(row)}
+                                      disabled={!quantityIsDirty || !quantityIsValid || quantityIsWorking}
+                                    >
+                                      {quantityIsWorking ? "Saving..." : "Save"}
+                                    </button>
+                                  </div>
+                                )}
+                              </td>
+                              <td>{row.reservedQuantity}</td>
+                              <td>
+                                <strong>{row.availableQuantity}</strong>
+                                {row.availableQuantity <= 10 ? <span className="admin-merchandise-low-stock">Low stock</span> : null}
+                              </td>
+                              <td>
+                                <div className="admin-merchandise-image-actions">
+                                  <label className="secondary-button admin-merchandise-upload-button">
+                                    {activeMerchandiseImageSku === row.sku ? "Working..." : row.imageSrc ? "Replace" : "Upload"}
+                                    <input
+                                      type="file"
+                                      accept="image/png,image/jpeg,image/webp,image/gif"
+                                      disabled={activeMerchandiseImageSku === row.sku}
+                                      onChange={(event) => {
+                                        void handleMerchandiseImageUpload(row.sku, event.currentTarget.files?.[0] ?? null);
+                                        event.currentTarget.value = "";
+                                      }}
+                                    />
+                                  </label>
+                                  <button
+                                    className="secondary-button"
+                                    type="button"
+                                    onClick={() => void handleMerchandiseImageDelete(row.sku)}
+                                    disabled={activeMerchandiseImageSku === row.sku || !row.imageSrc}
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      ) : (
+                        <tr>
+                          <td colSpan={7}>No merchandise inventory loaded.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="admin-inquiry-summary admin-merchandise-summary">
+                  <article>
+                    <span>Total orders</span>
+                    <strong>{merchandiseOrderTotals.all}</strong>
+                  </article>
+                  <article>
+                    <span>Active</span>
+                    <strong>{merchandiseOrderTotals.active}</strong>
+                  </article>
+                  <article>
+                    <span>Cancelled</span>
+                    <strong>{merchandiseOrderTotals.cancelled}</strong>
+                  </article>
+                  <article>
+                    <span>Units in orders</span>
+                    <strong>{merchandiseOrderTotals.units}</strong>
+                  </article>
+                  <article>
+                    <span>Server total</span>
+                    <strong>{formatAdminMoney(merchandiseOrderTotals.amount)}</strong>
+                  </article>
+                  <article>
+                    <span>Storage</span>
+                    <strong>{merchandiseStorage || "Unknown"}</strong>
+                  </article>
+                </div>
+
+                {merchandiseOrdersStatus ? (
+                  <p className="admin-auth-status" aria-live="polite">
+                    {merchandiseOrdersStatus}
+                  </p>
+                ) : null}
+
+                <div className="admin-merchandise-orders">
+                  {merchandiseOrders.length ? (
+                    merchandiseOrders.map((order) => (
+                      <article key={order.id} className={`admin-merchandise-order-card is-${order.status}`}>
+                        <div className="admin-merchandise-order-head">
+                          <div>
+                            <span className={`admin-inquiry-badge ${order.status === "reserved" ? "is-pending" : "is-complete"}`}>
+                              {order.status}
+                            </span>
+                            <h4>{order.customer.name}</h4>
+                            <p>
+                              <a href={`mailto:${order.customer.email}`}>{order.customer.email}</a>
+                              {order.customer.phone ? ` · ${order.customer.phone}` : ""}
+                            </p>
+                          </div>
+                          <div className="admin-merchandise-order-meta">
+                            <strong>{order.id}</strong>
+                            <span>{formatAdminMoney(order.paymentSummary?.total)}</span>
+                            <time dateTime={order.createdAt}>{formatInquiryTimestamp(order.createdAt)}</time>
+                            <button
+                              className="secondary-button"
+                              type="button"
+                              onClick={() => void handleMerchandiseCancellation({ reservationId: order.id })}
+                              disabled={order.status !== "reserved" || activeMerchandiseCancellationKey === order.id}
+                            >
+                              {activeMerchandiseCancellationKey === order.id ? "Cancelling..." : "Cancel full order"}
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="admin-merchandise-order-items">
+                          {order.items.map((item, itemIndex) => {
+                            const itemId = item.id ?? `${order.id}:${itemIndex}`;
+                            const actionKey = `${order.id}:${itemId}`;
+                            const quantityValue = merchandiseCancelQuantities[actionKey] ?? "1";
+                            const cancellationQuantity = Number(quantityValue);
+
+                            return (
+                              <div key={itemId} className="admin-merchandise-order-item">
+                                <div>
+                                  <strong>{item.name}</strong>
+                                  <span>
+                                    {item.sku} · {item.size} · {item.color}
+                                  </span>
+                                </div>
+                                <span className="admin-merchandise-order-quantity">
+                                  Qty {item.quantity}
+                                  {typeof item.lineTotal === "number" ? ` · ${formatAdminMoney(item.lineTotal)}` : ""}
+                                </span>
+                                <div className="admin-merchandise-cancel-line">
+                                  <input
+                                    className="connect-edit-input"
+                                    type="number"
+                                    min="1"
+                                    max={item.quantity}
+                                    value={quantityValue}
+                                    disabled={order.status !== "reserved" || activeMerchandiseCancellationKey === actionKey}
+                                    onChange={(event) =>
+                                      setMerchandiseCancelQuantities((current) => ({
+                                        ...current,
+                                        [actionKey]: event.target.value
+                                      }))
+                                    }
+                                  />
+                                  <button
+                                    className="secondary-button"
+                                    type="button"
+                                    onClick={() =>
+                                      void handleMerchandiseCancellation({
+                                        reservationId: order.id,
+                                        itemId,
+                                        quantity: cancellationQuantity
+                                      })
+                                    }
+                                    disabled={
+                                      order.status !== "reserved" ||
+                                      activeMerchandiseCancellationKey === actionKey ||
+                                      !Number.isInteger(cancellationQuantity) ||
+                                      cancellationQuantity < 1 ||
+                                      cancellationQuantity > item.quantity
+                                    }
+                                  >
+                                    {activeMerchandiseCancellationKey === actionKey ? "Cancelling..." : "Cancel qty"}
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </article>
+                    ))
+                  ) : (
+                    <p className="admin-inquiry-empty">No merchandise orders yet.</p>
+                  )}
+                </div>
+              </>
+            )}
+          </section>
+        ) : null}
+
+        {!isAdminToolView && activeTab === "home" ? (
           <HomePage
             connectMoments={editableContent.connectMoments}
             homeCopy={editableContent.homeCopy}
@@ -2054,7 +2845,7 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
           />
         ) : null}
 
-        {!isInquiryView && activeTab === "causes" ? (
+        {!isAdminToolView && activeTab === "causes" ? (
           <CausesPage
             details={activeTabDetails}
             causeCards={editableContent.causeCards}
@@ -2079,7 +2870,7 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
           />
         ) : null}
 
-        {!isInquiryView && activeTab === "donate" ? (
+        {!isAdminToolView && activeTab === "donate" ? (
           <DonatePage
             details={activeTabDetails}
             donateCopy={editableContent.donateCopy}
@@ -2116,7 +2907,7 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
           />
         ) : null}
 
-        {!isInquiryView && activeTab === "contact" ? (
+        {!isAdminToolView && activeTab === "contact" ? (
           <ContactPage
             form={form}
             isSubmitting={isSubmitting}
@@ -2127,7 +2918,7 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
           />
         ) : null}
 
-        {!isInquiryView && activeTab === "connect" ? (
+        {!isAdminToolView && activeTab === "connect" ? (
           <ConnectPage
             details={activeTabDetails}
             connectContent={editableContent.connectPage}
@@ -2603,6 +3394,29 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
       ) : null}
 
       <ZeffyDonateDialog open={donateDialogOpen} onClose={() => setDonateDialogOpen(false)} />
+
+      {merchandiseImagePreview ? (
+        <div
+          className="admin-merchandise-lightbox"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${merchandiseImagePreview.name} full image preview`}
+          onClick={() => setMerchandiseImagePreview(null)}
+        >
+          <div className="admin-merchandise-lightbox-panel" onClick={(event) => event.stopPropagation()}>
+            <div className="admin-merchandise-lightbox-head">
+              <div>
+                <span>{merchandiseImagePreview.sku}</span>
+                <strong>{merchandiseImagePreview.name}</strong>
+              </div>
+              <button className="secondary-button" type="button" onClick={() => setMerchandiseImagePreview(null)}>
+                Close
+              </button>
+            </div>
+            <img src={merchandiseImagePreview.src} alt={`${merchandiseImagePreview.name} full preview`} />
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

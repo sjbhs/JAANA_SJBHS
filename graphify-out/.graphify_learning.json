@@ -1,0 +1,38 @@
+{
+  "generated_at": "2026-07-19T03:54:00.059942+00:00",
+  "nodes": {
+    "server_lib_merchandiseimagestore": {
+      "code_fingerprint": "1354d0450bbae5551313875b9d537c316f281db6f3cab2afbb179bf13fd77008",
+      "label": "merchandiseImageStore.ts",
+      "last": "2026-07-19T03:51:56.708608+00:00",
+      "provenance": [
+        {
+          "date": "2026-07-19T03:51:56.708608+00:00",
+          "outcome": "useful",
+          "q": "Where is merchandise image placeholder rendering implemented?"
+        }
+      ],
+      "score": 0.999967014,
+      "source_file": "server/lib/merchandiseImageStore.ts",
+      "status": "tentative",
+      "uses": 1
+    },
+    "src_site_components_merchandisestorepage": {
+      "code_fingerprint": "882fab0f5d6e9151c9a3d0b14f4583bf96d38c704ca788632bc4e7e469e08249",
+      "label": "MerchandiseStorePage.tsx",
+      "last": "2026-07-19T03:51:56.708608+00:00",
+      "provenance": [
+        {
+          "date": "2026-07-19T03:51:56.708608+00:00",
+          "outcome": "useful",
+          "q": "Where is merchandise image placeholder rendering implemented?"
+        }
+      ],
+      "score": 0.999967014,
+      "source_file": "src/site/components/MerchandiseStorePage.tsx",
+      "status": "tentative",
+      "uses": 1
+    }
+  },
+  "version": 1
+}

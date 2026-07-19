@@ -1,5 +1,4 @@
-import { isAdminSessionValid } from "../_auth.js";
-import { readJsonBody, unauthorizedResponse } from "../_shared.js";
+import { readJsonBody, requireAdminRequest } from "../_shared.js";
 import { deleteInquiry, updateInquiryReplyStatus } from "../../../server/lib/inquiryStore.js";
 
 type InquiryActionPayload = {
@@ -14,8 +13,10 @@ function getInquiryIdFromRequest(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  if (!isAdminSessionValid(request.headers.get("cookie"))) {
-    return unauthorizedResponse();
+  const adminGuard = requireAdminRequest(request, "inquiry-mutation");
+
+  if (adminGuard) {
+    return adminGuard;
   }
 
   const id = getInquiryIdFromRequest(request);
@@ -61,8 +62,10 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  if (!isAdminSessionValid(request.headers.get("cookie"))) {
-    return unauthorizedResponse();
+  const adminGuard = requireAdminRequest(request, "inquiry-mutation");
+
+  if (adminGuard) {
+    return adminGuard;
   }
 
   const id = getInquiryIdFromRequest(request);

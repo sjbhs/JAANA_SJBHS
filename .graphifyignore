@@ -1,0 +1,39 @@
+# Static media and downloadable documents
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.gif
+*.ico
+*.svg
+*.pdf
+*.mp4
+*.mov
+*.mp3
+*.wav
+
+# Dependency and package manager output
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Generated build, cache, and report folders
+dist/
+build/
+coverage/
+.next/
+.nuxt/
+.svelte-kit/
+.vite/
+.turbo/
+graphify-out/
+tmp/
+outputs/
+playwright-report/
+test-results/
+
+# Local runtime files and secrets
+.env
+.env.*
+server/data/

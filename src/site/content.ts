@@ -848,7 +848,7 @@ export const connectPlaceholders: SecondaryPage[] = [
   },
   {
     title: "Josephite Merchandise",
-    body: "Josephite merchandise details will be available soon. Pre-orders open after Aug 1st, with event pickup during the reunion."
+    body: "Order soon before favorite Josephite keepsakes sell out, and take home a reminder of the school spirit we share."
   },
   {
     title: "Local Attractions",
@@ -914,9 +914,8 @@ export const defaultConnectPageContent: ConnectPageContent = {
     }
   ],
   merchandise: {
-    body: "Merchandise details will be available soon.",
-    preorder:
-      "Visit here after Aug 1st to pre-order your merchandise before the event and pick up during the reunion. Limited supplies."
+    body: "Bring home alumni keepsakes, memorabilia, and everyday items that help you remember your alma mater long after the reunion.",
+    preorder: "Order soon before favorite pieces sell out, then collect your Josephite items at reunion pickup."
   },
   attractions: [
     "Monuments & Memorials",

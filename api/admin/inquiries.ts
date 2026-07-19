@@ -1,10 +1,11 @@
-import { isAdminSessionValid } from "./_auth.js";
 import { getInquiries } from "../../server/lib/inquiryStore.js";
-import { unauthorizedResponse } from "./_shared.js";
+import { requireAdminRequest } from "./_shared.js";
 
 export async function GET(request: Request) {
-  if (!isAdminSessionValid(request.headers.get("cookie"))) {
-    return unauthorizedResponse();
+  const adminGuard = requireAdminRequest(request, "inquiries");
+
+  if (adminGuard) {
+    return adminGuard;
   }
 
   try {

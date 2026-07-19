@@ -1,5 +1,4 @@
-import { isAdminSessionValid } from "./admin/_auth.js";
-import { readJsonBody, unauthorizedResponse } from "./admin/_shared.js";
+import { readJsonBody, requireAdminRequest } from "./admin/_shared.js";
 import { readSiteContent, validateSiteContent, writeSiteContent } from "../server/lib/siteContentStore.js";
 
 export async function GET() {
@@ -23,8 +22,10 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
-  if (!isAdminSessionValid(request.headers.get("cookie"))) {
-    return unauthorizedResponse();
+  const adminGuard = requireAdminRequest(request, "site-content");
+
+  if (adminGuard) {
+    return adminGuard;
   }
 
   const payload = await readJsonBody(request);

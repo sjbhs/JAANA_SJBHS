@@ -21,6 +21,28 @@ import {
 import { createInquiry, deleteInquiry, getInquiries, updateInquiryReplyStatus } from "./lib/inquiryStore";
 import { sendInquiryNotification } from "./lib/inquiryNotifications";
 import { InquiryPayload, validateInquiryPayload } from "./lib/inquiryValidation";
+import {
+  cancelMerchandiseReservation,
+  createMerchandiseReservation,
+  MerchandiseReservationError,
+  MerchandiseReservationPayload,
+  pingMerchandiseDatabase,
+  readMerchandiseInventory,
+  readMerchandiseOrders,
+  updateMerchandiseInventoryQuantity
+} from "./lib/merchandiseReservationStore";
+import {
+  getMerchandiseReceiptEmailConfigurationError,
+  isMerchandiseReceiptEmailConfigured,
+  isMerchandiseReceiptEmailDeliveryRequired,
+  sendMerchandiseReceiptNotification
+} from "./lib/merchandiseReceiptNotifications";
+import {
+  clearMerchandiseImage,
+  readMerchandiseImageMap,
+  readMerchandiseImages,
+  uploadMerchandiseImage
+} from "./lib/merchandiseImageStore";
 import { buildRateLimitHeaders, checkRateLimit, getClientIpFromNodeHeaders } from "./lib/rateLimit";
 
 const app = express();
@@ -29,7 +51,9 @@ const port = Number(process.env.PORT ?? 3001);
 const clientDistPath = path.resolve(process.cwd(), "dist/client");
 const devCorsOrigins = ["http://127.0.0.1:5173", "http://localhost:5173"];
 const loginRateLimit = { limit: 5, windowMs: 10 * 60 * 1000 };
+const adminApiRateLimit = { limit: 120, windowMs: 15 * 60 * 1000 };
 const inquirySubmitRateLimit = { limit: 10, windowMs: 15 * 60 * 1000 };
+const merchandiseReservationRateLimit = { limit: 8, windowMs: 15 * 60 * 1000 };
 
 function resolveCorsOrigins() {
   if (process.env.CORS_ORIGIN?.trim()) {
@@ -64,10 +88,27 @@ app.use(
     origin: resolveCorsOrigins()
   })
 );
-app.use(express.json({ limit: "32kb" }));
+app.use(express.json({ limit: "8mb" }));
 
 app.use("/api/admin", (_request, response, next) => {
   response.setHeader("Cache-Control", "no-store");
+  next();
+});
+
+app.use("/api/admin", (request, response, next) => {
+  if (request.path === "/login") {
+    return next();
+  }
+
+  const rateLimit = applyRateLimit(request, response, "admin-api", adminApiRateLimit);
+
+  if (!rateLimit.allowed) {
+    response.status(429).json({
+      error: "Too many admin requests. Please try again later."
+    });
+    return;
+  }
+
   next();
 });
 
@@ -106,33 +147,48 @@ app.get("/api/site-content", async (_request, response, next) => {
   }
 });
 
-app.put("/api/site-content", requireAdminSession, async (request, response, next) => {
-  try {
-    const validation = validateSiteContent(request.body as Parameters<typeof validateSiteContent>[0]);
+app.put(
+  "/api/site-content",
+  (request, response, next) => {
+    const rateLimit = applyRateLimit(request, response, "admin-api", adminApiRateLimit);
 
-    if (!validation.ok) {
-      return response.status(400).json({
-        error: "Unable to validate the site content."
+    if (!rateLimit.allowed) {
+      response.status(429).json({
+        error: "Too many admin requests. Please try again later."
       });
+      return;
     }
 
-    const content = await writeSiteContent(validation.data);
+    next();
+  },
+  requireAdminSession,
+  async (request, response, next) => {
+    try {
+      const validation = validateSiteContent(request.body as Parameters<typeof validateSiteContent>[0]);
 
-    response.json({
-      content
-    });
-  } catch (error) {
-    next(error);
+      if (!validation.ok) {
+        return response.status(400).json({
+          error: "Unable to validate the site content."
+        });
+      }
+
+      const content = await writeSiteContent(validation.data);
+
+      response.json({
+        content
+      });
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 app.get("/api/admin/session", async (request, response) => {
   const session = getAdminSessionFromCookie(request.headers.cookie);
 
   response.json({
     authenticated: Boolean(session),
-    email: session?.email ?? null,
-    adminEmail: adminEmailAddress
+    email: session?.email ?? null
   });
 });
 
@@ -265,6 +321,116 @@ app.delete("/api/admin/inquiries/:id", requireAdminSession, async (request, resp
   }
 });
 
+app.get("/api/admin/merchandise/inventory", requireAdminSession, async (_request, response, next) => {
+  try {
+    const inventory = await readMerchandiseInventory();
+    const images = await readMerchandiseImageMap();
+
+    response.json({
+      ...inventory,
+      inventory: inventory.inventory.map((row) => ({
+        ...row,
+        imageSrc: images[row.sku] ?? null
+      }))
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.patch("/api/admin/merchandise/inventory", requireAdminSession, async (request, response) => {
+  try {
+    const result = await updateMerchandiseInventoryQuantity(request.body);
+    const images = await readMerchandiseImageMap();
+
+    response.json({
+      ...result,
+      inventory: result.inventory.map((row) => ({
+        ...row,
+        imageSrc: images[row.sku] ?? null
+      }))
+    });
+  } catch (error) {
+    if (error instanceof MerchandiseReservationError) {
+      return response.status(error.statusCode).json({
+        error: error.message,
+        ...(error.inventory ? { inventory: error.inventory } : {})
+      });
+    }
+
+    console.error(error);
+    response.status(500).json({
+      error: "Unable to update merchandise quantity."
+    });
+  }
+});
+
+app.get("/api/admin/merchandise/images", requireAdminSession, async (_request, response, next) => {
+  try {
+    response.json({
+      images: await readMerchandiseImages()
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/api/admin/merchandise/images", requireAdminSession, async (request, response, next) => {
+  try {
+    const image = await uploadMerchandiseImage(request.body);
+
+    response.status(201).json({
+      image,
+      message: "Merchandise image updated."
+    });
+  } catch (error) {
+    response.status(400).json({
+      error: error instanceof Error ? error.message : "Unable to update merchandise image."
+    });
+  }
+});
+
+app.delete("/api/admin/merchandise/images/:sku", requireAdminSession, async (request, response, next) => {
+  try {
+    const image = await clearMerchandiseImage(request.params.sku);
+
+    response.json({
+      image,
+      message: "Merchandise image removed."
+    });
+  } catch (error) {
+    response.status(400).json({
+      error: error instanceof Error ? error.message : "Unable to remove merchandise image."
+    });
+  }
+});
+
+app.get("/api/admin/merchandise/orders", requireAdminSession, async (_request, response, next) => {
+  try {
+    response.json(await readMerchandiseOrders());
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.patch("/api/admin/merchandise/orders", requireAdminSession, async (request, response) => {
+  try {
+    response.json(await cancelMerchandiseReservation(request.body));
+  } catch (error) {
+    if (error instanceof MerchandiseReservationError) {
+      return response.status(error.statusCode).json({
+        error: error.message,
+        ...(error.inventory ? { inventory: error.inventory } : {})
+      });
+    }
+
+    console.error(error);
+    response.status(500).json({
+      error: "Unable to cancel merchandise order."
+    });
+  }
+});
+
 app.post("/api/inquiries", async (request, response, next) => {
   try {
     const rateLimit = applyRateLimit(request, response, "public-inquiry", inquirySubmitRateLimit);
@@ -296,6 +462,90 @@ app.post("/api/inquiries", async (request, response, next) => {
       total
     });
   } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/merchandise/inventory", async (_request, response, next) => {
+  try {
+    const inventory = await readMerchandiseInventory();
+
+    response.setHeader("Cache-Control", "no-store");
+    response.json(inventory);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/merchandise/health", async (_request, response) => {
+  try {
+    response.setHeader("Cache-Control", "no-store");
+    response.json(await pingMerchandiseDatabase());
+  } catch (error) {
+    if (error instanceof MerchandiseReservationError) {
+      return response.status(error.statusCode).json({
+        ok: false,
+        error: error.message
+      });
+    }
+
+    console.error(error);
+    response.status(500).json({
+      ok: false,
+      error: "Unable to check merchandise database."
+    });
+  }
+});
+
+app.get("/api/merchandise/images", async (_request, response, next) => {
+  try {
+    response.setHeader("Cache-Control", "no-store");
+    response.json({
+      images: await readMerchandiseImages()
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/api/merchandise/orders", async (request, response, next) => {
+  try {
+    const rateLimit = applyRateLimit(request, response, "merchandise-reservation", merchandiseReservationRateLimit);
+
+    if (!rateLimit.allowed) {
+      return response.status(429).json({
+        error: "Too many merchandise reservations. Please try again later."
+      });
+    }
+
+    if (isMerchandiseReceiptEmailDeliveryRequired() && !isMerchandiseReceiptEmailConfigured()) {
+      return response.status(503).json({
+        error: getMerchandiseReceiptEmailConfigurationError()
+      });
+    }
+
+    const result = await createMerchandiseReservation(request.body as MerchandiseReservationPayload);
+    const receiptNotification = await sendMerchandiseReceiptNotification(result);
+
+    if (!receiptNotification.ok) {
+      console.warn(receiptNotification.error);
+    }
+
+    response.status(201).json({
+      message: "Order reserved for event pickup.",
+      receiptEmail: {
+        sent: receiptNotification.ok
+      },
+      ...result
+    });
+  } catch (error) {
+    if (error instanceof MerchandiseReservationError) {
+      return response.status(error.statusCode).json({
+        error: error.message,
+        ...(error.inventory ? { inventory: error.inventory } : {})
+      });
+    }
+
     next(error);
   }
 });
