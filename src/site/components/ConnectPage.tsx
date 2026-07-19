@@ -32,6 +32,7 @@ const connectPosterPdfUrl = "/docs/north-america-connect-2026-poster.pdf";
 const connectPosterImageUrl = "/assets/north-america-connect-2026-poster.png";
 const connectPosterImageWebpSmallUrl = "/assets/north-america-connect-2026-poster-360.webp";
 const connectPosterImageWebpLargeUrl = "/assets/north-america-connect-2026-poster-612.webp";
+const merchandiseStoreUrl = "/josephite-store";
 
 const attractionPreviewLinks: Record<string, string> = {
   "Monuments & Memorials": "https://www.washington.org/visit-dc/monuments-memorials",
