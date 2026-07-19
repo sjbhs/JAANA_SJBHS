@@ -114,12 +114,14 @@ function getAdminRecipients() {
 }
 
 function getSmtpConfig(): SmtpConfig | null {
-  const host = process.env.SMTP_HOST?.trim() || "";
-  const rawPort = Number(process.env.SMTP_PORT ?? 587);
+  const gmailUser = process.env.GMAIL_USER?.trim() || "";
+  const gmailAppPassword = process.env.GMAIL_APP_PASSWORD?.trim() || "";
+  const host = process.env.SMTP_HOST?.trim() || (gmailUser && gmailAppPassword ? "smtp.gmail.com" : "");
+  const rawPort = Number(process.env.SMTP_PORT ?? (host === "smtp.gmail.com" ? 465 : 587));
   const port = Number.isFinite(rawPort) && rawPort > 0 ? rawPort : 587;
   const secure = parseBoolean(process.env.SMTP_SECURE) ?? port === 465;
-  const user = process.env.SMTP_USER?.trim() || "";
-  const pass = process.env.SMTP_PASS?.trim() || "";
+  const user = process.env.SMTP_USER?.trim() || gmailUser;
+  const pass = process.env.SMTP_PASS?.trim() || gmailAppPassword;
   const from =
     process.env.MERCHANDISE_EMAIL_FROM?.trim() ||
     process.env.SMTP_FROM?.trim() ||
@@ -145,8 +147,11 @@ function getSmtpConfig(): SmtpConfig | null {
 
 export function getMerchandiseReceiptEmailConfigurationError() {
   const missingValues = [];
+  const gmailUser = process.env.GMAIL_USER?.trim() || "";
+  const gmailAppPassword = process.env.GMAIL_APP_PASSWORD?.trim() || "";
+  const hasGmailSmtpAlias = Boolean(gmailUser && gmailAppPassword);
 
-  if (!process.env.SMTP_HOST?.trim()) {
+  if (!process.env.SMTP_HOST?.trim() && !hasGmailSmtpAlias) {
     missingValues.push("SMTP_HOST");
   }
 
@@ -154,14 +159,15 @@ export function getMerchandiseReceiptEmailConfigurationError() {
     !process.env.MERCHANDISE_EMAIL_FROM?.trim() &&
     !process.env.SMTP_FROM?.trim() &&
     !process.env.INQUIRY_EMAIL_FROM?.trim() &&
-    !process.env.SMTP_USER?.trim()
+    !process.env.SMTP_USER?.trim() &&
+    !gmailUser
   ) {
     missingValues.push("MERCHANDISE_EMAIL_FROM");
   }
 
   if (
-    (process.env.SMTP_USER?.trim() && !process.env.SMTP_PASS?.trim()) ||
-    (!process.env.SMTP_USER?.trim() && process.env.SMTP_PASS?.trim())
+    (process.env.SMTP_USER?.trim() && !process.env.SMTP_PASS?.trim() && !gmailAppPassword) ||
+    (!process.env.SMTP_USER?.trim() && !gmailUser && process.env.SMTP_PASS?.trim())
   ) {
     missingValues.push("SMTP_USER and SMTP_PASS");
   }
