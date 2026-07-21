@@ -2,6 +2,7 @@ import type { MerchandiseSku } from "./merchandiseInventory";
 
 export const defaultMerchandiseImages: Partial<Record<MerchandiseSku, string>> = {
   "MERCH-001": "/assets/merchandise/circular-josephite-magnet-clean.png",
+  "MERCH-002": "/assets/merchandise/sticker-set.png",
   "MERCH-003": "/assets/merchandise/luggage-tag.png",
   "MERCH-004": "/assets/merchandise/school-crest-lapel-pin.png",
   "MERCH-009": "/assets/merchandise/andrews-badge.png",
