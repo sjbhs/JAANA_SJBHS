@@ -1,5 +1,6 @@
 import { GalleryImage, TabId, HomePageCopy } from "../types";
 import { InlineEditableText } from "./InlineEditableText";
+import { optimizedImageSrc } from "../optimizedImages";
 
 type HomePageProps = {
   connectMoments: GalleryImage[];
@@ -25,7 +26,15 @@ export function HomePage({
       <section className="hero-section">
         <div className="hero-copy">
           <div className="hero-brand" aria-label="JAANA identity">
-            <img src="/assets/jaana-wordmark.png" alt="JAANA wordmark" />
+            <img
+              src={optimizedImageSrc("/assets/jaana-wordmark.png")}
+              alt="JAANA wordmark"
+              width="900"
+              height="502"
+              loading="eager"
+              decoding="async"
+              fetchPriority="high"
+            />
             <h1 className="hero-motto">
               <InlineEditableText
                 editable={editable}
@@ -61,7 +70,13 @@ export function HomePage({
             type="button"
             onClick={() => onOpenLightboxImage(connectMoments[0])}
           >
-            <img src={connectMoments[0].src} alt={connectMoments[0].alt} />
+            <img
+              src={optimizedImageSrc(connectMoments[0].src)}
+              alt={connectMoments[0].alt}
+              loading="eager"
+              decoding="async"
+              fetchPriority="high"
+            />
           </button>
           <div className="media-stack">
             <button
@@ -69,14 +84,14 @@ export function HomePage({
               type="button"
               onClick={() => onOpenLightboxImage(connectMoments[1])}
             >
-              <img src={connectMoments[1].src} alt={connectMoments[1].alt} />
+              <img src={optimizedImageSrc(connectMoments[1].src)} alt={connectMoments[1].alt} loading="eager" decoding="async" />
             </button>
             <button
               className="photo-button media-tile media-tile-small"
               type="button"
               onClick={() => onOpenLightboxImage(connectMoments[2])}
             >
-              <img src={connectMoments[2].src} alt={connectMoments[2].alt} />
+              <img src={optimizedImageSrc(connectMoments[2].src)} alt={connectMoments[2].alt} loading="eager" decoding="async" />
             </button>
           </div>
         </div>

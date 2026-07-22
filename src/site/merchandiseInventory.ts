@@ -75,19 +75,21 @@ export const merchandiseInventoryDatabase = {
   },
   "MERCH-017": {
     name: "Coffee Table Book - 100 Years",
-    description: "A commemorative book celebrating 100 years of St. Joseph’s Boys’ High School history and memories.",
+    description:
+      "Coffee Table Book: A Hundred Years, A Million Memories. A vibrant celebration of 100 years of the OBA, this coffee table book chronicles the rich history, proud achievements, and timeless spirit of SJBHS. Brought to life through personal stories and striking photography from alumni and staff, it’s a tribute to the legacy we share.",
     quantity: 20,
     price: 50
   },
   "MERCH-018": {
     name: "Faith & Toil Book - 150 Years",
-    description: "A heritage book honoring 150 years of Josephite faith, toil, tradition, and legacy.",
+    description:
+      "Trace the remarkable journey of St. Joseph’s Boys’ High School from 1858 to the modern era. Written by renowned Old Boy Christopher Rego, Faith and Toil is a deeply researched chronicle detailing the school’s founding by the Paris Foreign Missions, its Jesuit transition, and the monumental impact of its alumni. A must-have piece of SJBHS heritage for every Josephite shelf.",
     quantity: 20,
     price: 50
   },
   "MERCH-019": {
-    name: "Paul Fernandes Unframed Mounted Print",
-    description: "A nostalgic unframed Paul Fernandes print capturing the charm and memories of school life.",
+    name: "Paul Fernandes Unframed Mounted Print (19.5\"x16.5\")",
+    description: "A nostalgic 19.5\"x16.5\" unframed mounted Paul Fernandes print capturing the charm and memories of school life.",
     quantity: 20,
     price: 50
   },

@@ -12,6 +12,7 @@ import {
   type MerchandiseInventorySku,
   type MerchandiseSku
 } from "../merchandiseInventory";
+import { optimizedImageSrc } from "../optimizedImages";
 
 type Product = {
   id: string;
@@ -72,6 +73,40 @@ type MerchandiseHealthResponse = {
   ok?: boolean;
   error?: string;
 };
+
+type MerchandiseStorePageProps = {
+  onMainWebsiteClick?: () => void;
+};
+
+type StoreImageProps = {
+  src: string;
+  alt: string;
+  className?: string;
+  loading?: "eager" | "lazy";
+  fetchPriority?: "auto" | "high" | "low";
+  ariaHidden?: boolean;
+};
+
+function StoreImage({
+  src,
+  alt,
+  className,
+  loading = "lazy",
+  fetchPriority = "auto",
+  ariaHidden = false
+}: StoreImageProps) {
+  return (
+    <img
+      className={className}
+      src={optimizedImageSrc(src)}
+      alt={alt}
+      loading={loading}
+      decoding="async"
+      fetchPriority={fetchPriority}
+      aria-hidden={ariaHidden || undefined}
+    />
+  );
+}
 
 const storeProductCatalog: Array<Omit<Product, "price" | "components">> = [
   {
@@ -263,7 +298,8 @@ const storeProductCatalog: Array<Omit<Product, "price" | "components">> = [
     imageSrc: "/assets/merchandise/coffee-table-book-100-years.png",
     imageAlt: "Coffee table book 100 years preview",
     badge: "Book",
-    description: "A commemorative book celebrating 100 years of St. Joseph’s Boys’ High School history and memories.",
+    description:
+      "Coffee Table Book: A Hundred Years, A Million Memories. A vibrant celebration of 100 years of the OBA, this coffee table book chronicles the rich history, proud achievements, and timeless spirit of SJBHS. Brought to life through personal stories and striking photography from alumni and staff, it’s a tribute to the legacy we share.",
     sizeLabel: "Format",
     sizes: ["Hardcover"],
     colorLabel: "Edition",
@@ -278,7 +314,8 @@ const storeProductCatalog: Array<Omit<Product, "price" | "components">> = [
     imageSrc: "/assets/merchandise/faith-toil-book-150-years.png",
     imageAlt: "Faith and Toil book 150 years preview",
     badge: "Book",
-    description: "A heritage book honoring 150 years of Josephite faith, toil, tradition, and legacy.",
+    description:
+      "Trace the remarkable journey of St. Joseph’s Boys’ High School from 1858 to the modern era. Written by renowned Old Boy Christopher Rego, Faith and Toil is a deeply researched chronicle detailing the school’s founding by the Paris Foreign Missions, its Jesuit transition, and the monumental impact of its alumni. A must-have piece of SJBHS heritage for every Josephite shelf.",
     sizeLabel: "Format",
     sizes: ["Hardcover"],
     colorLabel: "Edition",
@@ -287,13 +324,13 @@ const storeProductCatalog: Array<Omit<Product, "price" | "components">> = [
   {
     id: "paul-fernandes-print",
     sku: "MERCH-019",
-    name: "Paul Fernandes Unframed Mounted Print",
+    name: "Paul Fernandes Unframed Mounted Print (19.5\"x16.5\")",
     category: "Books & Art",
     inventoryQuantity: inventoryQuantityFor("MERCH-019"),
     imageSrc: "/assets/merchandise/paul-fernandes-print.png",
     imageAlt: "Paul Fernandes unframed mounted print preview",
     badge: "Art print",
-    description: "A nostalgic unframed Paul Fernandes print capturing the charm and memories of school life.",
+    description: "A nostalgic 19.5\"x16.5\" unframed mounted Paul Fernandes print capturing the charm and memories of school life.",
     sizeLabel: "Format",
     sizes: ["Mounted print"],
     colorLabel: "Frame",
@@ -680,7 +717,7 @@ function availableQuantityForComponents(
   );
 }
 
-export function MerchandiseStorePage() {
+export function MerchandiseStorePage({ onMainWebsiteClick }: MerchandiseStorePageProps) {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [query, setQuery] = useState("");
   const [inventoryBySku, setInventoryBySku] = useState<Record<string, number>>(initialInventoryBySku);
@@ -1047,7 +1084,12 @@ export function MerchandiseStorePage() {
     <div className="store-shell">
       <header className="store-header">
         <div className="store-brand" aria-label="JAANA Josephite Store">
-          <img src="/assets/jaana-wordmark.png" alt="JAANA wordmark" />
+          <StoreImage
+            src="/assets/jaana-wordmark.png"
+            alt="JAANA wordmark"
+            loading="eager"
+            fetchPriority="high"
+          />
         </div>
         <button className="store-main-site-link" type="button" onClick={handleMainWebsiteRedirect}>
           Main website
@@ -1093,11 +1135,17 @@ export function MerchandiseStorePage() {
               </div>
               <div className="store-hero-visual" aria-label="Featured Josephite merchandise">
                 <div className="store-hero-collage">
-                  <img className="store-hero-collage-main" src="/assets/merchandise/cap.png" alt="Josephite cap preview" />
-                  <img src="/assets/merchandise/school-crest-lapel-pin.png" alt="School crest lapel pin preview" />
-                  <img src="/assets/merchandise/sticker-set.png" alt="Josephite sticker set preview" />
-                  <img src="/assets/merchandise/luggage-tag.png" alt="Josephite luggage tag preview" />
-                  <img src="/assets/merchandise/circular-josephite-magnet-clean.png" alt="Circular Josephite magnet preview" />
+                  <StoreImage
+                    className="store-hero-collage-main"
+                    src="/assets/merchandise/cap.png"
+                    alt="Josephite cap preview"
+                    loading="eager"
+                    fetchPriority="high"
+                  />
+                  <StoreImage src="/assets/merchandise/school-crest-lapel-pin.png" alt="School crest lapel pin preview" loading="eager" />
+                  <StoreImage src="/assets/merchandise/sticker-set.png" alt="Josephite sticker set preview" loading="eager" />
+                  <StoreImage src="/assets/merchandise/luggage-tag.png" alt="Josephite luggage tag preview" loading="eager" />
+                  <StoreImage src="/assets/merchandise/circular-josephite-magnet-clean.png" alt="Circular Josephite magnet preview" loading="eager" />
                 </div>
               </div>
             </section>
@@ -1136,7 +1184,7 @@ export function MerchandiseStorePage() {
                         onClick={() => setPreviewProduct(product)}
                         aria-label={`View full image for ${product.name}`}
                       >
-                        <img src={product.imageSrc} alt={product.imageAlt} />
+                        <StoreImage src={product.imageSrc} alt={product.imageAlt} />
                       </button>
                     ) : (
                       <div className="store-product-media store-product-media-placeholder" aria-label={product.imageAlt}>
@@ -1209,7 +1257,7 @@ export function MerchandiseStorePage() {
                           {canAddToCart ? "Add to cart" : "Max in cart"}
                         </button>
                         <button className="store-order-now-button" type="button" onClick={() => orderNow(product)} disabled={!canAddToCart}>
-                          Order now
+                          Reserve Now
                         </button>
                       </div>
                     </div>
@@ -1245,7 +1293,7 @@ export function MerchandiseStorePage() {
                   return (
                     <div className="store-cart-line" key={itemKey}>
                       {item.product.imageSrc ? (
-                        <img src={item.product.imageSrc} alt="" aria-hidden="true" />
+                        <StoreImage src={item.product.imageSrc} alt="" ariaHidden />
                       ) : (
                         <span className="store-cart-line-placeholder" aria-hidden="true">
                           Picture Coming Soon
@@ -1346,7 +1394,20 @@ export function MerchandiseStorePage() {
               <button className="secondary-button" type="button" onClick={() => setRedirectDialogOpen(false)}>
                 Cancel
               </button>
-              <button className="primary-button" type="button" onClick={() => (window.location.href = "/#connect")}>
+              <button
+                className="primary-button"
+                type="button"
+                onClick={() => {
+                  setRedirectDialogOpen(false);
+
+                  if (onMainWebsiteClick) {
+                    onMainWebsiteClick();
+                    return;
+                  }
+
+                  window.location.href = "/#connect";
+                }}
+              >
                 Continue
               </button>
             </div>
@@ -1368,7 +1429,9 @@ export function MerchandiseStorePage() {
             <button className="store-image-viewer-close" type="button" onClick={() => setPreviewProduct(null)}>
               Close
             </button>
-            {previewProduct.imageSrc ? <img src={previewProduct.imageSrc} alt={previewProduct.imageAlt} /> : null}
+            {previewProduct.imageSrc ? (
+              <StoreImage src={previewProduct.imageSrc} alt={previewProduct.imageAlt} loading="eager" fetchPriority="high" />
+            ) : null}
           </div>
         </div>
       ) : null}

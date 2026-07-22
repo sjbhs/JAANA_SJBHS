@@ -9,6 +9,7 @@ import {
 } from "../types";
 import { InlineEditableText } from "./InlineEditableText";
 import { handleRovingTabKeyDown } from "../accessibility";
+import { optimizedImageSrc } from "../optimizedImages";
 
 type ConnectPageProps = {
   details: TabConfig;
@@ -16,6 +17,7 @@ type ConnectPageProps = {
   connectCopy: ConnectPageCopy;
   editable?: boolean;
   registrationOpenRequest?: number;
+  onOpenStore?: () => void;
   onChangeDetails?: <K extends keyof TabConfig>(key: K, value: TabConfig[K]) => void;
   onChangeConnectCopy?: <K extends keyof ConnectPageCopy>(key: K, value: ConnectPageCopy[K]) => void;
   onChangeConnectContent?: <K extends keyof ConnectPageContent>(key: K, value: ConnectPageContent[K]) => void;
@@ -291,6 +293,7 @@ function ConnectPosterPicture({
         height="792"
         loading={priority ? "eager" : "lazy"}
         decoding="async"
+        fetchPriority={priority ? "high" : "auto"}
       />
     </picture>
   );
@@ -441,7 +444,7 @@ function SponsorCard({
   const cardContent = (
     <>
       <div className="connect-sponsor-logo">
-        <img src={sponsor.logoSrc} alt={sponsor.logoAlt} />
+        <img src={optimizedImageSrc(sponsor.logoSrc)} alt={sponsor.logoAlt} loading="lazy" decoding="async" />
       </div>
       <div className="connect-sponsor-card-body">
         <span className={`connect-sponsor-badge is-${tierSlug}`}>{tierName}</span>
@@ -543,6 +546,7 @@ export function ConnectPage({
   connectCopy,
   editable = false,
   registrationOpenRequest = 0,
+  onOpenStore,
   onChangeDetails,
   onChangeConnectCopy,
   onChangeConnectContent
@@ -823,7 +827,12 @@ export function ConnectPage({
                 ) : null}
               </div>
               <figure className="connect-airport-glimpse">
-                <img src={connectContent.travel.airportImageSrc} alt={connectContent.travel.airportImageAlt} />
+                <img
+                  src={optimizedImageSrc(connectContent.travel.airportImageSrc)}
+                  alt={connectContent.travel.airportImageAlt}
+                  loading="lazy"
+                  decoding="async"
+                />
               </figure>
             </div>
 
@@ -898,7 +907,12 @@ export function ConnectPage({
         <article id="connect-stay" className="connect-info-panel connect-stay-panel">
           <h3>Stay</h3>
           <div className="connect-hotel-preview">
-            <img src={connectContent.stay.hotelImageSrc} alt={connectContent.stay.hotelImageAlt} />
+            <img
+              src={optimizedImageSrc(connectContent.stay.hotelImageSrc)}
+              alt={connectContent.stay.hotelImageAlt}
+              loading="lazy"
+              decoding="async"
+            />
             <div>
               <strong>
                 <InlineEditableText
@@ -1039,12 +1053,12 @@ export function ConnectPage({
             ) : null}
           </div>
           <div className="connect-merchandise-preview" aria-hidden="true">
-            <img src="/assets/merchandise/alumni-essentials-bundle.png" alt="" />
+            <img src={optimizedImageSrc("/assets/merchandise/alumni-essentials-bundle.png")} alt="" loading="lazy" decoding="async" />
             <div>
-              <img src="/assets/merchandise/cap.png" alt="" />
-              <img src="/assets/merchandise/metal-water-bottle.png" alt="" />
-              <img src="/assets/merchandise/luggage-tag.png" alt="" />
-              <img src="/assets/merchandise/scarf.png" alt="" />
+              <img src={optimizedImageSrc("/assets/merchandise/cap.png")} alt="" loading="lazy" decoding="async" />
+              <img src={optimizedImageSrc("/assets/merchandise/metal-water-bottle.png")} alt="" loading="lazy" decoding="async" />
+              <img src={optimizedImageSrc("/assets/merchandise/luggage-tag.png")} alt="" loading="lazy" decoding="async" />
+              <img src={optimizedImageSrc("/assets/merchandise/scarf.png")} alt="" loading="lazy" decoding="async" />
             </div>
           </div>
         </article>
@@ -1222,6 +1236,11 @@ export function ConnectPage({
                 onClick={() => {
                   setStoreRedirectDialogOpen(false);
                   window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+                  if (onOpenStore) {
+                    onOpenStore();
+                    return;
+                  }
+
                   window.location.href = merchandiseStoreUrl;
                 }}
               >

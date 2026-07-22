@@ -65,7 +65,7 @@ values
   ('MERCH-016', 'Patricks Tie Pin - Green', 20, 10, 'individual', 16),
   ('MERCH-017', 'Coffee Table Book - 100 Years', 20, 50, 'individual', 17),
   ('MERCH-018', 'Faith & Toil Book - 150 Years', 20, 50, 'individual', 18),
-  ('MERCH-019', 'Paul Fernandes Unframed Mounted Print', 20, 50, 'individual', 19),
+  ('MERCH-019', 'Paul Fernandes Unframed Mounted Print (19.5"x16.5")', 20, 50, 'individual', 19),
   ('MERCH-020', 'Laptop Bag', 15, 40, 'individual', 20),
   ('MERCH-021', 'Laptop Sleeve', 15, 30, 'individual', 21),
   ('MERCH-022', 'Metal Water Bottle', 25, 20, 'individual', 22),

@@ -628,6 +628,33 @@ function App() {
     });
   };
 
+  const openStorePage = () => {
+    setMobileNavOpen(false);
+    window.history.pushState(null, "", "/josephite-store");
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "auto"
+    });
+    forceLocationRender((current) => current + 1);
+  };
+
+  const returnToConnectPage = () => {
+    setMobileNavOpen(false);
+
+    startTransition(() => {
+      setActiveTab("connect");
+    });
+
+    window.history.pushState(null, "", "/#connect");
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "auto"
+    });
+    forceLocationRender((current) => current + 1);
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!event.currentTarget.reportValidity()) {
@@ -702,7 +729,7 @@ function App() {
   const isOverviewTab = activeTab === "home";
 
   if (isStoreRoute) {
-    return <MerchandiseStorePage />;
+    return <MerchandiseStorePage onMainWebsiteClick={returnToConnectPage} />;
   }
 
   if (isAdminRoute) {
@@ -843,6 +870,7 @@ function App() {
             connectContent={connectPage}
             connectCopy={connectCopy}
             registrationOpenRequest={connectRegistrationRequest}
+            onOpenStore={openStorePage}
           />
         ) : null}
       </main>
