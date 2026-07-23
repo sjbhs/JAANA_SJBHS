@@ -2355,24 +2355,39 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
             >
               Merchandise
             </button>
-            {isContentView ? (
-              <>
-                <button
-                  className={isEditing ? "secondary-button is-active" : "secondary-button"}
-                  type="button"
-                  aria-pressed={isEditing}
-                  onClick={() => setIsEditing((current) => !current)}
-                >
-                  {isEditing ? "Done editing" : "Edit texts"}
-                </button>
-                <button className="primary-button" type="button" onClick={handleSave} disabled={isSaving || !hasUnsavedChanges}>
-                  {isSaving ? "Saving..." : "Save changes"}
-                </button>
-                <button className="secondary-button" type="button" onClick={undoChanges} disabled={!hasUnsavedChanges || isSaving}>
-                  Undo
-                </button>
-              </>
-            ) : null}
+            <button
+              className={`${isEditing ? "secondary-button is-active" : "secondary-button"} admin-content-only-action${
+                isContentView ? "" : " is-placeholder"
+              }`}
+              type="button"
+              aria-hidden={!isContentView}
+              aria-pressed={isEditing}
+              tabIndex={isContentView ? undefined : -1}
+              onClick={() => setIsEditing((current) => !current)}
+              disabled={!isContentView}
+            >
+              {isEditing ? "Done editing" : "Edit texts"}
+            </button>
+            <button
+              className={`primary-button admin-content-only-action${isContentView ? "" : " is-placeholder"}`}
+              type="button"
+              aria-hidden={!isContentView}
+              tabIndex={isContentView ? undefined : -1}
+              onClick={handleSave}
+              disabled={!isContentView || isSaving || !hasUnsavedChanges}
+            >
+              {isSaving ? "Saving..." : "Save changes"}
+            </button>
+            <button
+              className={`secondary-button admin-content-only-action${isContentView ? "" : " is-placeholder"}`}
+              type="button"
+              aria-hidden={!isContentView}
+              tabIndex={isContentView ? undefined : -1}
+              onClick={undoChanges}
+              disabled={!isContentView || !hasUnsavedChanges || isSaving}
+            >
+              Undo
+            </button>
           </div>
         </div>
       </section>
@@ -2529,27 +2544,28 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
             <div className="featured-heading admin-inquiry-head">
               <div>
                 <h3>Merchandise admin</h3>
-                <p>Review live stock, uploaded previews, and event pickup reservations from one place.</p>
               </div>
-              <div className="admin-merchandise-head-actions">
-                <div className="admin-merchandise-view-toggle" aria-label="Merchandise admin view">
-                  <button
-                    className={merchandiseAdminTab === "inventory" ? "secondary-button is-active" : "secondary-button"}
-                    type="button"
-                    aria-pressed={merchandiseAdminTab === "inventory"}
-                    onClick={() => setMerchandiseAdminTab("inventory")}
-                  >
-                    Inventory
-                  </button>
-                  <button
-                    className={merchandiseAdminTab === "orders" ? "secondary-button is-active" : "secondary-button"}
-                    type="button"
-                    aria-pressed={merchandiseAdminTab === "orders"}
-                    onClick={() => setMerchandiseAdminTab("orders")}
-                  >
-                    Orders
-                  </button>
-                </div>
+            </div>
+            <div className="admin-merchandise-toolbar">
+              <div className="admin-merchandise-view-toggle" aria-label="Merchandise admin view">
+                <button
+                  className={merchandiseAdminTab === "inventory" ? "secondary-button is-active" : "secondary-button"}
+                  type="button"
+                  aria-pressed={merchandiseAdminTab === "inventory"}
+                  onClick={() => setMerchandiseAdminTab("inventory")}
+                >
+                  Inventory
+                </button>
+                <button
+                  className={merchandiseAdminTab === "orders" ? "secondary-button is-active" : "secondary-button"}
+                  type="button"
+                  aria-pressed={merchandiseAdminTab === "orders"}
+                  onClick={() => setMerchandiseAdminTab("orders")}
+                >
+                  Orders
+                </button>
+              </div>
+              <div className="admin-merchandise-export-actions">
                 <button
                   className="secondary-button"
                   type="button"
