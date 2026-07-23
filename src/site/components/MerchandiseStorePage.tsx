@@ -1060,7 +1060,7 @@ export function MerchandiseStorePage({ onMainWebsiteClick }: MerchandiseStorePag
       const receiptStatus =
         payload.receiptEmail?.sent === false
           ? " Receipt email could not be sent, so please keep this reservation ID."
-          : " A PDF receipt has been emailed to you.";
+          : " A PDF receipt has been emailed to you. If it does not show up in your inbox, please check your spam, purchases, or other filtered folders.";
       const serverTotal =
         typeof payload.paymentSummary?.total === "number"
           ? ` Total due at pickup: ${formatMoney(payload.paymentSummary.total)}.`
