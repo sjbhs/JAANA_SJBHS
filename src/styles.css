@@ -4271,6 +4271,13 @@ img {
   font-size: 0.88rem;
 }
 
+.admin-controls-actions .secondary-button.is-active {
+  border-color: var(--navy);
+  background: var(--navy);
+  color: #fff;
+  box-shadow: 0 5px 12px rgba(36, 78, 164, 0.2);
+}
+
 .admin-inquiry-section {
   display: grid;
   gap: 1rem;
@@ -4555,7 +4562,7 @@ img {
 
 .admin-merchandise-view-toggle .secondary-button.is-active {
   border-color: rgba(36, 78, 164, 0.34);
-  background: var(--royal-blue);
+  background: var(--navy);
   color: #fff;
 }
 
@@ -4800,6 +4807,56 @@ img {
   gap: 0.8rem;
 }
 
+.admin-merchandise-customer-group {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.9rem;
+  border: 1px solid rgba(19, 53, 127, 0.12);
+  border-radius: 14px;
+  background: rgba(241, 246, 255, 0.58);
+}
+
+.admin-merchandise-customer-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: end;
+}
+
+.admin-merchandise-customer-head h4 {
+  margin: 0.18rem 0 0.2rem;
+  color: var(--navy-deep);
+  font-size: 1.12rem;
+  line-height: 1.2;
+}
+
+.admin-merchandise-customer-head p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.admin-merchandise-customer-summary {
+  display: grid;
+  justify-items: end;
+  gap: 0.12rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-align: right;
+}
+
+.admin-merchandise-customer-summary strong {
+  color: var(--navy-deep);
+  font-size: 0.9rem;
+}
+
+.admin-merchandise-customer-orders {
+  display: grid;
+  gap: 0.6rem;
+}
+
 .admin-merchandise-order-card {
   display: grid;
   gap: 0.8rem;
@@ -4822,11 +4879,13 @@ img {
   align-items: start;
 }
 
-.admin-merchandise-order-head h4 {
+.admin-merchandise-order-head h5 {
   margin: 0.45rem 0 0.2rem;
   color: var(--navy-deep);
-  font-size: 1rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 0.78rem;
   line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 
 .admin-merchandise-order-head p {
@@ -4843,14 +4902,6 @@ img {
   color: var(--muted);
   font-size: 0.78rem;
   text-align: right;
-}
-
-.admin-merchandise-order-meta strong {
-  max-width: 17rem;
-  color: var(--navy-deep);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-  font-size: 0.76rem;
-  overflow-wrap: anywhere;
 }
 
 .admin-merchandise-order-meta .secondary-button {
@@ -5191,30 +5242,22 @@ img {
   padding-inline: 1rem;
 }
 
-.admin-media-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 55;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding: clamp(1rem, 2.5vw, 1.75rem);
-  background: rgba(245, 242, 234, 0.56);
-  backdrop-filter: blur(12px);
-  overflow: auto;
+.admin-media-section {
+  display: grid;
+  gap: 1rem;
+  width: var(--container);
+  margin: 0.85rem auto 0;
+  padding: clamp(0.85rem, 1.2vw, 1rem);
+  border: 1px solid rgba(19, 53, 127, 0.12);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 18px 42px rgba(13, 31, 74, 0.08);
 }
 
-.admin-media-drawer {
+.admin-media-page {
   display: grid;
   gap: 1.15rem;
-  width: min(94vw, 1200px);
-  padding: clamp(1.15rem, 2vw, 1.7rem);
-  border: 1px solid rgba(19, 53, 127, 0.12);
-  border-radius: clamp(22px, 2vw, 30px);
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 24px 48px rgba(13, 31, 74, 0.16);
-  max-height: calc(100vh - 3rem);
-  overflow: auto;
+  min-width: 0;
 }
 
 .admin-media-drawer-head {
@@ -5375,11 +5418,11 @@ img {
   gap: 1rem;
 }
 
-.admin-media-drawer .folder-grid {
+.admin-media-page .folder-grid {
   grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
 }
 
-.admin-media-drawer .folder-photo-grid {
+.admin-media-page .folder-photo-grid {
   grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
 }
 
@@ -8447,6 +8490,7 @@ a:focus-visible {
   }
 
   .admin-merchandise-head-actions,
+  .admin-merchandise-customer-head,
   .admin-merchandise-order-head,
   .admin-merchandise-order-item {
     grid-template-columns: 1fr;
@@ -8468,6 +8512,11 @@ a:focus-visible {
     text-align: left;
   }
 
+  .admin-merchandise-customer-summary {
+    justify-items: start;
+    text-align: left;
+  }
+
   .admin-merchandise-order-quantity {
     text-align: left;
   }
@@ -8483,6 +8532,11 @@ a:focus-visible {
 
   .admin-inquiry-card-head time {
     text-align: left;
+  }
+
+  .admin-media-page .folder-grid,
+  .admin-media-page .folder-photo-grid {
+    grid-template-columns: 1fr;
   }
 
   .donation-detail-grid {
@@ -8991,7 +9045,8 @@ a:focus-visible {
 
   .admin-controls-section,
   .admin-inquiry-section,
-  .admin-merchandise-section {
+  .admin-merchandise-section,
+  .admin-media-section {
     width: calc(100vw - 0.75rem);
   }
 
@@ -9000,8 +9055,11 @@ a:focus-visible {
   }
 
   .admin-controls-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     width: 100%;
     justify-content: flex-start;
+    overflow: visible;
     padding-bottom: 0.15rem;
   }
 
@@ -9013,6 +9071,73 @@ a:focus-visible {
 
   .admin-merchandise-summary {
     grid-template-columns: 1fr;
+  }
+
+  .admin-merchandise-table-wrap {
+    overflow: visible;
+    border: 0;
+    background: transparent;
+  }
+
+  .admin-merchandise-table {
+    display: block;
+    min-width: 0;
+  }
+
+  .admin-merchandise-table thead {
+    display: none;
+  }
+
+  .admin-merchandise-table tbody {
+    display: grid;
+    gap: 0.7rem;
+  }
+
+  .admin-merchandise-table tr {
+    display: grid;
+    padding: 0.55rem;
+    border: 1px solid rgba(19, 53, 127, 0.1);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.92);
+  }
+
+  .admin-merchandise-table td,
+  .admin-merchandise-table td:first-child,
+  .admin-merchandise-table td:last-child,
+  .admin-merchandise-table td:nth-child(4),
+  .admin-merchandise-table td:nth-child(5),
+  .admin-merchandise-table td:nth-child(6) {
+    display: grid;
+    grid-template-columns: minmax(5.2rem, 0.65fr) minmax(0, 1fr);
+    gap: 0.7rem;
+    align-items: center;
+    width: auto;
+    padding: 0.42rem;
+    border: 0;
+  }
+
+  .admin-merchandise-table td::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .admin-merchandise-table td .admin-merchandise-preview-empty,
+  .admin-merchandise-thumb-button {
+    justify-self: start;
+  }
+
+  .admin-merchandise-quantity-control,
+  .admin-merchandise-image-actions {
+    min-width: 0;
+  }
+
+  .admin-merchandise-customer-group,
+  .admin-merchandise-order-card {
+    padding: 0.7rem;
   }
 
   .admin-inquiry-filters {

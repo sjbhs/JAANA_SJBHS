@@ -95,6 +95,14 @@ type AdminMerchandiseOrdersResponse = {
   error?: string;
 };
 
+type AdminMerchandiseCustomerGroup = {
+  key: string;
+  customer: AdminMerchandiseOrder["customer"];
+  orders: AdminMerchandiseOrder[];
+  activeOrders: number;
+  total: number;
+};
+
 const inquiryStatusOptions = [
   { value: "all", label: "All" },
   { value: "pending", label: "Pending" },
@@ -133,6 +141,14 @@ function quantityDraftsFromInventory(rows: AdminMerchandiseInventoryRow[]) {
 
 function isBundleInventoryRow(row: AdminMerchandiseInventoryRow) {
   return row.sku.startsWith("BUNDLE-");
+}
+
+function merchandiseCustomerKey(customer: AdminMerchandiseOrder["customer"]) {
+  const email = customer.email.trim().toLowerCase();
+  const phone = customer.phone?.replace(/\D/g, "") ?? "";
+  const name = customer.name.trim().toLowerCase();
+
+  return email || phone || name;
 }
 
 function slugify(value: string) {
@@ -351,9 +367,7 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
   const [inquiryExportingFormat, setInquiryExportingFormat] = useState<"idle" | "csv" | "excel">("idle");
   const [activeInquiryActionId, setActiveInquiryActionId] = useState("");
   const [editorView, setEditorView] = useState<"content" | "media" | "inquiries" | "merchandise">("content");
-  const [mediaReturnView, setMediaReturnView] = useState<"content" | "inquiries" | "merchandise">("content");
   const [merchandiseInventory, setMerchandiseInventory] = useState<AdminMerchandiseInventoryRow[]>([]);
-  const [merchandiseStorage, setMerchandiseStorage] = useState("");
   const [merchandiseLoading, setMerchandiseLoading] = useState(false);
   const [merchandiseStatus, setMerchandiseStatus] = useState("Open merchandise to check live inventory.");
   const [merchandiseAdminTab, setMerchandiseAdminTab] = useState<"inventory" | "orders">("inventory");
@@ -446,6 +460,34 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
           units: 0,
           amount: 0
         }
+      ),
+    [merchandiseOrders]
+  );
+  const merchandiseCustomerGroups = useMemo(
+    () =>
+      Array.from(
+        merchandiseOrders
+          .reduce<Map<string, AdminMerchandiseCustomerGroup>>((groups, order) => {
+            const key = merchandiseCustomerKey(order.customer);
+            const existing = groups.get(key);
+
+            if (existing) {
+              existing.orders.push(order);
+              existing.activeOrders += order.status === "reserved" ? 1 : 0;
+              existing.total += order.paymentSummary?.total ?? 0;
+              return groups;
+            }
+
+            groups.set(key, {
+              key,
+              customer: order.customer,
+              orders: [order],
+              activeOrders: order.status === "reserved" ? 1 : 0,
+              total: order.paymentSummary?.total ?? 0
+            });
+            return groups;
+          }, new Map())
+          .values()
       ),
     [merchandiseOrders]
   );
@@ -596,7 +638,6 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
       const rows = Array.isArray(payload.inventory) ? payload.inventory : [];
 
       applyMerchandiseInventory(rows);
-      setMerchandiseStorage(typeof payload.storage === "string" ? payload.storage : "");
       setMerchandiseStatus("Loaded live merchandise quantities.");
       return true;
     } catch {
@@ -633,7 +674,6 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
       }
 
       setMerchandiseOrders(Array.isArray(payload.orders) ? payload.orders : []);
-      setMerchandiseStorage(typeof payload.storage === "string" ? payload.storage : merchandiseStorage);
       setMerchandiseOrdersStatus("Loaded merchandise orders.");
       return true;
     } catch {
@@ -685,10 +725,6 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
 
       if (Array.isArray(payload.orders)) {
         setMerchandiseOrders(payload.orders);
-      }
-
-      if (typeof payload.storage === "string") {
-        setMerchandiseStorage(payload.storage);
       }
 
       if (Array.isArray(payload.inventory)) {
@@ -769,10 +805,6 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
 
       if (Array.isArray(payload.inventory)) {
         applyMerchandiseInventory(payload.inventory);
-      }
-
-      if (typeof payload.storage === "string") {
-        setMerchandiseStorage(payload.storage);
       }
 
       setMerchandiseStatus(`Updated quantity for ${row.sku}.`);
@@ -1126,7 +1158,6 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
       setMerchandiseInventory([]);
       setMerchandiseQuantityDrafts({});
       setMerchandiseOrders([]);
-      setMerchandiseStorage("");
       setMerchandiseStatus("Sign in to view merchandise inventory.");
       setMerchandiseOrdersStatus("Sign in to view merchandise orders.");
     }
@@ -1138,7 +1169,6 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
   };
 
   const openMediaView = () => {
-    setMediaReturnView(editorView === "inquiries" || editorView === "merchandise" ? editorView : "content");
     openMediaRoot();
   };
 
@@ -1966,27 +1996,6 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
     setEditorStatus(`Viewing ${tabId} page.`);
   };
 
-  const closeMediaManager = () => {
-    setEditorView(mediaReturnView);
-    setEditorStatus(
-      mediaReturnView === "inquiries"
-        ? "Review and export incoming inquiries."
-        : mediaReturnView === "merchandise"
-          ? "Check merchandise stock and reservation counts."
-          : "Open edit mode to change visible copy."
-    );
-    setSelectedFolderId("");
-    setSelectedAlbumId("");
-    setFolderFormOpen(false);
-    setAlbumFormOpen(false);
-    setImageFormOpen(false);
-    setNewFolderTitle("");
-    setNewAlbumTitle("");
-    setSelectedImageCaption("");
-    setPendingImageFile(null);
-    setImageInputKey((current) => current + 1);
-  };
-
   const openMediaRoot = () => {
     setEditorView("media");
     setSelectedFolderId("");
@@ -2044,7 +2053,6 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
       return;
     }
 
-    closeMediaManager();
   };
 
   const mediaTitle =
@@ -2195,7 +2203,7 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
   const isMediaView = editorView === "media";
   const isInquiryView = editorView === "inquiries";
   const isMerchandiseView = editorView === "merchandise";
-  const isAdminToolView = isInquiryView || isMerchandiseView;
+  const isAdminToolView = isMediaView || isInquiryView || isMerchandiseView;
 
   const isOverviewTab = activeTab === "home";
   const activeSelectedCause =
@@ -2292,6 +2300,14 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
         <div className="admin-controls-bar">
           <div className="admin-controls-actions">
             <button
+              className={isContentView ? "secondary-button is-active" : "secondary-button"}
+              type="button"
+              aria-pressed={isContentView}
+              onClick={openContentView}
+            >
+              Content
+            </button>
+            <button
               className={isMediaView ? "secondary-button is-active" : "secondary-button"}
               type="button"
               aria-pressed={isMediaView}
@@ -2303,31 +2319,17 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
               className={isInquiryView ? "secondary-button is-active" : "secondary-button"}
               type="button"
               aria-pressed={isInquiryView}
-              onClick={() => {
-                if (isInquiryView) {
-                  openContentView();
-                  return;
-                }
-
-                void openInquiriesView();
-              }}
+              onClick={() => void openInquiriesView()}
             >
-              {isInquiryView ? "Content" : "Inquiries"}
+              Inquiries
             </button>
             <button
               className={isMerchandiseView ? "secondary-button is-active" : "secondary-button"}
               type="button"
               aria-pressed={isMerchandiseView}
-              onClick={() => {
-                if (isMerchandiseView) {
-                  openContentView();
-                  return;
-                }
-
-                void openMerchandiseView();
-              }}
+              onClick={() => void openMerchandiseView()}
             >
-              {isMerchandiseView ? "Content" : "Merchandise"}
+              Merchandise
             </button>
             {isContentView ? (
               <>
@@ -2510,6 +2512,7 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
                   <button
                     className={merchandiseAdminTab === "inventory" ? "secondary-button is-active" : "secondary-button"}
                     type="button"
+                    aria-pressed={merchandiseAdminTab === "inventory"}
                     onClick={() => setMerchandiseAdminTab("inventory")}
                   >
                     Inventory
@@ -2517,6 +2520,7 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
                   <button
                     className={merchandiseAdminTab === "orders" ? "secondary-button is-active" : "secondary-button"}
                     type="button"
+                    aria-pressed={merchandiseAdminTab === "orders"}
                     onClick={() => setMerchandiseAdminTab("orders")}
                   >
                     Orders
@@ -2544,10 +2548,6 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
             {merchandiseAdminTab === "inventory" ? (
               <>
                 <div className="admin-inquiry-summary admin-merchandise-summary">
-                  <article>
-                    <span>Storage</span>
-                    <strong>{merchandiseStorage || "Unknown"}</strong>
-                  </article>
                   <article>
                     <span>Rows</span>
                     <strong>{merchandiseInventory.length}</strong>
@@ -2598,7 +2598,7 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
 
                           return (
                             <tr key={row.sku} className={row.availableQuantity <= 10 ? "is-low-stock" : ""}>
-                              <td>
+                              <td data-label="Image">
                                 {row.imageSrc ? (
                                   <button
                                     className="admin-merchandise-thumb-button"
@@ -2617,9 +2617,9 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
                                   <span className="admin-merchandise-preview-empty">Picture Coming Soon</span>
                                 )}
                               </td>
-                              <td>{row.sku}</td>
-                              <td>{row.name}</td>
-                              <td>
+                              <td data-label="SKU">{row.sku}</td>
+                              <td data-label="Item">{row.name}</td>
+                              <td data-label="Total">
                                 {isBundleRow ? (
                                   <div className="admin-merchandise-quantity-readonly">
                                     <strong>{row.totalQuantity}</strong>
@@ -2652,12 +2652,12 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
                                   </div>
                                 )}
                               </td>
-                              <td>{row.reservedQuantity}</td>
-                              <td>
+                              <td data-label="Reserved">{row.reservedQuantity}</td>
+                              <td data-label="Available">
                                 <strong>{row.availableQuantity}</strong>
                                 {row.availableQuantity <= 10 ? <span className="admin-merchandise-low-stock">Low stock</span> : null}
                               </td>
-                              <td>
+                              <td data-label="Manage">
                                 <div className="admin-merchandise-image-actions">
                                   <label className="secondary-button admin-merchandise-upload-button">
                                     {activeMerchandiseImageSku === row.sku ? "Working..." : row.imageSrc ? "Replace" : "Upload"}
@@ -2716,10 +2716,6 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
                     <span>Server total</span>
                     <strong>{formatAdminMoney(merchandiseOrderTotals.amount)}</strong>
                   </article>
-                  <article>
-                    <span>Storage</span>
-                    <strong>{merchandiseStorage || "Unknown"}</strong>
-                  </article>
                 </div>
 
                 {merchandiseOrdersStatus ? (
@@ -2729,95 +2725,118 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
                 ) : null}
 
                 <div className="admin-merchandise-orders">
-                  {merchandiseOrders.length ? (
-                    merchandiseOrders.map((order) => (
-                      <article key={order.id} className={`admin-merchandise-order-card is-${order.status}`}>
-                        <div className="admin-merchandise-order-head">
+                  {merchandiseCustomerGroups.length ? (
+                    merchandiseCustomerGroups.map((group) => (
+                      <section key={group.key} className="admin-merchandise-customer-group">
+                        <div className="admin-merchandise-customer-head">
                           <div>
-                            <span className={`admin-inquiry-badge ${order.status === "reserved" ? "is-pending" : "is-complete"}`}>
-                              {order.status}
-                            </span>
-                            <h4>{order.customer.name}</h4>
+                            <span className="section-kicker">Customer</span>
+                            <h4>{group.customer.name}</h4>
                             <p>
-                              <a href={`mailto:${order.customer.email}`}>{order.customer.email}</a>
-                              {order.customer.phone ? ` · ${order.customer.phone}` : ""}
+                              <a href={`mailto:${group.customer.email}`}>{group.customer.email}</a>
+                              {group.customer.phone ? ` · ${group.customer.phone}` : ""}
                             </p>
                           </div>
-                          <div className="admin-merchandise-order-meta">
-                            <strong>{order.id}</strong>
-                            <span>{formatAdminMoney(order.paymentSummary?.total)}</span>
-                            <time dateTime={order.createdAt}>{formatInquiryTimestamp(order.createdAt)}</time>
-                            <button
-                              className="secondary-button"
-                              type="button"
-                              onClick={() => void handleMerchandiseCancellation({ reservationId: order.id })}
-                              disabled={order.status !== "reserved" || activeMerchandiseCancellationKey === order.id}
-                            >
-                              {activeMerchandiseCancellationKey === order.id ? "Cancelling..." : "Cancel full order"}
-                            </button>
+                          <div className="admin-merchandise-customer-summary">
+                            <strong>
+                              {group.orders.length} {group.orders.length === 1 ? "order" : "orders"}
+                            </strong>
+                            <span>
+                              {group.activeOrders} active · {formatAdminMoney(group.total)}
+                            </span>
                           </div>
                         </div>
 
-                        <div className="admin-merchandise-order-items">
-                          {order.items.map((item, itemIndex) => {
-                            const itemId = item.id ?? `${order.id}:${itemIndex}`;
-                            const actionKey = `${order.id}:${itemId}`;
-                            const quantityValue = merchandiseCancelQuantities[actionKey] ?? "1";
-                            const cancellationQuantity = Number(quantityValue);
-
-                            return (
-                              <div key={itemId} className="admin-merchandise-order-item">
+                        <div className="admin-merchandise-customer-orders">
+                          {group.orders.map((order) => (
+                            <article key={order.id} className={`admin-merchandise-order-card is-${order.status}`}>
+                              <div className="admin-merchandise-order-head">
                                 <div>
-                                  <strong>{item.name}</strong>
-                                  <span>
-                                    {item.sku} · {item.size} · {item.color}
+                                  <span
+                                    className={`admin-inquiry-badge ${order.status === "reserved" ? "is-pending" : "is-complete"}`}
+                                  >
+                                    {order.status}
                                   </span>
+                                  <h5>Order {order.id}</h5>
                                 </div>
-                                <span className="admin-merchandise-order-quantity">
-                                  Qty {item.quantity}
-                                  {typeof item.lineTotal === "number" ? ` · ${formatAdminMoney(item.lineTotal)}` : ""}
-                                </span>
-                                <div className="admin-merchandise-cancel-line">
-                                  <input
-                                    className="connect-edit-input"
-                                    type="number"
-                                    min="1"
-                                    max={item.quantity}
-                                    value={quantityValue}
-                                    disabled={order.status !== "reserved" || activeMerchandiseCancellationKey === actionKey}
-                                    onChange={(event) =>
-                                      setMerchandiseCancelQuantities((current) => ({
-                                        ...current,
-                                        [actionKey]: event.target.value
-                                      }))
-                                    }
-                                  />
+                                <div className="admin-merchandise-order-meta">
+                                  <span>{formatAdminMoney(order.paymentSummary?.total)}</span>
+                                  <time dateTime={order.createdAt}>{formatInquiryTimestamp(order.createdAt)}</time>
                                   <button
                                     className="secondary-button"
                                     type="button"
-                                    onClick={() =>
-                                      void handleMerchandiseCancellation({
-                                        reservationId: order.id,
-                                        itemId,
-                                        quantity: cancellationQuantity
-                                      })
-                                    }
-                                    disabled={
-                                      order.status !== "reserved" ||
-                                      activeMerchandiseCancellationKey === actionKey ||
-                                      !Number.isInteger(cancellationQuantity) ||
-                                      cancellationQuantity < 1 ||
-                                      cancellationQuantity > item.quantity
-                                    }
+                                    onClick={() => void handleMerchandiseCancellation({ reservationId: order.id })}
+                                    disabled={order.status !== "reserved" || activeMerchandiseCancellationKey === order.id}
                                   >
-                                    {activeMerchandiseCancellationKey === actionKey ? "Cancelling..." : "Cancel qty"}
+                                    {activeMerchandiseCancellationKey === order.id ? "Cancelling..." : "Cancel full order"}
                                   </button>
                                 </div>
                               </div>
-                            );
-                          })}
+
+                              <div className="admin-merchandise-order-items">
+                                {order.items.map((item, itemIndex) => {
+                                  const itemId = item.id ?? `${order.id}:${itemIndex}`;
+                                  const actionKey = `${order.id}:${itemId}`;
+                                  const quantityValue = merchandiseCancelQuantities[actionKey] ?? "1";
+                                  const cancellationQuantity = Number(quantityValue);
+
+                                  return (
+                                    <div key={itemId} className="admin-merchandise-order-item">
+                                      <div>
+                                        <strong>{item.name}</strong>
+                                        <span>
+                                          {item.sku} · {item.size} · {item.color}
+                                        </span>
+                                      </div>
+                                      <span className="admin-merchandise-order-quantity">
+                                        Qty {item.quantity}
+                                        {typeof item.lineTotal === "number" ? ` · ${formatAdminMoney(item.lineTotal)}` : ""}
+                                      </span>
+                                      <div className="admin-merchandise-cancel-line">
+                                        <input
+                                          className="connect-edit-input"
+                                          type="number"
+                                          min="1"
+                                          max={item.quantity}
+                                          value={quantityValue}
+                                          aria-label={`Quantity to cancel for ${item.name} in order ${order.id}`}
+                                          disabled={order.status !== "reserved" || activeMerchandiseCancellationKey === actionKey}
+                                          onChange={(event) =>
+                                            setMerchandiseCancelQuantities((current) => ({
+                                              ...current,
+                                              [actionKey]: event.target.value
+                                            }))
+                                          }
+                                        />
+                                        <button
+                                          className="secondary-button"
+                                          type="button"
+                                          onClick={() =>
+                                            void handleMerchandiseCancellation({
+                                              reservationId: order.id,
+                                              itemId,
+                                              quantity: cancellationQuantity
+                                            })
+                                          }
+                                          disabled={
+                                            order.status !== "reserved" ||
+                                            activeMerchandiseCancellationKey === actionKey ||
+                                            !Number.isInteger(cancellationQuantity) ||
+                                            cancellationQuantity < 1 ||
+                                            cancellationQuantity > item.quantity
+                                          }
+                                        >
+                                          {activeMerchandiseCancellationKey === actionKey ? "Cancelling..." : "Cancel qty"}
+                                        </button>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </article>
+                          ))}
                         </div>
-                      </article>
+                      </section>
                     ))
                   ) : (
                     <p className="admin-inquiry-empty">No merchandise orders yet.</p>
@@ -3080,22 +3099,9 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
           </div>
         ) : null}
 
-        {editorView === "media" ? (
-          <div className="admin-media-overlay" onClick={closeMediaManager}>
-            <div
-              className="admin-media-drawer"
-              onClick={(event) => event.stopPropagation()}
-              onKeyDown={(event) => {
-                if (event.key === "Escape") {
-                  closeMediaManager();
-                }
-              }}
-              role="dialog"
-              aria-modal="true"
-              aria-label="Media folders editor"
-              tabIndex={-1}
-              autoFocus
-            >
+        {isMediaView ? (
+          <section className="section-block admin-media-section" aria-label="Media folders editor">
+            <div className="admin-media-page">
               <div className="admin-media-drawer-head">
                 <div className="admin-media-drawer-copy">
                   <span className="section-kicker">Media folders</span>
@@ -3108,9 +3114,6 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
                       Back
                     </button>
                   ) : null}
-                  <button className="secondary-button" type="button" onClick={closeMediaManager}>
-                    Close
-                  </button>
                 </div>
               </div>
 
@@ -3355,7 +3358,7 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
                 ) : null}
               </div>
             </div>
-          </div>
+          </section>
         ) : null}
       </main>
 
