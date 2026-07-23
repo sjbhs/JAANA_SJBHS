@@ -19,6 +19,7 @@ import { ConnectPage } from "./ConnectPage";
 import { DonatePage } from "./DonatePage";
 import { HomePage } from "./HomePage";
 import { initialForm } from "../content";
+import { buildMerchandiseOrdersCsv, buildMerchandiseReportXlsx } from "../merchandiseReport";
 import { ZeffyDonateDialog } from "./ZeffyDonateDialog";
 import { handleRovingTabKeyDown } from "../accessibility";
 
@@ -289,6 +290,10 @@ function buildInquiryExcelDocument(inquiries: InquiryEntry[]) {
 
 function downloadTextFile(contents: string, filename: string, mimeType: string) {
   const blob = new Blob([contents], { type: mimeType });
+  downloadBlob(blob, filename);
+}
+
+function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
@@ -1182,6 +1187,25 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
     setEditorView("merchandise");
     setEditorStatus("Check merchandise stock and reservation counts.");
     await Promise.all([loadMerchandiseInventory(), loadMerchandiseOrders()]);
+  };
+
+  const exportMerchandiseCsv = () => {
+    const date = new Date().toISOString().slice(0, 10);
+    downloadTextFile(
+      buildMerchandiseOrdersCsv(merchandiseOrders),
+      `jaana_merchandise_orders_${date}.csv`,
+      "text/csv;charset=utf-8"
+    );
+    setMerchandiseOrdersStatus(`Downloaded ${merchandiseOrders.length} orders as CSV.`);
+  };
+
+  const exportMerchandiseWorkbook = () => {
+    const date = new Date().toISOString().slice(0, 10);
+    downloadBlob(
+      buildMerchandiseReportXlsx(merchandiseOrders, merchandiseInventory),
+      `jaana_merchandise_report_${date}.xlsx`
+    );
+    setMerchandiseOrdersStatus("Downloaded the multi-sheet merchandise report.");
   };
 
   const openInquiryFilters = () => {
@@ -2541,6 +2565,22 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
                     : merchandiseLoading
                       ? "Refreshing..."
                       : "Refresh inventory"}
+                </button>
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={exportMerchandiseCsv}
+                  disabled={!merchandiseOrders.length || merchandiseOrdersLoading}
+                >
+                  Export CSV
+                </button>
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={exportMerchandiseWorkbook}
+                  disabled={!merchandiseOrders.length || !merchandiseInventory.length || merchandiseOrdersLoading || merchandiseLoading}
+                >
+                  Export Excel report
                 </button>
               </div>
             </div>
