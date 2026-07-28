@@ -163,19 +163,16 @@ INQUIRY_STORAGE_PATH=./server/data/inquiries.json
 ADMIN_EMAIL=jaanamedia@gmail.com
 ADMIN_PASSWORD=replace-with-a-long-unique-password
 ADMIN_SESSION_SECRET=replace-with-at-least-32-random-characters
-INQUIRY_EMAIL_FROM=JAANA Website <no-reply@jaana.app>
 INQUIRY_EMAIL_TO_GENERAL=jaanagroup@gmail.com
 INQUIRY_EMAIL_TO_FINANCE=jaanafinance@gmail.com
 INQUIRY_EMAIL_CC=
 REQUIRE_INQUIRY_EMAIL=true
-RESEND_API_KEY=
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=465
 SMTP_SECURE=true
 SMTP_USER=jaanamedia@gmail.com
 SMTP_PASS=
-SMTP_FROM=
-MERCHANDISE_EMAIL_FROM=
+SMTP_FROM=JAANA <jaanamedia@gmail.com>
 MERCHANDISE_RECEIPT_EMAIL_TO=jaanamedia@gmail.com
 REQUIRE_MERCHANDISE_RECEIPT_EMAIL=true
 VITE_API_PROXY_TARGET=http://127.0.0.1:3001
@@ -199,8 +196,6 @@ What they control:
   Locked admin password used to sign in to the hidden editor. Use a unique production value and do not commit it.
 - `ADMIN_SESSION_SECRET`
   Secret used to sign the HTTP-only admin session cookie. Use at least 32 random characters.
-- `INQUIRY_EMAIL_FROM`
-  Verified sender address or identity used by inquiry notification emails.
 - `INQUIRY_EMAIL_TO_GENERAL`
   Comma-separated recipients for general inquiry notification emails. Defaults to `jaanagroup@gmail.com`.
 - `INQUIRY_EMAIL_TO_FINANCE`
@@ -211,20 +206,16 @@ What they control:
   All public inquiry submissions route through the shared `/api/inquiries` backend, including the main Contact Us inquiry form and the Donate-page endowment and employer-matching request forms. General inquiries go to `jaanagroup@gmail.com` and finance inquiries go to `jaanafinance@gmail.com`. The submitter also receives an automatic confirmation email, and replies to that confirmation go back to the configured JAANA recipient inbox.
 - `REQUIRE_INQUIRY_EMAIL`
   Set to `true` in deployment so inquiry submissions fail visibly if email delivery is not configured. Vercel deployments default to requiring email delivery unless this is explicitly set to `false`.
-- `RESEND_API_KEY`
-  API key used to send inquiry notification emails through Resend.
 - `SMTP_HOST`
-  SMTP server hostname used for merchandise receipt emails.
+  Shared SMTP server hostname used for inquiry notifications and merchandise receipt emails.
 - `SMTP_PORT`
   SMTP server port. Defaults to `587`.
 - `SMTP_SECURE`
   Set to `true` for implicit TLS, commonly port `465`; otherwise STARTTLS is used when supported.
 - `SMTP_USER` / `SMTP_PASS`
-  Optional SMTP credentials. Set both values when the SMTP provider requires authentication.
+  Shared SMTP credentials for every website-generated email. Set both values when the SMTP provider requires authentication.
 - `SMTP_FROM`
-  Optional shared SMTP sender fallback. Leave blank to send as `JAANA Merchandise <SMTP_USER>`.
-- `MERCHANDISE_EMAIL_FROM`
-  Sender used for merchandise receipt emails. Leave blank to fall back to `SMTP_FROM`, `INQUIRY_EMAIL_FROM`, or `JAANA Merchandise <SMTP_USER>`.
+  Shared sender mailbox. Inquiry emails display as `JAANA Website`; store emails display as `JAANA Merchandise`, while both use this same address and SMTP login.
 - `MERCHANDISE_RECEIPT_EMAIL_TO`
   Comma-separated internal recipients for merchandise receipt copies. Defaults to `jaanamedia@gmail.com`.
 - `REQUIRE_MERCHANDISE_RECEIPT_EMAIL`
@@ -374,8 +365,9 @@ Required fields:
 - `email`
 - `interest`
 
-When `RESEND_API_KEY` is configured, the API also emails inquiry details to `INQUIRY_EMAIL_TO` and optional
-`INQUIRY_EMAIL_CC` recipients. Submissions are still written to JSON storage if email is not configured.
+The API sends inquiry details and submitter confirmations through the shared SMTP account. General and finance
+submissions use `INQUIRY_EMAIL_TO_GENERAL` and `INQUIRY_EMAIL_TO_FINANCE`; optional copies use `INQUIRY_EMAIL_CC`.
+When required delivery is enabled, a missing SMTP configuration or delivery failure is returned visibly to the form.
 
 ### `POST /api/merchandise/orders`
 
@@ -441,10 +433,10 @@ Deploy flow:
 
 1. Import the repo into Vercel.
 2. Use the existing project settings from `vercel.json`.
-3. Add production environment variables for `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET`, `RESEND_API_KEY`, `INQUIRY_EMAIL_FROM`, `INQUIRY_EMAIL_TO_GENERAL`, `INQUIRY_EMAIL_TO_FINANCE`, `REQUIRE_INQUIRY_EMAIL=true`, `MERCHANDISE_SUPABASE_URL`, and `MERCHANDISE_SUPABASE_SERVICE_ROLE_KEY`.
+3. Add production environment variables for `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, `INQUIRY_EMAIL_TO_GENERAL`, `INQUIRY_EMAIL_TO_FINANCE`, `REQUIRE_INQUIRY_EMAIL=true`, `MERCHANDISE_RECEIPT_EMAIL_TO`, `REQUIRE_MERCHANDISE_RECEIPT_EMAIL=true`, `MERCHANDISE_SUPABASE_URL`, and `MERCHANDISE_SUPABASE_SERVICE_ROLE_KEY`.
 4. Deploy.
 
-The inquiry form depends on Resend in deployment. If `RESEND_API_KEY` or a verified `INQUIRY_EMAIL_FROM` sender is missing, deployed submissions return an error instead of pretending the message reached JAANA.
+Inquiry and merchandise emails use the same SMTP mailbox in deployment. The public forms return an error instead of pretending delivery succeeded when required SMTP delivery is unavailable.
 
 ## Notes for the next developer
 

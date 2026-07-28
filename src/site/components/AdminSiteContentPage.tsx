@@ -2915,6 +2915,7 @@ export function AdminSiteContentPage({ details, onContentSaved }: AdminSiteConte
               }))
             }
             onActivateTab={handleActivateTab}
+            onOpenStore={() => setEditorStatus("The Josephite Store opens from the public website.")}
             onOpenPastEventsDialog={() => setEditorStatus("Past events live in the public view.")}
             onOpenLightboxImage={() => setEditorStatus("Media opens in the public view.")}
           />

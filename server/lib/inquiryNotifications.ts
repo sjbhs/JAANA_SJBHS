@@ -1,4 +1,10 @@
 import type { NormalizedInquiry } from "./inquiryValidation.js";
+import {
+  createSmtpTransport,
+  getSmtpConfigurationError,
+  isSmtpConfigured,
+  parseBoolean
+} from "./smtpTransport.js";
 
 export type InquiryNotificationResult =
   | {
@@ -11,8 +17,6 @@ export type InquiryNotificationResult =
 
 const defaultGeneralRecipients = ["jaanagroup@gmail.com"];
 const defaultFinanceRecipients = ["jaanafinance@gmail.com"];
-const resendApiKey = process.env.RESEND_API_KEY?.trim();
-const inquiryEmailFrom = process.env.INQUIRY_EMAIL_FROM?.trim() || "";
 
 function parseRecipients(value: string | undefined) {
   return (value ?? "")
@@ -28,37 +32,6 @@ function escapeHtml(value: string) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
-}
-
-async function sendResendEmail(payload: Record<string, unknown>): Promise<InquiryNotificationResult> {
-  try {
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${resendApiKey}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(payload)
-    });
-
-    if (!response.ok) {
-      const body = await response.text().catch(() => "");
-
-      return {
-        ok: false,
-        error: body ? `Unable to send inquiry email: ${body}` : "Unable to send inquiry email."
-      };
-    }
-
-    return {
-      ok: true
-    };
-  } catch {
-    return {
-      ok: false,
-      error: "Unable to send inquiry email."
-    };
-  }
 }
 
 export function getInquiryEmailRecipients() {
@@ -83,17 +56,21 @@ export function getInquiryReplyRecipients(inquiry: NormalizedInquiry) {
 }
 
 export function isInquiryEmailDeliveryRequired() {
-  const configuredValue = process.env.REQUIRE_INQUIRY_EMAIL?.trim().toLowerCase();
+  const configuredValue = parseBoolean(process.env.REQUIRE_INQUIRY_EMAIL);
 
-  if (configuredValue === "false" || configuredValue === "0" || configuredValue === "no") {
-    return false;
-  }
-
-  if (configuredValue === "true" || configuredValue === "1" || configuredValue === "yes") {
-    return true;
+  if (configuredValue !== null) {
+    return configuredValue;
   }
 
   return Boolean(process.env.VERCEL);
+}
+
+export function getInquiryEmailConfigurationError() {
+  return getSmtpConfigurationError("Inquiry email");
+}
+
+export function isInquiryEmailConfigured() {
+  return isSmtpConfigured();
 }
 
 function formatInquiryText(inquiry: NormalizedInquiry) {
@@ -313,43 +290,56 @@ function formatConfirmationHtml(inquiry: NormalizedInquiry) {
 }
 
 export async function sendInquiryNotification(inquiry: NormalizedInquiry): Promise<InquiryNotificationResult> {
-  if (!resendApiKey) {
-    return {
-      ok: false,
-      error: "Inquiry email is not configured. Set RESEND_API_KEY to enable notifications."
-    };
-  }
+  const smtp = createSmtpTransport("inquiry");
 
-  if (!inquiryEmailFrom) {
+  if (!smtp) {
     return {
       ok: false,
-      error: "Inquiry email sender is not configured. Set INQUIRY_EMAIL_FROM."
+      error: getInquiryEmailConfigurationError()
     };
   }
 
   const to = getRecipientsForGroup(inquiry.recipientGroup);
   const cc = parseRecipients(process.env.INQUIRY_EMAIL_CC);
   const replyTo = getInquiryReplyRecipients(inquiry);
-  const adminNotification = await sendResendEmail({
-    from: inquiryEmailFrom,
-    to,
-    ...(cc.length ? { cc } : {}),
-    ...(replyTo.length ? { reply_to: replyTo } : {}),
-    subject: `JAANA inquiry: ${inquiry.interest}`,
-    text: formatInquiryText(inquiry),
-    html: formatInquiryHtml(inquiry)
-  });
 
-  if (!adminNotification.ok) {
-    return adminNotification;
+  try {
+    const adminNotification = smtp.transporter.sendMail({
+      from: smtp.from,
+      to,
+      ...(cc.length ? { cc } : {}),
+      ...(replyTo.length ? { replyTo } : {}),
+      subject: `JAANA inquiry: ${inquiry.interest}`,
+      text: formatInquiryText(inquiry),
+      html: formatInquiryHtml(inquiry)
+    });
+    const submitterConfirmation = smtp.transporter.sendMail({
+      from: smtp.from,
+      to: [inquiry.email],
+      replyTo: to,
+      subject: "JAANA confirmation: your request has been submitted",
+      text: formatConfirmationText(inquiry),
+      html: formatConfirmationHtml(inquiry)
+    });
+    const results = await Promise.allSettled([adminNotification, submitterConfirmation]);
+    const rejectedResults = results.filter((result): result is PromiseRejectedResult => result.status === "rejected");
+
+    if (rejectedResults.length) {
+      return {
+        ok: false,
+        error: `Unable to send inquiry email: ${rejectedResults
+          .map((result) => (result.reason instanceof Error ? result.reason.message : String(result.reason)))
+          .join("; ")}`
+      };
+    }
+
+    return {
+      ok: true
+    };
+  } catch {
+    return {
+      ok: false,
+      error: "Unable to send inquiry email."
+    };
   }
-
-  return sendResendEmail({
-    from: inquiryEmailFrom,
-    to: [inquiry.email],
-    reply_to: to,
-    subject: "JAANA confirmation: your request has been submitted",
-    text: formatConfirmationText(inquiry),
-    html: formatConfirmationHtml(inquiry)
-  });
 }

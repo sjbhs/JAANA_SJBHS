@@ -8,6 +8,7 @@ type HomePageProps = {
   editable?: boolean;
   onChangeHomeCopy?: <K extends keyof HomePageCopy>(key: K, value: HomePageCopy[K]) => void;
   onActivateTab: (tabId: TabId) => void;
+  onOpenStore: () => void;
   onOpenPastEventsDialog: () => void;
   onOpenLightboxImage: (image: GalleryImage) => void;
 };
@@ -18,11 +19,52 @@ export function HomePage({
   editable = false,
   onChangeHomeCopy,
   onActivateTab,
+  onOpenStore,
   onOpenPastEventsDialog,
   onOpenLightboxImage
 }: HomePageProps) {
   return (
     <>
+      <section className="home-featured-now" aria-label="Featured reunion and merchandise">
+        <div className="home-featured-now-heading">
+          <span>Featured now</span>
+          <p>Reconnect with Josephites—and bring a piece of St. Joseph&apos;s home.</p>
+        </div>
+
+        <div className="home-featured-now-grid">
+          <article className="home-feature-card home-reunion-card">
+            <div className="home-feature-card-copy">
+              <span className="home-feature-kicker">September 19–20 · Northern Virginia</span>
+              <strong>North America Connect 2026</strong>
+              <p>A full reunion weekend of fellowship, celebration, and support for the Teachers Insurance Program.</p>
+              <button className="home-feature-button" type="button" onClick={() => onActivateTab("connect")}>
+                Reunion details &amp; registration
+                <span aria-hidden="true">→</span>
+              </button>
+            </div>
+            <div className="home-feature-poster" aria-hidden="true">
+              <img src="/assets/north-america-connect-2026-poster-360.webp" alt="" />
+            </div>
+          </article>
+
+          <article className="home-feature-card home-store-card">
+            <div className="home-feature-card-copy">
+              <span className="home-feature-kicker">The Josephite Store</span>
+              <strong>Wear it. Gift it. Remember it.</strong>
+              <p>Shop house merchandise, alumni essentials, books, gifts, and reunion-ready Josephite favorites.</p>
+              <button className="home-feature-button" type="button" onClick={onOpenStore}>
+                Shop merchandise
+                <span aria-hidden="true">→</span>
+              </button>
+            </div>
+            <div className="home-feature-products" aria-hidden="true">
+              <img src="/assets/merchandise/optimized/metal-water-bottle.webp" alt="" />
+              <img src="/assets/merchandise/optimized/coffee-table-book-100-years.webp" alt="" />
+            </div>
+          </article>
+        </div>
+      </section>
+
       <section className="hero-section">
         <div className="hero-copy">
           <div className="hero-brand" aria-label="JAANA identity">

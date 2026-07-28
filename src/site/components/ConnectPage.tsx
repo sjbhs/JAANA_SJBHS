@@ -668,6 +668,51 @@ export function ConnectPage({
         </div>
       </nav>
 
+      <section className="connect-section connect-merchandise-section" aria-labelledby="connect-merchandise-title">
+        <article id="connect-merchandise" className="connect-info-panel connect-merchandise-panel">
+          <div className="connect-merchandise-copy">
+            <p className="connect-merchandise-kicker">Storefront</p>
+            <h3 id="connect-merchandise-title">Josephite Merchandise</h3>
+            <p>
+              <InlineEditableText
+                editable={editable}
+                value={connectContent.merchandise.body}
+                onChange={(value) => onChangeConnectContent?.("merchandise", { ...connectContent.merchandise, body: value })}
+                className="body-copy-edit"
+                ariaLabel="Merchandise body"
+              />
+            </p>
+            <p>
+              <InlineEditableText
+                editable={editable}
+                value={connectContent.merchandise.preorder}
+                onChange={(value) => onChangeConnectContent?.("merchandise", { ...connectContent.merchandise, preorder: value })}
+                className="body-copy-edit"
+                ariaLabel="Merchandise preorder details"
+              />
+            </p>
+            {!editable ? (
+              <button
+                className="primary-button connect-store-button"
+                type="button"
+                onClick={() => setStoreRedirectDialogOpen(true)}
+              >
+                Open Josephite Store
+              </button>
+            ) : null}
+          </div>
+          <div className="connect-merchandise-preview" aria-hidden="true">
+            <img src={optimizedImageSrc("/assets/merchandise/alumni-essentials-bundle.png")} alt="" loading="lazy" decoding="async" />
+            <div>
+              <img src={optimizedImageSrc("/assets/merchandise/cap.png")} alt="" loading="lazy" decoding="async" />
+              <img src={optimizedImageSrc("/assets/merchandise/metal-water-bottle.png")} alt="" loading="lazy" decoding="async" />
+              <img src={optimizedImageSrc("/assets/merchandise/luggage-tag.png")} alt="" loading="lazy" decoding="async" />
+              <img src={optimizedImageSrc("/assets/merchandise/scarf.png")} alt="" loading="lazy" decoding="async" />
+            </div>
+          </div>
+        </article>
+      </section>
+
       <section id="connect-pricing" className="connect-section connect-pricing-section" aria-labelledby="connect-pricing-title">
         <div className="featured-heading">
           <div>
@@ -1016,51 +1061,6 @@ export function ConnectPage({
               </dd>
             </div>
           </dl>
-        </article>
-      </section>
-
-      <section className="connect-section connect-merchandise-section" aria-labelledby="connect-merchandise-title">
-        <article id="connect-merchandise" className="connect-info-panel connect-merchandise-panel">
-          <div className="connect-merchandise-copy">
-            <p className="connect-merchandise-kicker">Storefront</p>
-            <h3 id="connect-merchandise-title">Josephite Merchandise</h3>
-            <p>
-              <InlineEditableText
-                editable={editable}
-                value={connectContent.merchandise.body}
-                onChange={(value) => onChangeConnectContent?.("merchandise", { ...connectContent.merchandise, body: value })}
-                className="body-copy-edit"
-                ariaLabel="Merchandise body"
-              />
-            </p>
-            <p>
-              <InlineEditableText
-                editable={editable}
-                value={connectContent.merchandise.preorder}
-                onChange={(value) => onChangeConnectContent?.("merchandise", { ...connectContent.merchandise, preorder: value })}
-                className="body-copy-edit"
-                ariaLabel="Merchandise preorder details"
-              />
-            </p>
-            {!editable ? (
-              <button
-                className="primary-button connect-store-button"
-                type="button"
-                onClick={() => setStoreRedirectDialogOpen(true)}
-              >
-                Open Josephite Store
-              </button>
-            ) : null}
-          </div>
-          <div className="connect-merchandise-preview" aria-hidden="true">
-            <img src={optimizedImageSrc("/assets/merchandise/alumni-essentials-bundle.png")} alt="" loading="lazy" decoding="async" />
-            <div>
-              <img src={optimizedImageSrc("/assets/merchandise/cap.png")} alt="" loading="lazy" decoding="async" />
-              <img src={optimizedImageSrc("/assets/merchandise/metal-water-bottle.png")} alt="" loading="lazy" decoding="async" />
-              <img src={optimizedImageSrc("/assets/merchandise/luggage-tag.png")} alt="" loading="lazy" decoding="async" />
-              <img src={optimizedImageSrc("/assets/merchandise/scarf.png")} alt="" loading="lazy" decoding="async" />
-            </div>
-          </div>
         </article>
       </section>
 

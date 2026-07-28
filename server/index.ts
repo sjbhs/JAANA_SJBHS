@@ -19,7 +19,12 @@ import {
   writeSiteContent
 } from "./lib/siteContentStore";
 import { createInquiry, deleteInquiry, getInquiries, updateInquiryReplyStatus } from "./lib/inquiryStore";
-import { sendInquiryNotification } from "./lib/inquiryNotifications";
+import {
+  getInquiryEmailConfigurationError,
+  isInquiryEmailConfigured,
+  isInquiryEmailDeliveryRequired,
+  sendInquiryNotification
+} from "./lib/inquiryNotifications";
 import { InquiryPayload, validateInquiryPayload } from "./lib/inquiryValidation";
 import {
   cancelMerchandiseReservation,
@@ -449,12 +454,26 @@ app.post("/api/inquiries", async (request, response, next) => {
       });
     }
 
+    const emailDeliveryRequired = isInquiryEmailDeliveryRequired();
+
+    if (emailDeliveryRequired && !isInquiryEmailConfigured()) {
+      return response.status(503).json({
+        error: getInquiryEmailConfigurationError()
+      });
+    }
+
     const result = await createInquiry(validation.data);
     const total = result.total;
     const notification = await sendInquiryNotification(validation.data);
 
     if (!notification.ok) {
       console.warn(notification.error);
+
+      if (emailDeliveryRequired) {
+        return response.status(502).json({
+          error: "Your request was saved, but the confirmation email could not be sent. Please try again or contact JAANA directly."
+        });
+      }
     }
 
     response.status(201).json({

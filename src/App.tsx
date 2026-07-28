@@ -786,6 +786,13 @@ function App() {
                   </button>
                 ))}
               </nav>
+              <button className="mobile-store-link" type="button" onClick={openStorePage}>
+                <span>
+                  <strong>Josephite Store</strong>
+                  <small>Shop alumni merchandise</small>
+                </span>
+                <span aria-hidden="true">→</span>
+              </button>
             </div>
           </div>
 
@@ -819,6 +826,9 @@ function App() {
                   </button>
               ))}
             </nav>
+            <button className="header-store-button" type="button" onClick={openStorePage}>
+              Store
+            </button>
           </div>
         </div>
       </header>
@@ -829,6 +839,7 @@ function App() {
             connectMoments={connectMoments}
             homeCopy={homeCopy}
             onActivateTab={activateTab}
+            onOpenStore={openStorePage}
             onOpenPastEventsDialog={() => setPastEventsDialogOpen(true)}
             onOpenLightboxImage={openLightboxImage}
           />

@@ -859,7 +859,7 @@ export const connectPlaceholders: SecondaryPage[] = [
 
 export const defaultConnectPageContent: ConnectPageContent = {
   sponsorMessage: defaultConnectSponsorMessage,
-  detailLinks: ["Pricing", "Schedule", "Travel & Stay", "Josephite Merchandise", "Local Attractions", "Sponsor"],
+  detailLinks: ["Josephite Merchandise", "Pricing", "Schedule", "Travel & Stay", "Local Attractions", "Sponsor"],
   pricing: [
     {
       title: "Early Bird Pricing",

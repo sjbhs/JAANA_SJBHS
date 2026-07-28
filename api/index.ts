@@ -8,7 +8,12 @@ import {
   verifyAdminCredentials
 } from "./admin/_auth.js";
 import { readJsonBody, requireAdminRequest, tooManyRequestsResponse } from "./admin/_shared.js";
-import { sendInquiryNotification } from "../server/lib/inquiryNotifications.js";
+import {
+  getInquiryEmailConfigurationError,
+  isInquiryEmailConfigured,
+  isInquiryEmailDeliveryRequired,
+  sendInquiryNotification
+} from "../server/lib/inquiryNotifications.js";
 import { createInquiry, deleteInquiry, getInquiries, updateInquiryReplyStatus } from "../server/lib/inquiryStore.js";
 import { validateInquiryPayload, type InquiryPayload } from "../server/lib/inquiryValidation.js";
 import {
@@ -167,11 +172,24 @@ async function publicInquiryPost(request: Request) {
   }
 
   try {
+    const emailDeliveryRequired = isInquiryEmailDeliveryRequired();
+
+    if (emailDeliveryRequired && !isInquiryEmailConfigured()) {
+      return jsonError(getInquiryEmailConfigurationError(), 503);
+    }
+
     const result = await createInquiry(validation.data);
     const notification = await sendInquiryNotification(validation.data);
 
     if (!notification.ok) {
       console.warn(notification.error);
+
+      if (emailDeliveryRequired) {
+        return jsonError(
+          "Your request was saved, but the confirmation email could not be sent. Please try again or contact JAANA directly.",
+          502
+        );
+      }
     }
 
     return Response.json(

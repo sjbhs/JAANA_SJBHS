@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import path from "node:path";
-import nodemailer from "nodemailer";
 import type Mail from "nodemailer/lib/mailer";
 import type {
   MerchandiseInventoryRow,
@@ -9,6 +8,12 @@ import type {
   MerchandiseReservationItem
 } from "./merchandiseReservationStore.js";
 import { buildMerchandisePaymentSummary } from "./merchandiseReservationStore.js";
+import {
+  createSmtpTransport,
+  getSmtpConfigurationError,
+  isSmtpConfigured,
+  parseBoolean
+} from "./smtpTransport.js";
 
 export type MerchandiseReceiptNotificationResult =
   | {
@@ -25,15 +30,6 @@ type MerchandiseReceiptOrder = {
   paymentSummary?: MerchandisePaymentSummary;
 };
 
-type SmtpConfig = {
-  host: string;
-  port: number;
-  secure: boolean;
-  from: string;
-  user?: string;
-  pass?: string;
-};
-
 const defaultAdminRecipients = ["jaanamedia@gmail.com"];
 const receiptPdfWidth = 612;
 const receiptPdfHeight = 792;
@@ -48,20 +44,6 @@ function parseRecipients(value: string | undefined) {
     .split(",")
     .map((item) => item.trim())
     .filter(Boolean);
-}
-
-function parseBoolean(value: string | undefined) {
-  const normalizedValue = value?.trim().toLowerCase();
-
-  if (["true", "1", "yes"].includes(normalizedValue ?? "")) {
-    return true;
-  }
-
-  if (["false", "0", "no"].includes(normalizedValue ?? "")) {
-    return false;
-  }
-
-  return null;
 }
 
 function escapeHtml(value: string) {
@@ -113,72 +95,12 @@ function getAdminRecipients() {
   return configuredRecipients.length ? configuredRecipients : defaultAdminRecipients;
 }
 
-function getSmtpConfig(): SmtpConfig | null {
-  const gmailUser = process.env.GMAIL_USER?.trim() || "";
-  const gmailAppPassword = process.env.GMAIL_APP_PASSWORD?.trim() || "";
-  const host = process.env.SMTP_HOST?.trim() || (gmailUser && gmailAppPassword ? "smtp.gmail.com" : "");
-  const rawPort = Number(process.env.SMTP_PORT ?? (host === "smtp.gmail.com" ? 465 : 587));
-  const port = Number.isFinite(rawPort) && rawPort > 0 ? rawPort : 587;
-  const secure = parseBoolean(process.env.SMTP_SECURE) ?? port === 465;
-  const user = process.env.SMTP_USER?.trim() || gmailUser;
-  const pass = process.env.SMTP_PASS?.trim() || gmailAppPassword;
-  const from =
-    process.env.MERCHANDISE_EMAIL_FROM?.trim() ||
-    process.env.SMTP_FROM?.trim() ||
-    process.env.INQUIRY_EMAIL_FROM?.trim() ||
-    (user ? `JAANA Merchandise <${user}>` : "");
-
-  if (!host || !from) {
-    return null;
-  }
-
-  if ((user && !pass) || (!user && pass)) {
-    return null;
-  }
-
-  return {
-    host,
-    port,
-    secure,
-    from,
-    ...(user && pass ? { user, pass } : {})
-  };
-}
-
 export function getMerchandiseReceiptEmailConfigurationError() {
-  const missingValues = [];
-  const gmailUser = process.env.GMAIL_USER?.trim() || "";
-  const gmailAppPassword = process.env.GMAIL_APP_PASSWORD?.trim() || "";
-  const hasGmailSmtpAlias = Boolean(gmailUser && gmailAppPassword);
-
-  if (!process.env.SMTP_HOST?.trim() && !hasGmailSmtpAlias) {
-    missingValues.push("SMTP_HOST");
-  }
-
-  if (
-    !process.env.MERCHANDISE_EMAIL_FROM?.trim() &&
-    !process.env.SMTP_FROM?.trim() &&
-    !process.env.INQUIRY_EMAIL_FROM?.trim() &&
-    !process.env.SMTP_USER?.trim() &&
-    !gmailUser
-  ) {
-    missingValues.push("MERCHANDISE_EMAIL_FROM");
-  }
-
-  if (
-    (process.env.SMTP_USER?.trim() && !process.env.SMTP_PASS?.trim() && !gmailAppPassword) ||
-    (!process.env.SMTP_USER?.trim() && !gmailUser && process.env.SMTP_PASS?.trim())
-  ) {
-    missingValues.push("SMTP_USER and SMTP_PASS");
-  }
-
-  return missingValues.length
-    ? `Merchandise receipt email is not configured. Set ${missingValues.join(", ")}.`
-    : "";
+  return getSmtpConfigurationError("Merchandise receipt email");
 }
 
 export function isMerchandiseReceiptEmailConfigured() {
-  return Boolean(getSmtpConfig());
+  return isSmtpConfigured();
 }
 
 export function isMerchandiseReceiptEmailDeliveryRequired() {
@@ -733,9 +655,9 @@ function messageAttachments(order: MerchandiseReceiptOrder) {
 export async function sendMerchandiseReceiptNotification(
   order: MerchandiseReceiptOrder
 ): Promise<MerchandiseReceiptNotificationResult> {
-  const config = getSmtpConfig();
+  const smtp = createSmtpTransport("merchandise");
 
-  if (!config) {
+  if (!smtp) {
     return {
       ok: false,
       error: getMerchandiseReceiptEmailConfigurationError()
@@ -743,29 +665,16 @@ export async function sendMerchandiseReceiptNotification(
   }
 
   try {
-    const transporter = nodemailer.createTransport({
-      host: config.host,
-      port: config.port,
-      secure: config.secure,
-      ...(config.user && config.pass
-        ? {
-            auth: {
-              user: config.user,
-              pass: config.pass
-            }
-          }
-        : {})
-    });
-    const customerMessage = transporter.sendMail({
-      from: config.from,
+    const customerMessage = smtp.transporter.sendMail({
+      from: smtp.from,
       to: [order.reservation.customer.email],
       subject: `JAANA merchandise receipt ${order.reservation.id}`,
       text: formatCustomerText(order),
       html: formatCustomerHtml(order),
       attachments: messageAttachments(order)
     });
-    const adminMessage = transporter.sendMail({
-      from: config.from,
+    const adminMessage = smtp.transporter.sendMail({
+      from: smtp.from,
       to: getAdminRecipients(),
       replyTo: order.reservation.customer.email,
       subject: `JAANA merchandise order ${order.reservation.id}`,
