@@ -11,6 +11,7 @@ import { HomePage } from "./site/components/HomePage";
 import { LightboxDialog } from "./site/components/LightboxDialog";
 import { MerchandiseStorePage } from "./site/components/MerchandiseStorePage";
 import { PastEventsDialog } from "./site/components/PastEventsDialog";
+import { StoreRedirectDialog } from "./site/components/StoreRedirectDialog";
 import { ZeffyDonateDialog } from "./site/components/ZeffyDonateDialog";
 import {
   AlbumFolder,
@@ -38,6 +39,7 @@ function App() {
   const [selectedAlbum, setSelectedAlbum] = useState<EventAlbum | null>(null);
   const [pastEventsDialogOpen, setPastEventsDialogOpen] = useState(false);
   const [donateDialogOpen, setDonateDialogOpen] = useState(false);
+  const [storeRedirectDialogOpen, setStoreRedirectDialogOpen] = useState(false);
   const [lightboxImage, setLightboxImage] = useState<GalleryImage | null>(null);
   const [lightboxZoomed, setLightboxZoomed] = useState(false);
   const [lightboxScale, setLightboxScale] = useState(1);
@@ -630,13 +632,7 @@ function App() {
 
   const openStorePage = () => {
     setMobileNavOpen(false);
-    window.history.pushState(null, "", "/josephite-store");
-    window.scrollTo({
-      top: 0,
-      left: 0,
-      behavior: "auto"
-    });
-    forceLocationRender((current) => current + 1);
+    setStoreRedirectDialogOpen(true);
   };
 
   const returnToConnectPage = () => {
@@ -970,6 +966,7 @@ function App() {
       ) : null}
 
       <ZeffyDonateDialog open={donateDialogOpen} onClose={() => setDonateDialogOpen(false)} />
+      <StoreRedirectDialog open={storeRedirectDialogOpen} onClose={() => setStoreRedirectDialogOpen(false)} />
     </div>
   );
 }

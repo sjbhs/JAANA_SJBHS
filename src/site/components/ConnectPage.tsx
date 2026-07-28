@@ -34,8 +34,6 @@ const connectPosterPdfUrl = "/docs/north-america-connect-2026-poster.pdf";
 const connectPosterImageUrl = "/assets/north-america-connect-2026-poster.png";
 const connectPosterImageWebpSmallUrl = "/assets/north-america-connect-2026-poster-360.webp";
 const connectPosterImageWebpLargeUrl = "/assets/north-america-connect-2026-poster-612.webp";
-const merchandiseStoreUrl = "/josephite-store";
-
 const attractionPreviewLinks: Record<string, string> = {
   "Monuments & Memorials": "https://www.washington.org/visit-dc/monuments-memorials",
   "Smithsonian Museums": "https://www.si.edu/visit",
@@ -555,7 +553,6 @@ export function ConnectPage({
   const [activeSponsorTier, setActiveSponsorTier] = useState(0);
   const [showFloatingRegister, setShowFloatingRegister] = useState(false);
   const [posterDialogOpen, setPosterDialogOpen] = useState(false);
-  const [storeRedirectDialogOpen, setStoreRedirectDialogOpen] = useState(false);
   const heroRegisterButtonRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
@@ -695,7 +692,7 @@ export function ConnectPage({
               <button
                 className="primary-button connect-store-button"
                 type="button"
-                onClick={() => setStoreRedirectDialogOpen(true)}
+                onClick={() => onOpenStore?.()}
               >
                 Open Josephite Store
               </button>
@@ -1219,39 +1216,6 @@ export function ConnectPage({
 
       <ConnectZeffyDialog type={dialogType} connectContent={connectContent} onClose={() => setDialogType(null)} />
       {posterDialogOpen ? <ConnectPosterDialog onClose={() => setPosterDialogOpen(false)} /> : null}
-      {storeRedirectDialogOpen
-        ? createPortal(
-        <div className="store-confirm-overlay" role="dialog" aria-modal="true" aria-labelledby="connect-store-confirm-title">
-          <div className="store-confirm-dialog">
-            <p className="store-kicker">Opening store</p>
-            <h2 id="connect-store-confirm-title">Open JAANA Store?</h2>
-            <p>This will redirect you to the Josephite Store.</p>
-            <div className="store-confirm-actions">
-              <button className="secondary-button" type="button" onClick={() => setStoreRedirectDialogOpen(false)}>
-                Cancel
-              </button>
-              <button
-                className="primary-button"
-                type="button"
-                onClick={() => {
-                  setStoreRedirectDialogOpen(false);
-                  window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-                  if (onOpenStore) {
-                    onOpenStore();
-                    return;
-                  }
-
-                  window.location.href = merchandiseStoreUrl;
-                }}
-              >
-                Continue
-              </button>
-            </div>
-          </div>
-        </div>,
-            document.body
-          )
-        : null}
     </section>
   );
 }
