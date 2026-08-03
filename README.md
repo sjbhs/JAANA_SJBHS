@@ -1,454 +1,672 @@
+<p align="center">
+  <img src="public/assets/jaana-wordmark.png" alt="JAANA — The Josephite Alumni Association of North America" width="420" />
+</p>
+
 # JAANA
 
-Single-page React + TypeScript site for the SJBHS OBA / JAANA giving and alumni outreach flow, backed by a small Express API for inquiry submission.
+Full-stack web platform for the Josephite Alumni Association of North America. It brings alumni outreach, school causes, donations, event registration, photo galleries, inquiries, and reunion merchandise into one responsive application.
 
-This repo is no longer a generic starter. It now contains a working branded site with the current priority pages already implemented:
+[![React](https://img.shields.io/badge/React-18.3-61DAFB?logo=react&logoColor=white)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-4.5-646CFF?logo=vite&logoColor=white)](https://vite.dev/)
+[![Express](https://img.shields.io/badge/Express-4.21-000000?logo=express&logoColor=white)](https://expressjs.com/)
+[![Vercel](https://img.shields.io/badge/Vercel-Configured-000000?logo=vercel&logoColor=white)](https://vercel.com/)
 
-- `Home`
-- `Causes`
-- `Donate`
-- `North America Connect 2026`
+---
 
-## What this project includes
+## Table of contents
 
-### Front end
+- [Overview](#overview)
+- [Key features](#key-features)
+- [How the application works](#how-the-application-works)
+- [Technology stack](#technology-stack)
+- [Quick start](#quick-start)
+- [Environment configuration](#environment-configuration)
+- [Available commands](#available-commands)
+- [Application routes](#application-routes)
+- [API reference](#api-reference)
+- [Project structure](#project-structure)
+- [Data and persistence](#data-and-persistence)
+- [Deployment](#deployment)
+- [Security and accessibility](#security-and-accessibility)
+- [Testing and verification](#testing-and-verification)
+- [Troubleshooting](#troubleshooting)
+- [Current limitations](#current-limitations)
 
-- A polished single-page React app built with Vite
-- Hash-based tab navigation instead of a full router
-- A `Causes` page focused on priority support areas
-- A `Donate` page focused on upcoming online giving and contact flow
-- Cause detail modals with:
-  - funding summary
-  - impact/support content
-  - direct donation actions
-- A `North America Connect 2026` page with sponsor-oriented content and supporting assets
-- A live inquiry form embedded in the `Donate` page
-- A lightweight hidden `/admin` editor for site content with a normal login form
+---
 
-### Back end
+## Overview
 
-- Express API used during local development and production server runs
-- Vercel serverless functions in `api/` for deployment
-- Local JSON persistence for inquiry submissions
-- Local JSON persistence for editable site content
-- Validation for inquiry form payloads
+JAANA is the public website and operations portal for the Josephite Alumni Association of North America. The public experience supports alumni communication, giving, event promotion, sponsor recognition, and merchandise reservations. A protected dashboard gives administrators a single place to maintain content and handle incoming activity.
 
-## What was done in this repo
+This repository contains four connected experiences:
 
-The current implementation is focused on the donor and alumni experience rather than a broad marketing site.
+1. **Public alumni website** — home, causes, giving, contact, and North America Connect content.
+2. **Josephite Store** — an inventory-aware catalog and event-pickup reservation flow.
+3. **Administration dashboard** — content, media, inquiry, inventory, and order management.
+4. **Shared API layer** — Express for local/self-hosted use and a Vercel handler for serverless deployment.
 
-Implemented work:
+### Engineering highlights
 
-- Reworked the site around the current priority areas instead of building every page equally
-- Split the giving experience into separate `Causes` and `Donate` pages
-- Added structured cause data and interactive cause detail modals
-- Added a donation action menu with direct redirect links for payment methods
-- Added `North America Connect 2026` event and sponsor content
-- Added a live contact/inquiry form for cause support, donations, sponsorships, and alumni questions
-- Added API routes for:
-  - health checks
-  - inquiry submission
-  - inquiry stats
-- Added Connect content read/write routes for the public page and hidden admin editor
-- Added local JSON storage for inquiries
-- Added local JSON storage for the Connect page editor
-- Added Vercel-compatible API functions and build config
+- The Express server and Vercel function reuse the same validation, authentication, notification, rate-limiting, and persistence modules.
+- Editable content is normalized against typed defaults before it reaches the UI, which protects the site from incomplete saved data.
+- Merchandise bundles consume their underlying component inventory rather than maintaining unrelated stock counts.
+- Reservation totals are calculated on the server; the browser does not supply authoritative prices.
+- Inquiry and merchandise email failures are surfaced to the UI when delivery is required.
+- The interface includes keyboard navigation, skip links, accessible tabs, labeled forms, and dismissible dialogs.
 
-## Tech stack
+---
 
-- React 18
-- TypeScript
-- Vite
-- Express
-- Node.js
-- Vercel functions for deployment
+## Key features
 
-## How the app is organized
+### Public website
 
-### Main UI files
+- Responsive navigation for desktop and mobile layouts
+- Home, Causes, Donate, Contact, and North America Connect 2026 sections
+- Structured cause cards with detailed funding and impact dialogs
+- Embedded Zeffy donation, sponsorship, and registration flows
+- Event schedules, pricing, travel guidance, hotel details, and local recommendations
+- Sponsor tiers, sponsor recognition, and supporting downloadable documents
+- Categorized event albums with full-screen image viewing and zoom controls
+- Contact and finance inquiry forms with server-side validation
 
-- `src/App.tsx`
-  Main application UI, page/tab content, cause data, donation menu logic, and inquiry form flow.
-- `src/styles.css`
-  All site styling, including page layouts, buttons, modals, and donation menu presentation.
-- `src/main.tsx`
-  Front-end entry point.
+### Josephite Store
 
-### Backend files
+- Individual products and multi-item bundles
+- Size, color, and quantity selection
+- Availability calculated against component-level inventory
+- Cart totals calculated from the canonical server-side catalog
+- Event-pickup reservations with no online payment collection
+- Customer confirmation and internal notification emails
+- Generated PDF receipt attachments
+- Reservation IDs for customer support and pickup reconciliation
 
-- `server/index.ts`
-  Express server used for local development and compiled production server runs.
-- `server/lib/inquiryStore.ts`
-  Reads and writes inquiry submissions to JSON storage.
-- `server/lib/inquiryValidation.ts`
-  Validates the inquiry payload before writing it.
-- `server/lib/adminAuth.ts`
-  Session-cookie helpers and admin login checks.
+### Administration dashboard
 
-### Deployment API files
+- Email/password sign-in backed by a signed HTTP-only session cookie
+- Structured page-copy and cause editing
+- Donation-route and inquiry-topic management
+- Album, gallery, and media management
+- Inquiry filtering by date, category, and status
+- Inquiry completion tracking and deletion
+- CSV and Excel-compatible inquiry exports
+- Inventory quantity and product-image management
+- Merchandise image management
+- Reservation review, cancellation, and CSV/XLSX exports
 
-- `api/health.ts`
-- `api/site-content.ts`
-- `api/inquiries/index.ts`
-- `api/admin/session.ts`
-- `api/admin/login.ts`
-- `api/admin/logout.ts`
-- `api/admin/inquiries.ts`
-- `api/admin/inquiries/[id].ts`
+### API behavior
 
-These mirror the main API behavior for Vercel deployment.
+- Payload validation and normalization before persistence
+- IP-based throttling for login, inquiry, and reservation endpoints
+- Shared SMTP transport for all website-generated email
+- Local JSON persistence for development
+- Supabase/Postgres-backed merchandise inventory and reservations for Vercel
+- No-cache headers on administrative and inventory responses
 
-### Static content
+---
 
-- `public/assets/`
-  Images, logos, house shields, event visuals, and other site assets.
-- `public/docs/`
-  Supporting PDFs and sponsor documents used by the project.
-
-## Project structure
+## How the application works
 
 ```text
-.
-├── src/
-│   ├── App.tsx
-│   ├── main.tsx
-│   ├── styles.css
-│   └── vite-env.d.ts
-├── server/
-│   ├── index.ts
-│   └── lib/
-│       ├── adminAuth.ts
-│       ├── inquiryStore.ts
-│       └── inquiryValidation.ts
-├── api/
-│   ├── health.ts
-│   ├── site-content.ts
-│   ├── admin/
-│   │   ├── _auth.ts
-│   │   ├── _shared.ts
-│   │   ├── inquiries.ts
-│   │   ├── login.ts
-│   │   ├── logout.ts
-│   │   └── session.ts
-│   └── inquiries/
-│       └── index.ts
-├── public/
-│   ├── assets/
-│   └── docs/
-├── .env.example
-├── README.md
-├── package.json
-├── vite.config.ts
-├── vercel.json
-├── tsconfig.json
-├── tsconfig.server.json
-└── tsconfig.vercel.json
+Browser
+  ├── Public React application
+  ├── Josephite Store
+  └── Protected admin dashboard
+            │
+            │ /api
+            ▼
+       Runtime adapter
+       ┌────┴───────────────┐
+       │                    │
+Express server       Vercel handler
+       │                    │
+       └─────────┬──────────┘
+                 ▼
+        Shared server modules
+  ├── authentication and rate limiting
+  ├── inquiry validation and notification
+  ├── content normalization and persistence
+  ├── inventory and reservation services
+  └── SMTP delivery and PDF generation
+                 │
+                 ▼
+   Local JSON, SMTP, and Supabase/Postgres
 ```
 
-## Environment variables
+### Public content flow
 
-Copy `.env.example` to `.env` before local development.
+The client starts with typed default content from `src/site/content.ts`. It then requests `/api/site-content`, normalizes the response in `src/site/siteContent.ts`, and replaces the defaults when valid saved content is available. If the API is unavailable, the public site can still render from its built-in content.
+
+### Inquiry flow
+
+1. A visitor submits the Contact or Donate inquiry form.
+2. The API normalizes and validates the payload.
+3. The submission is saved to the configured inquiry store.
+4. The server selects the general or finance recipient group.
+5. Nodemailer sends the internal notification and visitor confirmation.
+6. The admin dashboard can filter, export, complete, or delete the inquiry.
+
+### Merchandise reservation flow
+
+1. The store loads current inventory, prices, and image overrides from the API.
+2. The cart prevents a product or bundle from consuming more stock than is available.
+3. The API validates the customer, SKUs, options, and quantities.
+4. Prices and totals are recalculated from server-owned catalog data.
+5. The reservation updates local JSON or the Supabase inventory functions.
+6. The server generates a PDF receipt and sends customer/admin emails.
+7. Updated inventory is returned to the browser immediately.
+
+### Admin authentication flow
+
+The configured administrator signs in at `/admin`. Successful authentication creates a signed session cookie with `HttpOnly`, `SameSite=Strict`, and production-only `Secure` attributes. Protected API routes validate that cookie before reading or changing administrative data.
+
+---
+
+## Technology stack
+
+### Frontend
+
+| Tool | Role |
+| --- | --- |
+| React 18 | Component-based public site, store, and admin interface |
+| TypeScript | Shared content, API, inventory, and component types |
+| Vite | Development server, API proxy, and production client build |
+| CSS | Responsive layouts, visual system, dialogs, forms, and print behavior |
+
+### Backend
+
+| Tool | Role |
+| --- | --- |
+| Node.js | Server runtime and build tooling |
+| Express | Local development API and compiled production server |
+| Vercel Functions | Serverless API adapter for deployed environments |
+| Nodemailer | Inquiry confirmations and merchandise receipt delivery |
+| Node `crypto` | HMAC signing and timing-safe credential comparison |
+
+### Data and integrations
+
+| Tool | Role |
+| --- | --- |
+| Local JSON | Zero-setup development persistence |
+| Supabase/Postgres | Durable merchandise inventory and reservation storage |
+| Zeffy | Embedded donations, sponsorships, and event registration |
+| SMTP provider | Transactional inquiry and merchandise email |
+| Vercel | Static client hosting, API routing, and serverless execution |
+
+---
+
+## Quick start
+
+### Prerequisites
+
+- Node.js 18 or newer
+- npm
+- Git
+
+Supabase and SMTP are optional for basic local development. They are needed to exercise durable merchandise storage and email delivery.
+
+### 1. Clone the repository
 
 ```bash
-cp .env.example .env
+git clone https://github.com/sjbhs/JAANA_SJBHS.git
+cd JAANA_SJBHS
 ```
 
-Current variables:
+### 2. Install dependencies
+
+Use the committed lockfile for a reproducible install:
+
+```bash
+npm ci
+```
+
+Use `npm install` instead when intentionally changing dependencies.
+
+### 3. Add local configuration when needed
+
+The public site and file-backed development services have working defaults. Create a root `.env` file to enable the admin dashboard or email delivery.
+
+Minimal admin configuration:
 
 ```env
-HOST=127.0.0.1
-PORT=3001
-CORS_ORIGIN=http://127.0.0.1:5173
-INQUIRY_STORAGE_PATH=./server/data/inquiries.json
-ADMIN_EMAIL=jaanamedia@gmail.com
+ADMIN_EMAIL=admin@example.com
 ADMIN_PASSWORD=replace-with-a-long-unique-password
 ADMIN_SESSION_SECRET=replace-with-at-least-32-random-characters
-INQUIRY_EMAIL_TO_GENERAL=jaanagroup@gmail.com
-INQUIRY_EMAIL_TO_FINANCE=jaanafinance@gmail.com
-INQUIRY_EMAIL_CC=
-REQUIRE_INQUIRY_EMAIL=true
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=465
-SMTP_SECURE=true
-SMTP_USER=jaanamedia@gmail.com
-SMTP_PASS=
-SMTP_FROM=JAANA <jaanamedia@gmail.com>
-MERCHANDISE_RECEIPT_EMAIL_TO=jaanamedia@gmail.com
-REQUIRE_MERCHANDISE_RECEIPT_EMAIL=true
-VITE_API_PROXY_TARGET=http://127.0.0.1:3001
-VITE_HOST=127.0.0.1
-VITE_PORT=5173
 ```
 
-What they control:
+Do not commit `.env` or real credentials.
 
-- `HOST`
-  Host for the Express server.
-- `PORT`
-  Port for the Express server.
-- `CORS_ORIGIN`
-  Allowed browser origin for API requests.
-- `INQUIRY_STORAGE_PATH`
-  JSON file path used to store inquiry submissions locally.
-- `ADMIN_EMAIL`
-  Locked admin email used to sign in to the hidden editor.
-- `ADMIN_PASSWORD`
-  Locked admin password used to sign in to the hidden editor. Use a unique production value and do not commit it.
-- `ADMIN_SESSION_SECRET`
-  Secret used to sign the HTTP-only admin session cookie. Use at least 32 random characters.
-- `INQUIRY_EMAIL_TO_GENERAL`
-  Comma-separated recipients for general inquiry notification emails. Defaults to `jaanagroup@gmail.com`.
-- `INQUIRY_EMAIL_TO_FINANCE`
-  Comma-separated recipients for finance inquiry notification emails. Defaults to `jaanafinance@gmail.com`.
-- `INQUIRY_EMAIL_CC`
-  Optional comma-separated CC recipients for inquiry notification emails.
-- Inquiry delivery behavior
-  All public inquiry submissions route through the shared `/api/inquiries` backend, including the main Contact Us inquiry form and the Donate-page endowment and employer-matching request forms. General inquiries go to `jaanagroup@gmail.com` and finance inquiries go to `jaanafinance@gmail.com`. The submitter also receives an automatic confirmation email, and replies to that confirmation go back to the configured JAANA recipient inbox.
-- `REQUIRE_INQUIRY_EMAIL`
-  Set to `true` in deployment so inquiry submissions fail visibly if email delivery is not configured. Vercel deployments default to requiring email delivery unless this is explicitly set to `false`.
-- `SMTP_HOST`
-  Shared SMTP server hostname used for inquiry notifications and merchandise receipt emails.
-- `SMTP_PORT`
-  SMTP server port. Defaults to `587`.
-- `SMTP_SECURE`
-  Set to `true` for implicit TLS, commonly port `465`; otherwise STARTTLS is used when supported.
-- `SMTP_USER` / `SMTP_PASS`
-  Shared SMTP credentials for every website-generated email. Set both values when the SMTP provider requires authentication.
-- `SMTP_FROM`
-  Shared sender mailbox. Inquiry emails display as `JAANA Website`; store emails display as `JAANA Merchandise`, while both use this same address and SMTP login.
-- `MERCHANDISE_RECEIPT_EMAIL_TO`
-  Comma-separated internal recipients for merchandise receipt copies. Defaults to `jaanamedia@gmail.com`.
-- `REQUIRE_MERCHANDISE_RECEIPT_EMAIL`
-  Set to `true` in deployment so merchandise orders fail before inventory is reserved when SMTP is not configured. Vercel deployments default to requiring receipt email configuration unless this is explicitly set to `false`.
-- `VITE_API_PROXY_TARGET`
-  Backend target for Vite's `/api` proxy.
-- `VITE_HOST`
-  Host for the Vite development server.
-- `VITE_PORT`
-  Port for the Vite development server.
-
-## How to run locally
-
-### 1. Install dependencies
-
-```bash
-npm install
-```
-
-### 2. Create the local env file
-
-```bash
-cp .env.example .env
-```
-
-### 3. Start the app in development
+### 4. Start the application
 
 ```bash
 npm run dev
 ```
 
-This starts:
+This launches the client and API together:
 
-- Vite front end on `http://127.0.0.1:5173`
-- Express API on `http://127.0.0.1:3001`
+| Service | URL |
+| --- | --- |
+| Public website | `http://127.0.0.1:5173` |
+| Admin dashboard | `http://127.0.0.1:5173/admin` |
+| Josephite Store | `http://127.0.0.1:5173/josephite-store` |
+| API health check | `http://127.0.0.1:3001/api/health` |
 
-Vite proxies `/api` requests to the Express server during development.
+Vite proxies browser requests from `/api` to the Express server at port `3001`.
 
-### 4. Open the site
-
-- Front end: `http://127.0.0.1:5173`
-- API health check: `http://127.0.0.1:3001/api/health`
-- Hidden admin editor: `http://127.0.0.1:5173/admin`
-
-The public Connect page is read-only. Editing happens only through the hidden `/admin` route.
-The admin page uses a signed session cookie, a fixed admin email/password, a site-content editor, and an inquiry inbox for donations/sponsorship requests.
-The site-content editor storage is still file-backed, so on Vercel you should connect it to persistent storage if you want edits to survive deploys and serverless restarts.
-
-## Available scripts
-
-### Development
+### 5. Confirm the services are running
 
 ```bash
-npm run dev
+curl http://127.0.0.1:3001/api/health
+curl http://127.0.0.1:3001/api/merchandise/health
 ```
 
-Runs the front end and back end together.
-
-```bash
-npm run dev:client
-```
-
-Runs the Vite front end only.
-
-```bash
-npm run dev:server
-```
-
-Runs the Express server only with `nodemon`.
-
-### Build
-
-```bash
-npm run build
-```
-
-Builds both:
-
-- client output to `dist/client`
-- server output to `dist/server`
-
-```bash
-npm run build:client
-```
-
-Type-checks the front end and builds the Vite client.
-
-```bash
-npm run build:server
-```
-
-Builds the server TypeScript output.
-
-### Production run
-
-```bash
-npm run start
-```
-
-Runs the compiled Express server from `dist/server/index.js`.
-
-After a build, this server also serves the static client from `dist/client`.
-
-### Preview
-
-```bash
-npm run preview
-```
-
-Previews the built Vite client only. This is useful for front-end review, but it does not replace the Express API.
-
-### Vercel
-
-```bash
-npm run build:vercel
-```
-
-Runs the Vercel-specific type check and builds the client output used by Vercel.
-
-## API endpoints
-
-### `GET /api/health`
-
-Returns:
+Expected local responses include:
 
 ```json
 { "status": "ok" }
 ```
 
-### `POST /api/inquiries`
-
-Accepts:
-
 ```json
-{
-  "name": "Jane Doe",
-  "email": "jane@example.com",
-  "organization": "Batch 2008",
-  "interest": "Support a cause",
-  "notes": "Interested in scholarships"
-}
+{ "ok": true, "storage": "local-json" }
 ```
 
-Required fields:
+### Run a production-style build locally
 
-- `name`
-- `email`
-- `interest`
+```bash
+npm run build
+npm run start
+```
 
-The API sends inquiry details and submitter confirmations through the shared SMTP account. General and finance
-submissions use `INQUIRY_EMAIL_TO_GENERAL` and `INQUIRY_EMAIL_TO_FINANCE`; optional copies use `INQUIRY_EMAIL_CC`.
-When required delivery is enabled, a missing SMTP configuration or delivery failure is returned visibly to the form.
+The compiled Express process serves both the API and `dist/client` at `http://127.0.0.1:3001`.
 
-### `POST /api/merchandise/orders`
+---
 
-Creates a merchandise reservation, generates a PDF receipt, emails the receipt to the customer with a thank-you message,
-and emails a receipt copy plus remaining purchased-item quantities to `MERCHANDISE_RECEIPT_EMAIL_TO`
-(`jaanamedia@gmail.com` by default). In deployment, configure SMTP before enabling merchandise checkout.
+## Environment configuration
 
-### `GET /api/admin/inquiries`
+All server secrets belong in the root `.env` file or the deployment provider's environment settings.
 
-Returns the latest inquiry submissions for the `/admin` inbox view.
+### Runtime and local development
 
-## Inquiry storage
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `HOST` | `127.0.0.1` | Express bind address |
+| `PORT` | `3001` | Express port |
+| `CORS_ORIGIN` | Local Vite origins | Comma-separated browser origins allowed by Express |
+| `VITE_API_PROXY_TARGET` | `http://localhost:${PORT}` | Vite `/api` proxy target |
+| `VITE_HOST` | `127.0.0.1` | Vite bind address |
+| `VITE_PORT` | `5173` | Vite port |
 
-Inquiry entries are stored in JSON.
+### Admin authentication
 
-Default local path:
+| Variable | Required for admin | Purpose |
+| --- | --- | --- |
+| `ADMIN_EMAIL` | Yes | The single allowed administrator email |
+| `ADMIN_PASSWORD` | Yes | Administrator password; use a unique production value |
+| `ADMIN_SESSION_SECRET` | Yes | HMAC secret used to sign session cookies; use at least 32 characters |
+
+### SMTP and inquiry routing
+
+| Variable | Purpose |
+| --- | --- |
+| `SMTP_HOST` | SMTP server hostname |
+| `SMTP_PORT` | SMTP port; commonly `587` for STARTTLS or `465` for implicit TLS |
+| `SMTP_SECURE` | `true` for implicit TLS, otherwise `false` |
+| `SMTP_USER` | SMTP username |
+| `SMTP_PASS` | SMTP password or provider app password |
+| `SMTP_FROM` | Sender mailbox used by website-generated email |
+| `INQUIRY_EMAIL_TO_GENERAL` | Comma-separated recipients for general inquiries |
+| `INQUIRY_EMAIL_TO_FINANCE` | Comma-separated recipients for finance inquiries |
+| `INQUIRY_EMAIL_CC` | Optional comma-separated copied recipients |
+| `REQUIRE_INQUIRY_EMAIL` | Fail an inquiry request when notification delivery is unavailable |
+| `MERCHANDISE_RECEIPT_EMAIL_TO` | Internal recipients for reservation receipt copies |
+| `REQUIRE_MERCHANDISE_RECEIPT_EMAIL` | Prevent reservations when receipt delivery is not configured |
+
+Example SMTP configuration:
+
+```env
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=website@example.com
+SMTP_PASS=replace-with-provider-credential
+SMTP_FROM=JAANA <website@example.com>
+
+INQUIRY_EMAIL_TO_GENERAL=general@example.com
+INQUIRY_EMAIL_TO_FINANCE=finance@example.com
+INQUIRY_EMAIL_CC=
+REQUIRE_INQUIRY_EMAIL=true
+
+MERCHANDISE_RECEIPT_EMAIL_TO=store@example.com
+REQUIRE_MERCHANDISE_RECEIPT_EMAIL=true
+```
+
+### Persistence
+
+| Variable | Purpose |
+| --- | --- |
+| `INQUIRY_STORAGE_PATH` | Override the local inquiry JSON file |
+| `SITE_CONTENT_STORAGE_PATH` | Override the editable site-content JSON file |
+| `MERCHANDISE_STORAGE_PATH` | Override the local reservation JSON file |
+| `MERCHANDISE_SUPABASE_URL` | Supabase project URL for merchandise storage |
+| `MERCHANDISE_SUPABASE_SERVICE_ROLE_KEY` | Server-only Supabase service role credential |
+| `MERCHANDISE_SUPABASE_TIMEOUT_MS` | Supabase request timeout, clamped between 1 and 30 seconds |
+
+The generic `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` names are also accepted as fallbacks. Never expose a service role key through a `VITE_` variable.
+
+---
+
+## Available commands
+
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Run Vite and Express concurrently |
+| `npm run dev:client` | Run only the Vite client |
+| `npm run dev:server` | Run only Express with `nodemon` reloads |
+| `npm run build` | Type-check and build the client and Express server |
+| `npm run build:client` | Type-check and build the browser application |
+| `npm run build:server` | Compile the Express server to `dist/server` |
+| `npm run check:vercel` | Type-check the Vercel handler and shared modules |
+| `npm run build:vercel` | Run the Vercel check and build `dist/client` |
+| `npm run preview` | Preview the built client without an API server |
+| `npm run start` | Run the compiled Express server |
+
+`npm run preview` is intended for visual review only. Forms, content loading, inventory, and admin features still require an API process.
+
+---
+
+## Application routes
+
+| Route | Purpose |
+| --- | --- |
+| `/` | Public application; section navigation is stored in the URL hash |
+| `/#home` | Home section |
+| `/#causes` | School causes |
+| `/#donate` | Donation options |
+| `/#contact` | Public inquiry form |
+| `/#connect` | North America Connect 2026 information |
+| `/josephite-store` | Merchandise catalog and reservation checkout |
+| `/admin` | Protected administration dashboard |
+
+Vercel rewrites `/admin` and `/josephite-store` to the SPA entry point so direct navigation and refreshes work correctly.
+
+---
+
+## API reference
+
+### Public endpoints
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/health` | Basic API health check |
+| `GET` | `/api/site-content` | Read normalized public site content |
+| `POST` | `/api/inquiries` | Validate, save, and notify on a public inquiry |
+| `GET` | `/api/merchandise/health` | Check the active merchandise storage provider |
+| `GET` | `/api/merchandise/inventory` | Read current product, bundle, price, and availability data |
+| `GET` | `/api/merchandise/images` | Read merchandise image overrides |
+| `POST` | `/api/merchandise/orders` | Create an event-pickup reservation and send its receipt |
+
+### Authenticated endpoints
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/admin/session` | Check the current admin session |
+| `POST` | `/api/admin/login` | Verify credentials and create a session cookie |
+| `POST` | `/api/admin/logout` | Clear the session cookie |
+| `PUT` | `/api/site-content` | Validate and save editable public content |
+| `GET` | `/api/admin/inquiries` | Read filtered or recent inquiries |
+| `PATCH` | `/api/admin/inquiries/:id` | Update inquiry completion status |
+| `DELETE` | `/api/admin/inquiries/:id` | Delete an inquiry |
+| `GET` | `/api/admin/merchandise/inventory` | Read inventory for administration |
+| `PATCH` | `/api/admin/merchandise/inventory` | Update total inventory quantity |
+| `GET` | `/api/admin/merchandise/orders` | Read reservation orders |
+| `PATCH` | `/api/admin/merchandise/orders` | Cancel an order or selected quantity |
+| `GET` | `/api/admin/merchandise/images` | Read merchandise image configuration |
+| `POST` | `/api/admin/merchandise/images` | Upload or replace a product image |
+| `DELETE` | `/api/admin/merchandise/images/:sku` | Remove a product image override |
+
+### Example inquiry request
+
+```bash
+curl -X POST http://127.0.0.1:3001/api/inquiries \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Jane Doe",
+    "email": "jane@example.com",
+    "organization": "Class of 2008",
+    "interest": "Support a cause",
+    "recipientGroup": "general",
+    "notes": "I would like more information about the scholarship program."
+  }'
+```
+
+Required inquiry fields are `name`, `email`, and `interest`. `recipientGroup` accepts `general` or `finance` and defaults to `general`.
+
+---
+
+## Project structure
 
 ```text
-server/data/inquiries.json
+JAANA_SJBHS/
+├── api/
+│   ├── index.ts                      # Vercel route dispatcher
+│   └── admin/                        # Shared serverless auth helpers
+├── database/
+│   ├── README.md                     # Inquiry database notes
+│   └── inquiries.sql                 # PostgreSQL inquiry schema and export view
+├── public/
+│   ├── assets/
+│   │   ├── albums/                   # Event gallery images
+│   │   ├── merchandise/              # Product photography
+│   │   ├── sponsors/                 # Sponsor marks
+│   │   └── optimized/                # Web-optimized imagery
+│   └── docs/                         # Event and sponsorship PDFs
+├── server/
+│   ├── data/                         # Local JSON stores
+│   ├── lib/
+│   │   ├── adminAuth.ts              # Signed admin sessions
+│   │   ├── inquiryNotifications.ts   # Inquiry email templates and delivery
+│   │   ├── inquiryStore.ts           # Inquiry persistence and filtering
+│   │   ├── inquiryValidation.ts      # Public inquiry validation
+│   │   ├── merchandiseImageStore.ts  # Product image overrides
+│   │   ├── merchandiseReceiptNotifications.ts
+│   │   ├── merchandiseReservationStore.ts
+│   │   ├── rateLimit.ts              # In-memory IP rate limiter
+│   │   ├── siteContentStore.ts       # Editable content persistence
+│   │   └── smtpTransport.ts          # Shared SMTP configuration
+│   ├── sql/
+│   │   └── merchandise_reservations_supabase.sql
+│   └── index.ts                      # Express application
+├── src/
+│   ├── site/
+│   │   ├── components/               # Public pages, dialogs, store, and admin UI
+│   │   ├── accessibility.tsx         # Keyboard tab-navigation helper
+│   │   ├── content.ts                # Default site and event content
+│   │   ├── inquiryConstraints.ts     # Shared browser/server field constraints
+│   │   ├── merchandiseImages.ts      # Default product imagery
+│   │   ├── merchandiseInventory.ts   # Products, bundles, prices, and stock
+│   │   ├── merchandiseReport.ts      # CSV/XLSX merchandise reports
+│   │   ├── optimizedImages.ts        # Optimized asset selection
+│   │   ├── siteContent.ts            # Content defaults and normalization
+│   │   └── types.ts                  # Shared client content types
+│   ├── App.tsx                       # Application shell and navigation
+│   ├── main.tsx                      # React entry point
+│   └── styles.css                    # Application styling
+├── index.html
+├── package.json
+├── tsconfig.json                     # Browser TypeScript target
+├── tsconfig.server.json              # Express TypeScript target
+├── tsconfig.vercel.json              # Vercel TypeScript target
+├── vercel.json                       # Build, output, and rewrite configuration
+└── vite.config.ts                    # Client development and proxy configuration
 ```
 
-Notes:
+---
 
-- The file/directory is created automatically if it does not already exist.
-- On Vercel, storage falls back to `/tmp/jaana-sjbhs-inquiries.json`.
-- Vercel `/tmp` storage is ephemeral, so submissions are not durable there.
+## Data and persistence
 
-If this project moves beyond prototype/light production use, replace JSON storage with a database or hosted store.
+| Data | Local development | Vercel/serverless | Durable setup |
+| --- | --- | --- | --- |
+| Site content | `server/data/site-content.json` | Temporary filesystem | Move to a database or hosted document store |
+| Inquiries | `server/data/inquiries.json` | Temporary filesystem | Wire the store to `database/inquiries.sql` |
+| Merchandise reservations | `server/data/merchandise-reservations.json` | Supabase required | Apply the merchandise SQL schema |
+| Merchandise image overrides | JSON plus `public/assets/merchandise/uploads` | Filesystem writes are not durable | Move uploads to object storage |
 
-## Merchandise reservation storage
+### Merchandise database setup
 
-Merchandise preorders use two API routes:
+1. Create a Supabase project.
+2. Open its SQL editor.
+3. Run [`server/sql/merchandise_reservations_supabase.sql`](server/sql/merchandise_reservations_supabase.sql).
+4. Set `MERCHANDISE_SUPABASE_URL` and `MERCHANDISE_SUPABASE_SERVICE_ROLE_KEY` on the server.
+5. Confirm the connection with `GET /api/merchandise/health`.
 
-- `GET /api/merchandise/inventory`
-- `POST /api/merchandise/orders`
+The SQL schema includes products, bundle components, reservations, reservation items, inventory views, and database functions for reservation and cancellation behavior.
 
-Local development stores reservations in:
+### Inquiry database starting point
 
-```text
-server/data/merchandise-reservations.json
-```
+[`database/inquiries.sql`](database/inquiries.sql) defines a PostgreSQL inquiry table, validation constraints, indexes, row-level security, and a flattened export view. The current application store is still file-backed; the SQL file is a migration starting point, not an active adapter.
 
-For deployment, configure a persistent database before accepting real preorders. The Vercel API will not fake durable reservations without one. The Supabase/Postgres setup script is:
-
-```text
-server/sql/merchandise_reservations_supabase.sql
-```
-
-Required deployment variables:
-
-- `MERCHANDISE_SUPABASE_URL`
-- `MERCHANDISE_SUPABASE_SERVICE_ROLE_KEY`
+---
 
 ## Deployment
 
-This repo is configured for Vercel with:
+### Vercel
 
-- `vercel.json`
-- root `api/` functions
-- `npm run build:vercel`
+The repository includes `vercel.json` with the client build, output directory, API rewrite, and SPA route rewrites.
 
-Deploy flow:
+1. Import `sjbhs/JAANA_SJBHS` into Vercel.
+2. Keep the project root at the repository root.
+3. Use `npm run build:vercel` as the build command.
+4. Use `dist/client` as the output directory.
+5. Add admin, SMTP, inquiry-routing, and Supabase variables in the project settings.
+6. Run the merchandise Supabase SQL before enabling store reservations.
+7. Deploy and check `/api/health` and `/api/merchandise/health`.
 
-1. Import the repo into Vercel.
-2. Use the existing project settings from `vercel.json`.
-3. Add production environment variables for `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, `INQUIRY_EMAIL_TO_GENERAL`, `INQUIRY_EMAIL_TO_FINANCE`, `REQUIRE_INQUIRY_EMAIL=true`, `MERCHANDISE_RECEIPT_EMAIL_TO`, `REQUIRE_MERCHANDISE_RECEIPT_EMAIL=true`, `MERCHANDISE_SUPABASE_URL`, and `MERCHANDISE_SUPABASE_SERVICE_ROLE_KEY`.
-4. Deploy.
+Vercel routes `/api/*` through `api/index.ts`. The same handler dispatches each HTTP method to shared service modules.
 
-Inquiry and merchandise emails use the same SMTP mailbox in deployment. The public forms return an error instead of pretending delivery succeeded when required SMTP delivery is unavailable.
+### Self-hosted Node process
 
-## Notes for the next developer
+```bash
+npm ci
+npm run build
+NODE_ENV=production npm run start
+```
 
-- The site is intentionally a single-page app with section/tab switching, not a multi-route site.
-- Most of the content structure currently lives directly in `src/App.tsx`.
-- The visual behavior for the Causes and Donate flows, along with the cause modals, is driven from `src/App.tsx` plus `src/styles.css`.
-- If you need to change cause content, donation links, sponsor content, or contact details, start in `src/App.tsx`.
-- If you need to change layout, sizing, modal appearance, or button behavior, start in `src/styles.css`.
+Set `HOST=0.0.0.0` when the process must accept traffic from outside the machine or container. Place a TLS-enabled reverse proxy or platform load balancer in front of the Node process.
 
-## Verified
+---
 
-Last verified during this update:
+## Security and accessibility
 
-- `npm run build`
-- `npm run build:server`
+### Security controls
+
+- HMAC-SHA256 signed admin session tokens
+- Timing-safe password and signature comparisons
+- `HttpOnly` and `SameSite=Strict` session cookies
+- `Secure` cookies in production and Vercel environments
+- Server-side validation for inquiry and merchandise payloads
+- Server-owned merchandise names and prices
+- IP-based login, inquiry, reservation, and Express admin throttling
+- No-store caching headers for administrative data
+- Service role credentials kept in server-only environment variables
+
+The rate limiter is process-local. It is suitable for basic abuse protection but is not a replacement for a shared rate-limit service in a horizontally scaled deployment.
+
+### Accessibility behavior
+
+- Skip links for public and admin layouts
+- Semantic labels on forms and controls
+- Roving keyboard focus for tab navigation
+- Escape-key handling for menus and dialogs
+- ARIA-selected states for page tabs
+- Status and alert regions for asynchronous form feedback
+- Responsive layouts across desktop and mobile breakpoints
+
+---
+
+## Testing and verification
+
+### TypeScript and production builds
+
+```bash
+npm run build
+npm run build:vercel
+```
+
+These commands verify the browser, Express, and Vercel TypeScript targets and produce the client/server builds.
+
+### Recommended manual smoke test
+
+- [ ] Load the public website and move through every navigation tab.
+- [ ] Open and close cause, gallery, donation, and event dialogs with mouse and keyboard.
+- [ ] Submit a general inquiry and verify its validation and success/error state.
+- [ ] Sign in to `/admin` with configured local credentials.
+- [ ] Edit site content, save it, and confirm the public view refreshes.
+- [ ] Filter and export inquiries from the admin dashboard.
+- [ ] Open the store, add individual and bundled products, and adjust quantities.
+- [ ] Complete a reservation and confirm inventory decreases.
+- [ ] Verify the customer PDF receipt and internal email when SMTP is enabled.
+- [ ] Cancel a reservation and confirm component inventory is restored.
+- [ ] Run both health endpoints in the target deployment.
+- [ ] Review the public site at mobile and desktop widths.
+
+There is no standalone automated test suite configured in `package.json` at present. The build checks above are the current automated release gate.
+
+---
+
+## Troubleshooting
+
+### The website loads but forms say the backend is unavailable
+
+- Start both services with `npm run dev`, not `npm run dev:client`.
+- Confirm `curl http://127.0.0.1:3001/api/health` succeeds.
+- Check that `VITE_API_PROXY_TARGET` points to the Express port.
+- Restart Vite after changing environment variables.
+
+### Admin sign-in reports that authentication is not configured
+
+Set all three admin variables and restart the server:
+
+```env
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=replace-with-a-long-unique-password
+ADMIN_SESSION_SECRET=replace-with-at-least-32-random-characters
+```
+
+### Inquiry or receipt email cannot be sent
+
+- Confirm `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, and `SMTP_FROM`.
+- Use an app password if the email provider requires one.
+- Match `SMTP_SECURE=true` with implicit TLS, normally port `465`.
+- Use `SMTP_SECURE=false` for STARTTLS configurations, normally port `587`.
+- Set the matching `REQUIRE_*_EMAIL` variable to `false` only for development where delivery is intentionally optional.
+
+### Merchandise works locally but fails after deployment
+
+Vercel intentionally refuses to treat temporary files as durable reservation storage. Apply the Supabase SQL, add both merchandise Supabase variables, redeploy, and check `/api/merchandise/health`.
+
+### Saved content or inquiries disappear on Vercel
+
+Those stores currently fall back to the temporary filesystem in serverless environments. Connect them to persistent storage before relying on them for production records.
+
+### A port is already in use
+
+Choose different ports in `.env` and keep the Vite proxy aligned:
+
+```env
+PORT=3002
+VITE_PORT=5174
+VITE_API_PROXY_TARGET=http://127.0.0.1:3002
+CORS_ORIGIN=http://127.0.0.1:5174
+```
+
+---
+
+## Current limitations
+
+- Inquiry and editable site-content persistence are file-backed.
+- Admin-uploaded merchandise images require object storage for durable serverless use.
+- Rate-limit state is held in memory and is not shared between instances.
+- Authentication supports one configured administrator rather than multiple roles.
+- Automated unit and end-to-end test suites have not yet been added.
+
+These boundaries are documented so the repository can be evaluated accurately and the next production-hardening work is clear.
