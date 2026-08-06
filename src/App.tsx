@@ -886,6 +886,9 @@ function App() {
         <div className="footer-brand">
           <strong>JAANA</strong>
           <span>The Josephite Alumni Association of North America.</span>
+          <a className="footer-policy-link" href="/privacy-policy.html">
+            Privacy policy
+          </a>
         </div>
         <div className="footer-contacts">
           {contactChannels.map((channel) => (

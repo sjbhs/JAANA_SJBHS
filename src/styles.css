@@ -3542,6 +3542,12 @@ img {
   line-height: 1.6;
 }
 
+.footer-brand .footer-policy-link {
+  width: fit-content;
+  color: var(--navy);
+  font-size: 0.86rem;
+}
+
 .footer-contacts {
   display: grid;
   grid-template-columns: repeat(4, max-content);

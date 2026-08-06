@@ -1,0 +1,18 @@
+# JAANA
+
+> The official website of the Josephite Alumni Association of North America, serving alumni of St. Joseph's Boys' High School, Bangalore.
+
+## Main sections
+
+- [Home](https://jaana.co/): Association overview, current initiatives, and alumni highlights.
+- [Causes](https://jaana.co/#causes): School and community causes supported by JAANA.
+- [Donate](https://jaana.co/#donate): Ways to support JAANA and its causes.
+- [North America Connect](https://jaana.co/#connect): Reunion information, registration, travel, and sponsors.
+- [Josephite Store](https://jaana.co/josephite-store): Alumni merchandise reserved online for event pickup.
+- [Contact](https://jaana.co/#contact): General and finance inquiry forms and contact channels.
+- [Privacy policy](https://jaana.co/privacy-policy.html): How the website handles personal information.
+
+## Contact
+
+- General inquiries: jaanagroup@gmail.com
+- Finance inquiries: jaanafinance@gmail.com
