@@ -160,6 +160,7 @@ export type ConnectScheduleItem = {
   address: string;
   mapHref?: string;
   highlights: string[];
+  agenda?: { time: string; activity: string }[];
 };
 
 export type ConnectMerchandiseContent = {

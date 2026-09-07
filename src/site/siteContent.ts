@@ -86,8 +86,8 @@ export const defaultConnectCopy: ConnectPageCopy = {
   sponsorHeading: "Sponsor North America Connect 2026",
   sponsorBody:
     "North America Connect 2026 is made possible by alumni, families, batches, and businesses who want this reunion to do more than bring us together. Sponsorship proceeds support the SJBHS OBA Teachers Insurance Program while giving sponsors visible, polished recognition across the reunion weekend and JAANA communications.",
-  scheduleHeading: "Register Today for the North America Connect 2026 Reunion",
-  scheduleBody: "Find pricing, schedule, travel, stay, Josephite merchandise, and local attraction details below."
+  scheduleHeading: "A weekend to reconnect",
+  scheduleBody: "An evening of celebration. An afternoon of camaraderie. Join fellow Josephites for two days of shared memories and new connections."
 };
 
 const makeAlbumKey = (album: Partial<EventAlbum> | undefined, folderId: string, index: number) => {
@@ -305,11 +305,11 @@ function normalizeConnectCopy(copy: Partial<ConnectPageCopy> | undefined): Conne
     sponsorBody:
       typeof copy?.sponsorBody === "string" && copy.sponsorBody.trim() ? copy.sponsorBody.trim() : defaultConnectCopy.sponsorBody,
     scheduleHeading:
-      typeof copy?.scheduleHeading === "string" && copy.scheduleHeading.trim()
+      typeof copy?.scheduleHeading === "string" && copy.scheduleHeading.trim() && copy.scheduleHeading !== "Register Today for the North America Connect 2026 Reunion"
         ? copy.scheduleHeading.trim()
         : defaultConnectCopy.scheduleHeading,
     scheduleBody:
-      typeof copy?.scheduleBody === "string" && copy.scheduleBody.trim() ? copy.scheduleBody.trim() : defaultConnectCopy.scheduleBody
+      typeof copy?.scheduleBody === "string" && copy.scheduleBody.trim() && copy.scheduleBody !== "Find pricing, schedule, travel, stay, Josephite merchandise, and local attraction details below." ? copy.scheduleBody.trim() : defaultConnectCopy.scheduleBody
   };
 }
 
@@ -390,7 +390,12 @@ function normalizeScheduleItem(
     venue: typeof item?.venue === "string" && item.venue.trim() ? item.venue.trim() : fallback.venue,
     address: typeof item?.address === "string" && item.address.trim() ? item.address.trim() : fallback.address,
     mapHref: typeof item?.mapHref === "string" && item.mapHref.trim() ? item.mapHref.trim() : fallback.mapHref,
-    highlights: normalizeStringArray(item?.highlights, fallback.highlights)
+    highlights: normalizeStringArray(item?.highlights, fallback.highlights),
+    agenda: Array.isArray(item?.agenda)
+      ? item.agenda.filter((entry) => entry && typeof entry.time === "string" && typeof entry.activity === "string")
+          .map((entry) => ({ time: entry.time.trim(), activity: entry.activity.trim() }))
+          .filter((entry) => entry.time && entry.activity)
+      : fallback.agenda
   };
 }
 

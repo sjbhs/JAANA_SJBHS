@@ -1462,6 +1462,41 @@ img {
   font-weight: 900;
 }
 
+.connect-agenda {
+  width: 100%;
+  margin-top: 1.25rem;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.connect-agenda caption {
+  text-align: left;
+  color: var(--navy);
+  font-size: 1.1rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+}
+
+.connect-agenda th,
+.connect-agenda td {
+  padding: 0.65rem 0.4rem;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid #dce3eb;
+}
+
+.connect-agenda th {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.connect-agenda td:first-child {
+  width: 38%;
+  color: var(--navy);
+  font-weight: 700;
+}
+
 .connect-card-time {
   color: var(--navy);
   font-weight: 900;
@@ -9778,4 +9813,67 @@ a:focus-visible {
   margin-top: -10.5%;
   margin-bottom: -6.5%;
   clip-path: inset(20% 0 13%);
+}
+
+/* Compact, responsive reunion program. */
+#connect-schedule.connect-program {
+  padding: clamp(1rem, 2vw, 1.6rem);
+  background: #faf8f2;
+  border: 1px solid #e5dfd1;
+  border-radius: 18px;
+  box-shadow: 0 12px 32px rgba(28, 37, 47, .05);
+  scroll-margin-top: 110px;
+}
+.connect-program .featured-heading { margin: 0; }
+.connect-program .connect-program-eyebrow { margin: 0 0 .35rem; color: #796642; font-size: .65rem; font-weight: 700; letter-spacing: .12em; line-height: 1.5; }
+#connect-schedule-title { color: #1c2d42; font-family: Georgia, Baskerville, serif; font-size: clamp(1.45rem, 2.5vw, 2rem); font-weight: 400; letter-spacing: -.03em; line-height: 1.15; }
+.connect-program .body-copy { margin-top: .35rem; max-width: 50rem; color: #62666a; font-size: .85rem; line-height: 1.5; }
+.connect-program-tabs { display: flex; gap: .4rem; margin-top: .9rem; border-bottom: 1px solid #dcd2bd; }
+.connect-program-tabs button { flex: 0 1 auto; padding: .65rem 1.1rem; border: 0; border-bottom: 2px solid transparent; background: transparent; color: #68665f; font: inherit; font-size: .85rem; cursor: pointer; }
+.connect-program-tabs button[aria-selected="true"] { border-bottom-color: #9c7b3f; color: #1c2d42; background: #eee8da; font-weight: 600; border-radius: 6px 6px 0 0; }
+.connect-program-tabs button:focus-visible, .connect-program [role="tabpanel"]:focus-visible { outline: 2px solid #13357f; outline-offset: 3px; }
+.connect-program .connect-schedule-grid { display: block; margin-top: 0; }
+.connect-program [hidden] { display: none !important; }
+.connect-program .connect-schedule-card { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); grid-template-rows: repeat(5, auto) 1fr; column-gap: clamp(1rem, 3vw, 3rem); min-height: 0; padding: 1rem 0 .3rem; border: 0; border-radius: 0; background: transparent; box-shadow: none; overflow: visible; }
+.connect-program .connect-schedule-card > * { grid-column: 1; }
+.connect-program .connect-program-label { display: none; }
+.connect-program .connect-schedule-card h4 { margin: .2rem 0 .4rem; color: #1c2d42; font-size: clamp(1.25rem, 2vw, 1.6rem); font-weight: 400; letter-spacing: -.025em; line-height: 1.25; }
+.connect-program .connect-schedule-card p { margin: .25rem 0; font-size: .82rem; line-height: 1.45; }
+.connect-program .connect-schedule-card .connect-card-time { color: #796642; font-weight: 500; }
+.connect-program .connect-schedule-card strong { color: #374556; font-weight: 600; }
+.connect-program .connect-map-link { color: #686c6d; font-weight: 400; text-decoration-color: #bba77e; }
+.connect-program .connect-schedule-card .connect-agenda { grid-column: 2; grid-row: 1 / span 7; width: 100%; margin: 0; font-size: .86rem; line-height: 1.35; align-self: start; }
+.connect-program .connect-agenda caption, .connect-program .connect-agenda thead { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.connect-program .connect-agenda td { padding: clamp(.38rem, 1.1vh, .65rem) 0; border-bottom: 1px solid #e8e2d6; color: #37414c; }
+.connect-program .connect-agenda td:first-child { width: 39%; padding-right: .6rem; color: #716a59; font-size: .78rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+.connect-program .connect-agenda tr:last-child td { border-bottom: 0; }
+.connect-program .connect-chip-list { align-self: start; gap: .2rem .6rem; margin-top: .6rem; }
+.connect-program .connect-chip-list span { padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; color: #79786f; font-size: .7rem; font-weight: 400; }
+.connect-program .connect-chip-list > span:not(:last-child)::after { content: " ·"; margin-left: .6rem; color: #a78b55; }
+.connect-program .connect-program-timezone { margin: .6rem 0 0; padding-top: .5rem; border-top: 1px solid #dcd2bd; color: #71716b; font-size: .7rem; line-height: 1.4; }
+@media (max-width: 700px) {
+  #connect-schedule.connect-program { scroll-margin-top: 90px; padding: .9rem; }
+  .connect-program .body-copy { display: none; }
+  .connect-program-tabs { margin-top: .65rem; }
+  .connect-program-tabs button { flex: 1; padding: .65rem .4rem; font-size: .8rem; }
+  .connect-program .connect-schedule-card { display: block; padding-top: .65rem; }
+  .connect-program .connect-schedule-card h4 { font-size: 1.2rem; margin: 0 0 .2rem; }
+  .connect-program .connect-schedule-card p { font-size: .75rem; margin: .15rem 0; }
+  .connect-program .connect-schedule-card .connect-agenda { margin-top: .55rem; font-size: .8rem; }
+  .connect-program .connect-agenda td { padding: clamp(.32rem, 1vh, .55rem) 0; }
+  .connect-program .connect-agenda td:first-child { width: 40%; font-size: .72rem; }
+  .connect-program .connect-chip-list { display: none; }
+  .connect-program .connect-program-timezone { font-size: .65rem; }
+}
+@media (max-height: 550px) and (min-width: 701px) {
+  .connect-program .body-copy, .connect-program .connect-program-eyebrow { display: none; }
+  .connect-program .connect-agenda td { padding: .3rem 0; }
+}
+@media (max-width: 700px) and (max-height: 700px) {
+  #connect-schedule.connect-program { padding: .7rem; }
+  .connect-program .connect-program-eyebrow,
+  .connect-program .connect-card-time { display: none; }
+  .connect-program .connect-agenda td { padding: .27rem 0; }
+  .connect-program .connect-schedule-card h4 { font-size: 1.05rem; }
+  .connect-program .connect-program-timezone { margin-top: .3rem; padding-top: .3rem; }
 }

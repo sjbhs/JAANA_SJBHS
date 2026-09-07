@@ -902,7 +902,16 @@ export const defaultConnectPageContent: ConnectPageContent = {
       venue: "All Go Rhythms Bar & Restaurant",
       address: "21035 Dulles Town Cir, Sterling, VA 20166",
       mapHref: "https://maps.app.goo.gl/GGzvULv1g1pSUoYg7?g_st=aw",
-      highlights: ["Dancefloor", "DJ", "Photobooth", "Buffet and Live Counters", "Cash Bar", "Josephite Merchandise"]
+      highlights: ["Dancefloor", "DJ", "Photobooth", "Buffet and Live Counters", "Cash Bar", "Josephite Merchandise"],
+      agenda: [
+        { time: "6:30–7:30 PM", activity: "Registration" },
+        { time: "7:30–7:45 PM", activity: "Official Welcome & School Song" },
+        { time: "7:45–9:30 PM", activity: "Merchandise Store" },
+        { time: "7:45–9:30 PM", activity: "Career & Networking Lobby" },
+        { time: "7:45–9:00 PM", activity: "Dinner" },
+        { time: "9:00–9:30 PM", activity: "Group Photo" },
+        { time: "9:30 PM–2:00 AM", activity: "Karaoke, Dancing and Social" }
+      ]
     },
     {
       title: "Picnic Lunch and Games",
@@ -910,7 +919,14 @@ export const defaultConnectPageContent: ConnectPageContent = {
       venue: "Lake Fairfax Park, Canopy G",
       address: "Reston, VA 20190",
       mapHref: "https://maps.app.goo.gl/hMqWhjRLvm8n3Hhy7?g_st=aw",
-      highlights: ["Soccer", "Tug of War", "Games for Adults and Kids", "More"]
+      highlights: ["Soccer", "Tug of War", "Games for Adults and Kids", "More"],
+      agenda: [
+        { time: "11:00–11:30 AM", activity: "Registration" },
+        { time: "11:30 AM–1:00 PM", activity: "Picnic Lunch" },
+        { time: "1:00–1:30 PM", activity: "Group Photo & School Song" },
+        { time: "1:30–3:30 PM", activity: "Games, Sports, Activities & Open Mic" },
+        { time: "3:30–4:00 PM", activity: "Closing Circle and Prize Giveaways" }
+      ]
     }
   ],
   merchandise: {

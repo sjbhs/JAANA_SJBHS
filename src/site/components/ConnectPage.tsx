@@ -341,7 +341,7 @@ function ScheduleCard({
 
   return (
     <article className="connect-schedule-card">
-      <span className="connect-card-number">{String(index + 1).padStart(2, "0")}</span>
+      <div className="connect-program-label"><span className="connect-card-number">{String(index + 1).padStart(2, "0")}</span><span>Day {index + 1}</span></div>
       <h4>
         <InlineEditableText
           editable={editable}
@@ -398,19 +398,22 @@ function ScheduleCard({
           />
         </p>
       ) : null}
-      <div className="connect-chip-list" aria-label={`${item.title} highlights`}>
-        {item.highlights.map((highlight, highlightIndex) => (
-          <span key={`${highlight}-${highlightIndex}`}>
-            <InlineEditableText
-              editable={editable}
-              value={highlight}
-              onChange={(value) => onChange({ ...item, highlights: updateStringItem(item.highlights, highlightIndex, value) })}
-              className="body-copy-edit"
-              ariaLabel={`Schedule item ${index + 1} highlight ${highlightIndex + 1}`}
-            />
-          </span>
-        ))}
-      </div>
+      {item.agenda?.length ? (
+        <table className="connect-agenda">
+          <caption>Order of events</caption>
+          <thead>
+            <tr><th scope="col">Time</th><th scope="col">Activity</th></tr>
+          </thead>
+          <tbody>
+            {item.agenda.map((entry, agendaIndex) => (
+              <tr key={agendaIndex}>
+                <td>{entry.time}</td>
+                <td>{entry.activity}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : null}
     </article>
   );
 }
@@ -551,6 +554,7 @@ export function ConnectPage({
 }: ConnectPageProps) {
   const [dialogType, setDialogType] = useState<ConnectDialogType | null>(null);
   const [activeSponsorTier, setActiveSponsorTier] = useState(0);
+  const [activeScheduleDay, setActiveScheduleDay] = useState(0);
   const [showFloatingRegister, setShowFloatingRegister] = useState(false);
   const [posterDialogOpen, setPosterDialogOpen] = useState(false);
   const heroRegisterButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -574,8 +578,9 @@ export function ConnectPage({
     const updateFloatingRegister = () => {
       const heroButtonRect = heroRegisterButtonRef.current?.getBoundingClientRect();
       const heroButtonPast = heroButtonRect ? heroButtonRect.bottom < 0 : true;
-
-      setShowFloatingRegister(heroButtonPast);
+      const agendaRect = document.getElementById("connect-schedule")?.getBoundingClientRect();
+      const agendaVisible = agendaRect && agendaRect.top < window.innerHeight && agendaRect.bottom > 0;
+      setShowFloatingRegister(heroButtonPast && !agendaVisible);
     };
 
     updateFloatingRegister();
@@ -786,9 +791,10 @@ export function ConnectPage({
         </div>
       </section>
 
-      <section id="connect-schedule" className="connect-section" aria-labelledby="connect-schedule-title">
+      <section id="connect-schedule" className="connect-section connect-program" aria-labelledby="connect-schedule-title">
         <div className="featured-heading">
           <div>
+            <p className="connect-program-eyebrow">SEPTEMBER 19–20, 2026 · NORTHERN VIRGINIA</p>
             <h3 id="connect-schedule-title">
               <InlineEditableText
                 editable={editable}
@@ -809,8 +815,26 @@ export function ConnectPage({
             </div>
           </div>
         </div>
+        <div className="connect-program-tabs" role="tablist" aria-label="Reunion agenda day">
+          {connectContent.schedule.map((day, index) => (
+            <button
+              key={index}
+              type="button"
+              role="tab"
+              id={`agenda-day-${index}`}
+              aria-controls={`agenda-panel-${index}`}
+              aria-selected={activeScheduleDay === index}
+              tabIndex={activeScheduleDay === index ? 0 : -1}
+              onClick={() => setActiveScheduleDay(index)}
+              onKeyDown={handleRovingTabKeyDown}
+            >
+              {index === 0 ? "Saturday · Sep 19" : index === 1 ? "Sunday · Sep 20" : day.title}
+            </button>
+          ))}
+        </div>
         <div className="connect-schedule-grid">
           {connectContent.schedule.map((scheduleItem, scheduleIndex) => (
+            <div key={scheduleIndex} role="tabpanel" id={`agenda-panel-${scheduleIndex}`} aria-labelledby={`agenda-day-${scheduleIndex}`} hidden={activeScheduleDay !== scheduleIndex} tabIndex={0}>
             <ScheduleCard
               key={`${scheduleItem.title}-${scheduleIndex}`}
               item={scheduleItem}
@@ -820,6 +844,7 @@ export function ConnectPage({
                 onChangeConnectContent?.("schedule", updateArrayItem(connectContent.schedule, scheduleIndex, () => value))
               }
             />
+            </div>
           ))}
         </div>
       </section>
