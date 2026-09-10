@@ -1003,6 +1003,15 @@ export const defaultConnectPageContent: ConnectPageContent = {
       tier: "Bronze",
       alumni: "Class of 1997",
       batch: "1997"
+    },
+    {
+      name: "Niren Saldanha",
+      website: "",
+      logoSrc: "",
+      logoAlt: "",
+      tier: "Bronze",
+      alumni: "Class of 1988",
+      batch: "1988"
     }
   ],
   placeholders: connectPlaceholders

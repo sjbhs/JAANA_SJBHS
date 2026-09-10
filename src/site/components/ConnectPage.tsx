@@ -432,7 +432,8 @@ function SponsorCard({
   const tierSlug = sponsorTierSlug(sponsor.tier);
   const recognition = sponsorRecognition(sponsor);
   const displayHref = sponsorHref.replace(/^https?:\/\//i, "").replace(/\/$/, "");
-  const cardClassName = `connect-sponsor-card is-${tierSlug}${sponsorHref && !editable ? " is-linked" : ""}`;
+  const hasLogo = Boolean(sponsor.logoSrc.trim());
+  const cardClassName = `connect-sponsor-card is-${tierSlug}${hasLogo ? "" : " has-no-logo"}${sponsorHref && !editable ? " is-linked" : ""}`;
   const sponsorName = (
     <InlineEditableText
       editable={editable}
@@ -444,9 +445,11 @@ function SponsorCard({
   );
   const cardContent = (
     <>
-      <div className="connect-sponsor-logo">
-        <img src={optimizedImageSrc(sponsor.logoSrc)} alt={sponsor.logoAlt} loading="lazy" decoding="async" />
-      </div>
+      {hasLogo ? (
+        <div className="connect-sponsor-logo">
+          <img src={optimizedImageSrc(sponsor.logoSrc)} alt={sponsor.logoAlt} loading="lazy" decoding="async" />
+        </div>
+      ) : null}
       <div className="connect-sponsor-card-body">
         <span className={`connect-sponsor-badge is-${tierSlug}`}>{tierName}</span>
         <h5>{sponsorName}</h5>

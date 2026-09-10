@@ -429,8 +429,8 @@ function normalizeSponsorEntry(
   return {
     name: typeof sponsor?.name === "string" && sponsor.name.trim() ? sponsor.name.trim() : fallback.name,
     website: typeof sponsor?.website === "string" ? sponsor.website.trim() : fallback.website,
-    logoSrc: typeof sponsor?.logoSrc === "string" && sponsor.logoSrc.trim() ? sponsor.logoSrc.trim() : fallback.logoSrc,
-    logoAlt: typeof sponsor?.logoAlt === "string" && sponsor.logoAlt.trim() ? sponsor.logoAlt.trim() : fallback.logoAlt,
+    logoSrc: typeof sponsor?.logoSrc === "string" ? sponsor.logoSrc.trim() : fallback.logoSrc,
+    logoAlt: typeof sponsor?.logoAlt === "string" ? sponsor.logoAlt.trim() : fallback.logoAlt,
     tier: typeof sponsor?.tier === "string" && sponsor.tier.trim() ? sponsor.tier.trim() : fallback.tier,
     alumni: typeof sponsor?.alumni === "string" ? sponsor.alumni.trim() : fallback.alumni,
     batch: typeof sponsor?.batch === "string" ? sponsor.batch.trim() : fallback.batch

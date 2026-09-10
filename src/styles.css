@@ -2297,12 +2297,14 @@ img {
 
 .connect-sponsor-card.is-bronze {
   min-height: 0;
-  background:
-    linear-gradient(135deg, rgba(87, 111, 172, 0.08), rgba(255, 251, 245, 0.84));
 }
 
 .connect-sponsor-card.is-bronze .connect-sponsor-logo {
   min-height: 5.9rem;
+}
+
+.connect-sponsor-card.has-no-logo {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .connect-sponsor-card-body {
