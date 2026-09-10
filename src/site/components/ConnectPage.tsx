@@ -418,31 +418,14 @@ function ScheduleCard({
   );
 }
 
-function SponsorCard({
-  sponsor,
-  editable,
-  onChange
-}: {
-  sponsor: ConnectSponsorEntry;
-  editable: boolean;
-  onChange: (value: ConnectSponsorEntry) => void;
-}) {
+function SponsorCard({ sponsor }: { sponsor: ConnectSponsorEntry }) {
   const sponsorHref = resolveHref(sponsor.website);
   const tierName = sponsorTierName(sponsor.tier);
   const tierSlug = sponsorTierSlug(sponsor.tier);
   const recognition = sponsorRecognition(sponsor);
   const displayHref = sponsorHref.replace(/^https?:\/\//i, "").replace(/\/$/, "");
   const hasLogo = Boolean(sponsor.logoSrc.trim());
-  const cardClassName = `connect-sponsor-card is-${tierSlug}${hasLogo ? "" : " has-no-logo"}${sponsorHref && !editable ? " is-linked" : ""}`;
-  const sponsorName = (
-    <InlineEditableText
-      editable={editable}
-      value={sponsor.name}
-      onChange={(value) => onChange({ ...sponsor, name: value })}
-      className="section-title-edit"
-      ariaLabel="Sponsor name"
-    />
-  );
+  const cardClassName = `connect-sponsor-card is-${tierSlug}${hasLogo ? "" : " has-no-logo"}${sponsorHref ? " is-linked" : ""}`;
   const cardContent = (
     <>
       {hasLogo ? (
@@ -452,7 +435,7 @@ function SponsorCard({
       ) : null}
       <div className="connect-sponsor-card-body">
         <span className={`connect-sponsor-badge is-${tierSlug}`}>{tierName}</span>
-        <h5>{sponsorName}</h5>
+        <h5>{sponsor.name}</h5>
         {recognition ? (
           <p className="connect-sponsor-recognition">
             <span className="connect-sponsor-field-label">Donor</span>
@@ -462,74 +445,16 @@ function SponsorCard({
         {sponsorHref ? (
           <p className="connect-sponsor-url-line">
             <span className="connect-sponsor-field-label">Website</span>
-            {editable ? (
-              <a href={sponsorHref} target="_blank" rel="noreferrer">
-                {displayHref}
-              </a>
-            ) : (
-              <span className="connect-sponsor-url-value" aria-hidden="true">
-                {displayHref}
-              </span>
-            )}
+            <span className="connect-sponsor-url-value" aria-hidden="true">
+              {displayHref}
+            </span>
           </p>
-        ) : null}
-        {editable ? (
-          <div className="connect-admin-field-stack">
-            <InlineEditableText
-              editable
-              value={sponsor.website}
-              onChange={(value) => onChange({ ...sponsor, website: value })}
-              className="body-copy-edit"
-              placeholder="Sponsor website URL"
-              ariaLabel="Sponsor website URL"
-            />
-            <InlineEditableText
-              editable
-              value={sponsor.logoSrc}
-              onChange={(value) => onChange({ ...sponsor, logoSrc: value })}
-              className="body-copy-edit"
-              placeholder="Sponsor logo path"
-              ariaLabel="Sponsor logo path"
-            />
-            <InlineEditableText
-              editable
-              value={sponsor.logoAlt}
-              onChange={(value) => onChange({ ...sponsor, logoAlt: value })}
-              className="body-copy-edit"
-              placeholder="Sponsor logo alt text"
-              ariaLabel="Sponsor logo alt text"
-            />
-            <InlineEditableText
-              editable
-              value={sponsor.tier ?? ""}
-              onChange={(value) => onChange({ ...sponsor, tier: value })}
-              className="body-copy-edit"
-              placeholder="Sponsor tier"
-              ariaLabel="Sponsor tier"
-            />
-            <InlineEditableText
-              editable
-              value={sponsor.alumni ?? ""}
-              onChange={(value) => onChange({ ...sponsor, alumni: value })}
-              className="body-copy-edit"
-              placeholder="Sponsor alumni name"
-              ariaLabel="Sponsor alumni name"
-            />
-            <InlineEditableText
-              editable
-              value={sponsor.batch ?? ""}
-              onChange={(value) => onChange({ ...sponsor, batch: value })}
-              className="body-copy-edit"
-              placeholder="Sponsor batch year"
-              ariaLabel="Sponsor batch year"
-            />
-          </div>
         ) : null}
       </div>
     </>
   );
 
-  if (sponsorHref && !editable) {
+  if (sponsorHref) {
     return (
       <a className={cardClassName} href={sponsorHref} target="_blank" rel="noreferrer" aria-label={`Open ${sponsor.name} website`}>
         {cardContent}
@@ -1227,14 +1152,7 @@ export function ConnectPage({
           </div>
           <div className="connect-sponsor-grid connect-sponsor-directory-grid">
             {connectContent.sponsors.map((sponsor, sponsorIndex) => (
-              <SponsorCard
-                key={`${sponsor.name}-${sponsorIndex}`}
-                sponsor={sponsor}
-                editable={editable}
-                onChange={(value) =>
-                  onChangeConnectContent?.("sponsors", updateArrayItem(connectContent.sponsors, sponsorIndex, () => value))
-                }
-              />
+              <SponsorCard key={`${sponsor.name}-${sponsorIndex}`} sponsor={sponsor} />
             ))}
           </div>
         </div>

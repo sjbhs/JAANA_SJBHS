@@ -506,10 +506,19 @@ JAANA_SJBHS/
 
 | Data | Local development | Vercel/serverless | Durable setup |
 | --- | --- | --- | --- |
-| Site content | `server/data/site-content.json` | Temporary filesystem | Move to a database or hosted document store |
+| Site content except sponsors | `server/data/site-content.json` | Temporary filesystem | Move to a database or hosted document store |
+| Sponsor directory | `src/site/sponsors.ts` | Bundled with the deployment | Update in code and redeploy |
 | Inquiries | `server/data/inquiries.json` | Temporary filesystem | Wire the store to `database/inquiries.sql` |
 | Merchandise reservations | `server/data/merchandise-reservations.json` | Supabase required | Apply the merchandise SQL schema |
 | Merchandise image overrides | JSON plus `public/assets/merchandise/uploads` | Filesystem writes are not durable | Move uploads to object storage |
+
+### Developer-managed sponsors
+
+[`src/site/sponsors.ts`](src/site/sponsors.ts) is the single source of truth for the sponsor directory. Add, remove, edit, or reorder sponsors only in that file. The content normalizer attaches the canonical directory to API and fallback content, while persisted site-content JSON intentionally omits it.
+
+Sponsor logos belong in `public/assets/sponsors`. SVG and WebP files can be referenced directly. PNG and JPEG paths are automatically mapped to a matching WebP filename under `public/assets/sponsors/optimized`, so add that optimized file as well. Leave `logoSrc` and `logoAlt` empty for a text-only sponsor card.
+
+Run `npm run build` after changing the directory, then inspect `http://127.0.0.1:5173/#connect` with the development server running.
 
 ### Merchandise database setup
 

@@ -6,6 +6,15 @@ import type { SiteContent } from "../../src/site/types.js";
 const defaultStoragePath = path.resolve(process.cwd(), "server/data/site-content.json");
 const temporaryStoragePath = path.join(process.env.TMPDIR ?? "/tmp", "jaana-sjbhs-site-content.json");
 
+function contentForStorage(content: SiteContent) {
+  const { sponsors: _developerManagedSponsors, ...connectPage } = content.connectPage;
+
+  return {
+    ...content,
+    connectPage
+  };
+}
+
 function getStoragePath() {
   const configuredPath = process.env.SITE_CONTENT_STORAGE_PATH?.trim();
 
@@ -25,7 +34,7 @@ async function ensureStorage() {
   try {
     await fs.access(storagePath);
   } catch {
-    await fs.writeFile(storagePath, `${JSON.stringify(defaultSiteContent, null, 2)}\n`, "utf8");
+    await fs.writeFile(storagePath, `${JSON.stringify(contentForStorage(defaultSiteContent), null, 2)}\n`, "utf8");
   }
 
   return storagePath;
@@ -46,7 +55,7 @@ export async function writeSiteContent(content: Partial<SiteContent>) {
   const storagePath = await ensureStorage();
   const normalized = normalizeSiteContent(content);
 
-  await fs.writeFile(storagePath, `${JSON.stringify(normalized, null, 2)}\n`, "utf8");
+  await fs.writeFile(storagePath, `${JSON.stringify(contentForStorage(normalized), null, 2)}\n`, "utf8");
 
   return normalized;
 }

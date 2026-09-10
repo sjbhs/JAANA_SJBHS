@@ -5,7 +5,6 @@ import type {
   ConnectMerchandiseContent,
   ConnectPricingGroup,
   ConnectScheduleItem,
-  ConnectSponsorEntry,
   ConnectSponsorPageTier,
   ConnectStayContent,
   ConnectTravelContent,
@@ -422,28 +421,12 @@ function normalizeSponsorPageTier(
   };
 }
 
-function normalizeSponsorEntry(
-  sponsor: Partial<ConnectSponsorEntry> | undefined,
-  fallback: ConnectSponsorEntry
-): ConnectSponsorEntry {
-  return {
-    name: typeof sponsor?.name === "string" && sponsor.name.trim() ? sponsor.name.trim() : fallback.name,
-    website: typeof sponsor?.website === "string" ? sponsor.website.trim() : fallback.website,
-    logoSrc: typeof sponsor?.logoSrc === "string" ? sponsor.logoSrc.trim() : fallback.logoSrc,
-    logoAlt: typeof sponsor?.logoAlt === "string" ? sponsor.logoAlt.trim() : fallback.logoAlt,
-    tier: typeof sponsor?.tier === "string" && sponsor.tier.trim() ? sponsor.tier.trim() : fallback.tier,
-    alumni: typeof sponsor?.alumni === "string" ? sponsor.alumni.trim() : fallback.alumni,
-    batch: typeof sponsor?.batch === "string" ? sponsor.batch.trim() : fallback.batch
-  };
-}
-
 function normalizeConnectPageContent(content: Partial<ConnectPageContent> | undefined): ConnectPageContent {
   const fallback = defaultConnectPageContent;
   const placeholderCount = Math.max(content?.placeholders?.length ?? 0, fallback.placeholders.length);
   const pricingCount = Math.max(content?.pricing?.length ?? 0, fallback.pricing.length);
   const scheduleCount = Math.max(content?.schedule?.length ?? 0, fallback.schedule.length);
   const sponsorTierCount = Math.max(content?.sponsorTiers?.length ?? 0, fallback.sponsorTiers.length);
-  const sponsorCount = Math.max(content?.sponsors?.length ?? 0, fallback.sponsors.length);
 
   return {
     sponsorMessage:
@@ -466,9 +449,7 @@ function normalizeConnectPageContent(content: Partial<ConnectPageContent> | unde
     sponsorTiers: Array.from({ length: sponsorTierCount }, (_, index) =>
       normalizeSponsorPageTier(content?.sponsorTiers?.[index], fallback.sponsorTiers[index] ?? fallback.sponsorTiers[0])
     ),
-    sponsors: Array.from({ length: sponsorCount }, (_, index) =>
-      normalizeSponsorEntry(content?.sponsors?.[index], fallback.sponsors[index] ?? fallback.sponsors[0])
-    ),
+    sponsors: fallback.sponsors.map((sponsor) => ({ ...sponsor })),
     placeholders: Array.from({ length: placeholderCount }, (_, index) => {
       const item = content?.placeholders?.[index];
 
